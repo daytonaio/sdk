@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/devcontainers/typescript-node
+FROM node:23-slim
 RUN apt-get update && apt-get install -y curl sudo
 #   Install the TypeScript Language Server
 RUN npm i -g typescript-language-server

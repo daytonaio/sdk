@@ -8,6 +8,9 @@ on:
       version:
         description: 'Enter the version to release'
         required: true
+      revision:
+        description: 'Enter the revision to release'
+        required: true
 
 concurrency:
   # New commit on branch cancels running workflows of the same branch
@@ -16,6 +19,7 @@ concurrency:
 
 env:
   VERSION: ${{ inputs.version || github.event.client_payload.release_tag }}
+  REVISION: ${{ inputs.revision || '-1' }}
 
 jobs:
   build:
@@ -41,6 +45,6 @@ jobs:
           context: hack/workspace-images/${{ matrix.language}}
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: daytonaio/sdk-${{ matrix.language }}:${{ env.VERSION }}
+          tags: daytonaio/sdk-${{ matrix.language }}:${{ env.VERSION }}-${{ env.REVISION }}
           build-args: |
             "DAYTONA_VERSION=${{ env.VERSION }}"
