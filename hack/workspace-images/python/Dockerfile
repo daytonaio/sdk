@@ -12,4 +12,6 @@ ARG DAYTONA_VERSION
 
 RUN curl -sfL https://download.daytona.io/daytona/install.sh | DAYTONA_VERSION=${DAYTONA_VERSION} sudo -E bash
 
+RUN sudo chmod -R 777 /home/daytona
+
 ENTRYPOINT [ "sleep", "infinity" ]
