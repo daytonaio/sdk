@@ -1,7 +1,7 @@
 FROM node:23-slim
 RUN apt-get update && apt-get install -y curl sudo
 #   Install the TypeScript Language Server
-RUN npm i -g typescript-language-server
+RUN npm i -g typescript-language-server typescript
 #   Install the Daytona CLI
 RUN useradd -m daytona && echo "daytona ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/91-daytona
 USER daytona
