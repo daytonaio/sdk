@@ -1,7 +1,7 @@
 # Get version from root package.json
 VERSION := $(shell node -p "require('./package.json').version")
 
-.PHONY: sync-version build-all publish-all clean
+.PHONY: sync-version build-all build-docs publish-all clean
 
 # Sync versions across packages
 sync-version:
@@ -17,11 +17,18 @@ clean:
 	@rm -rf packages/typescript/dist
 	@rm -rf packages/python/dist packages/python/build packages/python/*.egg-info
 
-# Build both packages
+# Build docs for both packages
+build-docs:
+	@echo "Building documentation..."
+	@cd packages/typescript && npm run docs
+	@cd packages/python && npm run docs
+
+# Build both packages and docs
 build-all: clean sync-version
 	@echo "Building all packages..."
 	@cd packages/typescript && npm run build
 	@cd packages/python && python -m build
+	@$(MAKE) build-docs
 
 # Publish both packages
 publish-all: build-all

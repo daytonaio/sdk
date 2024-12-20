@@ -9,7 +9,6 @@
       "extensions": [
         "dbaeumer.vscode-eslint",
         "esbenp.prettier-vscode",
-        "astro-build.astro-vscode",
         "unifiedjs.vscode-mdx",
         "timonwong.shellcheck",
         "foxundermoon.shell-format",

@@ -1,0 +1,30 @@
+{
+  "items": [
+    {
+      "items": [
+        "__init__/__init__"
+      ],
+      "label": "__init__",
+      "type": "category"
+    },
+    {
+      "items": [
+        "code_toolbox/__init__",
+        "code_toolbox/workspace_python_code_toolbox",
+        "code_toolbox/workspace_ts_code_toolbox"
+      ],
+      "label": "code_toolbox",
+      "type": "category"
+    },
+    "api_client",
+    "daytona",
+    "filesystem",
+    "git",
+    "lsp_server",
+    "process",
+    "types",
+    "workspace"
+  ],
+  "label": "API Reference",
+  "type": "category"
+}

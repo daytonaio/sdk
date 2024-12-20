@@ -1,0 +1,5 @@
+{
+  "scripts": {
+    "docs": "mkdir -p ../../docs/python-sdk && pydoc-markdown && python src/generate_readme.py"
+  }
+} 
