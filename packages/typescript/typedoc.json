@@ -1,0 +1,24 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "entryPoints": ["./src/index.ts"],
+  "out": "../../docs/typescript-sdk",
+  "name": "Daytona TypeScript SDK",
+  "includeVersion": true,
+  "excludePrivate": true,
+  "excludeProtected": true,
+  "excludeExternals": true,
+  "plugin": ["typedoc-plugin-markdown"],
+  "theme": "markdown",
+  "readme": "none",
+  "categoryOrder": [
+    "Core",
+    "Workspace",
+    "FileSystem",
+    "Git",
+    "Process",
+    "LSP",
+    "*"
+  ],
+  "categorizeByGroup": true,
+  "cleanOutputDir": true
+} 

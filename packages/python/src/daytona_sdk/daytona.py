@@ -1,3 +1,9 @@
+"""
+Daytona SDK for Python
+
+This module provides the main entry point for interacting with Daytona Server API.
+"""
+
 import os
 import uuid
 from typing import Optional, Literal, Dict, Any
@@ -22,6 +28,13 @@ CodeLanguage = Literal["python", "javascript", "typescript"]
 
 @dataclass
 class DaytonaConfig:
+    """Configuration options for initializing the Daytona client.
+    
+    Args:
+        api_key: API key for authentication with Daytona server
+        server_url: URL of the Daytona server
+        target: Target environment for workspaces
+    """
     api_key: str
     server_url: str
     target: str
@@ -29,6 +42,13 @@ class DaytonaConfig:
 
 @dataclass
 class CreateWorkspaceParams:
+    """Parameters for creating a new workspace.
+    
+    Args:
+        id: Optional workspace ID. If not provided, a random ID will be generated
+        image: Optional Docker image to use for the workspace
+        language: Programming language to use in the workspace
+    """
     language: CodeLanguage
     id: Optional[str] = None
     image: Optional[str] = None
@@ -78,8 +98,16 @@ class Daytona:
         self.toolbox_api = WorkspaceToolboxApi(api_client)
 
     def create(self, params: Optional[CreateWorkspaceParams] = None) -> Workspace:
-        """
-        Create a new workspace with the specified parameters.
+        """Creates a new workspace.
+        
+        Args:
+            params: Parameters for workspace creation
+            
+        Returns:
+            The created workspace instance
+            
+        Raises:
+            ValueError: When an unsupported language is specified
         """
         workspace_id = (
             params.id if params and params.id else f"sandbox-{str(uuid.uuid4())[:8]}"
@@ -144,9 +172,8 @@ class Daytona:
                 raise ValueError(f"Unsupported language: {params.language}")
 
     def remove(self, workspace: Workspace) -> None:
-        """
-        Remove a workspace.
-
+        """Removes a workspace.
+        
         Args:
             workspace: The workspace to remove
         """
