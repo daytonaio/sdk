@@ -1,0 +1,27 @@
+loaders:
+  - type: python
+    search_path: ["src/daytona_sdk"]
+
+processors:
+  - type: filter
+  - type: smart
+  - type: crossref
+
+renderer:
+  type: docusaurus
+  docs_base_path: ./../../docs/python-sdk
+  relative_output_path: .
+  relative_sidebar_path: sidebar.json
+  sidebar_top_level_label: "API Reference"
+  markdown:
+    render_toc: false
+    render_module_header: true
+    descriptive_class_title: true
+    signature_in_header: false
+    signature_with_def: true
+    descriptive_module_title: true
+    insert_header_anchors: false
+    signature_code_block: true
+    use_fixed_header_levels: true
+    code_headers: true
+    classdef_code_block: true

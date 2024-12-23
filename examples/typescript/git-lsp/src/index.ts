@@ -5,7 +5,9 @@ async function main() {
   const daytona = new Daytona()
 
   //  first, create a workspace
-  const workspace = await daytona.create()
+  const workspace = await daytona.create({
+    language: 'typescript'
+  })
 
   try {
     const rootDir = await workspace.getWorkspaceRootDir()

@@ -2,7 +2,7 @@ import { WorkspaceCodeToolbox } from '../Workspace'
 
 export class WorkspaceTsCodeToolbox implements WorkspaceCodeToolbox {
   public getDefaultImage(): string {
-    return 'daytonaio/ai-test:0.1.0'
+    return 'daytonaio/sdk-typescript:v0.49.0-3'
   }
 
   public getRunCommand(code: string): string {

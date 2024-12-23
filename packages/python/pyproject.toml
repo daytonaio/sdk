@@ -28,3 +28,10 @@ classifiers = [
 ]
 keywords = ["daytona", "sdk"]
 license = {text = "Apache 2.0"}
+
+[project.optional-dependencies]
+dev = [
+    "pydoc-markdown>=4.8.2",
+    "black>=22.0.0",
+    "isort>=5.10.0"
+]
