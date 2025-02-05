@@ -54,3 +54,6 @@ fi
 twine upload --repository testpypi dist/* --verbose -u __token__ -p "$TEST_PYPI_API_TOKEN"
 
 echo "✅ Successfully published $NEW_VERSION to TestPyPI!"
+
+
+echo "dummy"
