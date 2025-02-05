@@ -2,7 +2,10 @@ name: Publish to TestPyPI
 
 on:
   pull_request:
-    types: [opened, synchronize] # Trigger on new PRs and new commits in a PR
+    types: [opened, synchronize] # Runs on new PRs and updates
+  push:
+    branches:
+      - main # Runs on PR merge
 
 jobs:
   publish:
@@ -13,11 +16,18 @@ jobs:
 
     defaults:
       run:
-        working-directory: packages/python # Set the working directory for all run steps
+        working-directory: packages/python # Set working directory
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Show GitHub context
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+        run: echo "$GITHUB_CONTEXT"
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -28,18 +38,35 @@ jobs:
         run: |
           pip install --upgrade setuptools wheel twine tomli tomli-w build
 
-      - name: Extract Version and Bump to Pre-Release
+      - name: Extract Version and Generate New Version
         run: |
+          # Get main version from pyproject.toml
           MAIN_VERSION=$(python3 -c "import tomli; from pathlib import Path; \
             content = Path('pyproject.toml').read_text(); \
             print(tomli.loads(content)['project']['version'])")
 
-          NEW_VERSION="${MAIN_VERSION}rc${{ github.run_number }}"
+          # Get short commit SHA
+          SHORT_SHA=$(git rev-parse --short ${{ github.sha }})
+          # Get numeric SHA
+          NUMERIC_SHA=$(printf "%u\n" 0x$SHORT_SHA)
+
+          echo "Short SHA: $SHORT_SHA"
+          echo "Numeric SHA: $NUMERIC_SHA"
+
+          # Check if running on a PR or on main
+          if [ "${{ github.event_name }}" == "pull_request" ]; then
+            # Get PR number
+            PR_NUMBER=${{ github.event.pull_request.number }}
+              NEW_VERSION="${MAIN_VERSION}rc${NUMERIC_SHA}.dev${PR_NUMBER}"
+          else
+            # On main branch after PR merge
+            NEW_VERSION="${MAIN_VERSION}rc${NUMERIC_SHA}"
+          fi
 
           echo "Extracted main version: $MAIN_VERSION"
-          echo "Bumping version to: $NEW_VERSION"
+          echo "New version: $NEW_VERSION"
 
-          # Update the version in pyproject.toml
+          # Update version in pyproject.toml
           python3 -c "
           import tomli, tomli_w
           from pathlib import Path
