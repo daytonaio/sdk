@@ -64,6 +64,7 @@ class CreateWorkspaceParams:
     target: Optional[str] = None
     resources: Optional[WorkspaceResources] = None
     timeout: Optional[float] = None
+    auto_stop_interval: Optional[int] = None
 
 
 class Daytona:
@@ -128,6 +129,9 @@ class Daytona:
         try:
             if params.timeout and params.timeout < 0:
                 raise ValueError("Timeout must be a non-negative number")
+            
+            if params.auto_stop_interval is not None and params.auto_stop_interval < 0:
+                raise ValueError("auto_stop_interval must be a non-negative integer")
 
             # Create workspace using dictionary
             workspace_data = CreateWorkspace(
@@ -139,6 +143,7 @@ class Daytona:
                 labels=params.labels,
                 public=params.public,
                 target=params.target if params.target else self.target,
+                auto_stop_interval=params.auto_stop_interval
             )
 
             if params.resources:

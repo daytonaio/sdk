@@ -70,6 +70,8 @@ export type CreateWorkspaceParams = {
   async?: boolean
   /** Timeout in seconds, for the workspace to be ready (0 means no timeout) */
   timeout?: number
+  /** Auto-stop interval in minutes (0 means disabled) (must be a non-negative integer) */
+  autoStopInterval?: number
 }
 
 /**
@@ -124,6 +126,10 @@ export class Daytona {
    * @returns {Promise<Workspace>} The created workspace instance
    */
   public async create(params?: CreateWorkspaceParams): Promise<Workspace> {
+    if (params?.autoStopInterval !== undefined && (!Number.isInteger(params.autoStopInterval) || params.autoStopInterval < 0)) {
+      throw new Error('autoStopInterval must be a non-negative integer');
+    }
+
     const workspaceId = params?.id || `sandbox-${uuidv4().slice(0, 8)}`
 
     const codeToolbox = this.getCodeToolbox(params?.language)
@@ -137,7 +143,7 @@ export class Daytona {
       throw new Error('Timeout must be a non-negative number')
     }
 
-    const reponse = await this.workspaceApi.createWorkspace({
+    const response = await this.workspaceApi.createWorkspace({
         id: workspaceId,
         name: workspaceId, //  todo: remove this after project refactor
         image: params?.image,
@@ -148,9 +154,10 @@ export class Daytona {
         gpu: params?.resources?.gpu,
         memory: params?.resources?.memory,
         disk: params?.resources?.disk,
+        autoStopInterval: params?.autoStopInterval,
     })
 
-    const workspaceInstance = reponse.data
+    const workspaceInstance = response.data
 
     const workspace = new Workspace(
       workspaceId,

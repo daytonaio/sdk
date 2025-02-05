@@ -247,4 +247,18 @@ export class Workspace {
         : null
     }
   }
+
+  /**
+   * Sets the auto-stop interval for the workspace
+   * @param {number} interval - Number of minutes after which the workspace will automatically stop (must be an integer). Set to 0 to disable auto-stop.
+   * @throws {Error} If interval is negative
+   */
+  public async setAutostopInterval(interval: number): Promise<void> {
+    if (!Number.isInteger(interval) || interval < 0) {
+      throw new Error('autoStopInterval must be a non-negative integer');
+    }
+    
+    await this.workspaceApi.setAutostopInterval(this.id, interval)
+    this.instance.autoStopInterval = interval
+  }
 }

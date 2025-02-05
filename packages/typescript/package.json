@@ -37,6 +37,6 @@
   },
   "dependencies": {
     "uuid": "^11.0.3",
-    "@daytonaio/api-client": "~0.12.2"
+    "@daytonaio/api-client": "~0.13.0"
   }
 }

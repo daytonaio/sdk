@@ -250,3 +250,19 @@ class Workspace:
             attempts += 1
             
         raise Exception("Workspace {self.id} failed to become stopped within the timeout period")
+
+    def set_autostop_interval(self, interval: int) -> None:
+        """Sets the auto-stop interval for the workspace.
+
+        Args:
+            interval: Number of minutes after which the workspace will automatically stop.
+                    Set to 0 to disable auto-stop.
+
+        Raises:
+            ValueError: If interval is negative
+        """
+        if not isinstance(interval, int) or interval < 0:
+            raise ValueError("Auto-stop interval must be a non-negative integer")
+
+        self.workspace_api.set_autostop_interval(self.id, interval)
+        self.instance.auto_stop_interval = interval
