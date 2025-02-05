@@ -1,12 +1,14 @@
 [build-system]
-requires = ["setuptools>=61.0"]
+requires = [
+    "setuptools>=61.0",
+]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "daytona_sdk"
-version = "0.9.0"
+name = "sdk-test"
+version = "0.9.1rc8"
 authors = [
-    { name = "Vedran Jukic", email = "vedran.jukic@gmail.com" },
+    { name = "Mirko Dzaja", email = "mirkodzaja0@gmail.com" },
 ]
 description = "Python SDK for Daytona"
 readme = "README.md"
@@ -17,7 +19,7 @@ dependencies = [
     "pydantic>=2.4.2,<3.0.0",
     "python-dateutil>=2.8.2,<3.0.0",
     "urllib3>=2.0.7,<3.0.0",
-    "daytona_api_client>=0.12.2,<1.0.0"
+    "daytona_api_client>=0.12.2,<1.0.0",
 ]
 classifiers = [
     "Development Status :: 3 - Alpha",
@@ -27,12 +29,17 @@ classifiers = [
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
 ]
-keywords = ["daytona", "sdk"]
-license = {text = "Apache 2.0"}
+keywords = [
+    "daytona",
+    "sdk",
+]
+
+[project.license]
+text = "Apache 2.0"
 
 [project.optional-dependencies]
 dev = [
     "pydoc-markdown>=4.8.2",
     "black>=22.0.0",
-    "isort>=5.10.0"
+    "isort>=5.10.0",
 ]
