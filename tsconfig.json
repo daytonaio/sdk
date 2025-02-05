@@ -2,7 +2,7 @@
     "compilerOptions": {
       "baseUrl": ".",
       "paths": {
-        "@daytona/sdk": ["packages/ts/src"]
+        "@daytonaio/sdk": ["packages/ts/src"]
       }
     }
   }

@@ -14,7 +14,7 @@
       "resolveJsonModule": true,
       "baseUrl": ".",
       "paths": {
-        "@daytona/sdk": ["../../packages/ts/src"]
+        "@daytonaio/sdk": ["../../packages/ts/src"]
       }
     },
     "include": ["src/**/*"],

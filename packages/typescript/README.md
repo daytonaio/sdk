@@ -34,13 +34,13 @@ To use the SDK, you'll need two essential pieces of information:
 You can install the package using npm:
 
 ```bash
-npm install @daytona/sdk
+npm install @daytonaio/sdk
 ```
 
 Or using yarn:
 
 ```bash
-yarn add @daytona/sdk
+yarn add @daytonaio/sdk
 ```
 
 ## Quick Start
@@ -48,7 +48,7 @@ yarn add @daytona/sdk
 Here's a simple example of using the SDK:
 
 ```typescript
-import { Daytona } from '@daytona/sdk'
+import { Daytona } from '@daytonaio/sdk'
 
 // Initialize the Daytona client
 const daytona = new Daytona()
@@ -76,7 +76,7 @@ console.log(response.result)
 The SDK can be configured using environment variables or by passing a configuration object:
 
 ```typescript
-import { Daytona, DaytonaConfig } from '@daytona/sdk'
+import { Daytona, DaytonaConfig } from '@daytonaio/sdk'
 
 const config: DaytonaConfig = {
   apiKey: 'your-api-key',

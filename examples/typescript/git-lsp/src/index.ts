@@ -1,5 +1,5 @@
 import * as path from 'path'
-import { Daytona } from '@daytona/sdk'
+import { Daytona } from '@daytonaio/sdk'
 
 async function main() {
   const daytona = new Daytona()

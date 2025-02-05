@@ -1,4 +1,4 @@
-import { Daytona } from '@daytona/sdk'
+import { Daytona } from '@daytonaio/sdk'
 import { inspect } from 'util'
 
 async function main() {

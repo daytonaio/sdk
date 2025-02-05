@@ -9,15 +9,15 @@ Official Python and TypeScript SDKs for interacting with Daytona, providing simp
 Install the SDK:
 
 ```bash
-npm install @daytona/sdk
+npm install @daytonaio/sdk
 # or
-yarn add @daytona/sdk
+yarn add @daytonaio/sdk
 ```
 
 Basic usage:
 
 ```typescript
-import { Daytona } from '@daytona/sdk'
+import { Daytona } from '@daytonaio/sdk'
 
 // Initialize the Daytona client
 const daytona = new Daytona()

@@ -1,4 +1,4 @@
-import { Daytona, Workspace } from '@daytona/sdk'
+import { Daytona, Workspace } from '@daytonaio/sdk'
 
 async function basicExec(workspace: Workspace) {
   //  run some python code directly

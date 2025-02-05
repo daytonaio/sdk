@@ -15,10 +15,10 @@ python3 -m pip install -e "packages/python"
 
 echo "Post-install completed successfully"
 
-echo "Building and linking @daytona/sdk..."
+echo "Building and linking @daytonaio/sdk..."
 cd packages/typescript
 yarn build
 yarn link
 
 cd ../../examples/typescript/exec-command
-yarn link @daytona/sdk
+yarn link @daytonaio/sdk
