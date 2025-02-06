@@ -167,10 +167,18 @@ class Workspace:
         labels_payload = {"labels": string_labels}
         return self.workspace_api.replace_labels(self.id, labels_payload)
 
-    def start(self):
-        """Starts the workspace."""
+    def start(self, timeout: Optional[float] = None):
+        """Starts the workspace.
+
+        Args:
+            timeout: Maximum time to wait in seconds. 0 means no timeout.
+
+        Raises:
+            ValueError: If timeout is negative
+            Exception: If workspace fails to start or times out
+        """
         self.workspace_api.start_workspace(self.id)
-        self.wait_for_workspace_start()
+        self.wait_for_workspace_start(timeout)
 
 
     def stop(self):
@@ -178,35 +186,39 @@ class Workspace:
         self.workspace_api.stop_workspace(self.id)
         self.wait_for_workspace_stop()
 
-    def wait_for_workspace_start(self) -> None:
+    def wait_for_workspace_start(self, timeout: float = 60) -> None:
         """Wait for workspace to reach 'started' state.
-        
+
+        Args:
+            timeout: Maximum time to wait in seconds. 0 means no timeout.
+
         Raises:
+            ValueError: If timeout is negative
             Exception: If workspace fails to start or times out
         """
-        max_attempts = 600
-        attempts = 0
-        
-        while attempts < max_attempts:
-            try:
-                workspace_check = self.workspace_api.get_workspace(self.id)
-                provider_metadata = json.loads(workspace_check.info.provider_metadata)
-                state = provider_metadata.get('state')
-                
-                if state == "started":
-                    return
-                    
-                if state == "error":
-                    raise Exception(f"Workspace {self.id} failed to start with status: {state}")
-            except Exception as e:
-                # If there's a validation error, continue waiting
-                if "validation error" not in str(e):
-                    raise e
-                
-            time.sleep(0.1)
-            attempts += 1
-            
-        raise Exception("Workspace {self.id} failed to become ready within the timeout period")
+        timeout = 60 if timeout is None else timeout
+        if timeout < 0:
+            raise ValueError("Timeout must be a non-negative number")
+
+        check_interval = 0.1  # Wait 100ms between checks
+        start_time = time.time()
+
+        while timeout == 0 or (time.time() - start_time) < timeout:
+            response = self.workspace_api.get_workspace(self.id)
+            provider_metadata = json.loads(response.info.provider_metadata)
+            state = provider_metadata.get('state', '')
+
+            if state == "started":
+                return
+
+            if state == "error":
+                raise Exception(
+                    f"Workspace {self.id} failed to start with state: {state}")
+
+            time.sleep(check_interval)
+
+        raise Exception(
+            "Workspace {self.id} failed to become ready within the timeout period")
 
     def wait_for_workspace_stop(self) -> None:
         """Wait for workspace to reach 'stopped' state.

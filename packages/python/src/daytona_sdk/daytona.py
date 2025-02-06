@@ -63,6 +63,7 @@ class CreateWorkspaceParams:
     public: Optional[bool] = None
     target: Optional[str] = None
     resources: Optional[WorkspaceResources] = None
+    timeout: Optional[float] = None
 
 
 class Daytona:
@@ -125,6 +126,9 @@ class Daytona:
         code_toolbox = self._get_code_toolbox(params)
 
         try:
+            if params.timeout and params.timeout < 0:
+                raise ValueError("Timeout must be a non-negative number")
+
             # Create workspace using dictionary
             workspace_data = CreateWorkspace(
                 id=workspace_id,
@@ -154,7 +158,7 @@ class Daytona:
 
             # Wait for workspace to start
             try:
-                workspace.wait_for_workspace_start()
+                workspace.wait_for_workspace_start(params.timeout)
             finally:
                 # If not Daytona SaaS, we don't need to handle pulling image state
                 pass
@@ -272,13 +276,13 @@ class Daytona:
     #     """
     #     self.workspace_api. (workspace_id=workspace.id, resources=resources)
     
-    def start(self, workspace: Workspace) -> None:
+    def start(self, workspace: Workspace, timeout: Optional[float] = None) -> None:
         """Starts a workspace and waits for it to be ready.
         
         Args:
             workspace: The workspace to start
         """
-        workspace.start()
+        workspace.start(timeout)
         workspace.wait_for_workspace_start()
     
     def stop(self, workspace: Workspace) -> None:

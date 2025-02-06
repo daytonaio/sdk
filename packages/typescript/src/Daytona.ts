@@ -68,6 +68,8 @@ export type CreateWorkspaceParams = {
   resources?: WorkspaceResources
   /** If true, will not wait for the workspace to be ready before returning */
   async?: boolean
+  /** Timeout in seconds, for the workspace to be ready (0 means no timeout) */
+  timeout?: number
 }
 
 /**
@@ -131,6 +133,10 @@ export class Daytona {
       labels[`code-toolbox-language`] = params.language
     }
 
+    if (params?.timeout && params.timeout < 0) {
+      throw new Error('Timeout must be a non-negative number')
+    }
+
     const reponse = await this.workspaceApi.createWorkspace({
         id: workspaceId,
         name: workspaceId, //  todo: remove this after project refactor
@@ -155,7 +161,7 @@ export class Daytona {
     )
 
     if (!params?.async) {
-      await workspace.waitUntilStarted()
+      await workspace.waitUntilStarted(params?.timeout)
     }
 
     return workspace
@@ -200,8 +206,8 @@ export class Daytona {
    * Starts a workspace
    * @param {Workspace} workspace - The workspace to start
    */
-  public async start(workspace: Workspace) {
-    await workspace.start()
+  public async start(workspace: Workspace, timeout?: number) {
+    await workspace.start(timeout)
   }
 
   /**

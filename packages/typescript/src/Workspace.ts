@@ -137,9 +137,12 @@ export class Workspace {
    * Starts the workspace
    * @returns {Promise<void>}
    */
-  public async start(): Promise<void> {
+  public async start(timeout?: number): Promise<void> {
+    if (timeout != undefined && timeout < 0) {
+      throw new Error('Timeout must be a non-negative number');
+    }
     await this.workspaceApi.startWorkspace(this.instance.id)
-    await this.waitUntilStarted()
+    await this.waitUntilStarted(timeout)
   }
 
   /**
@@ -159,11 +162,15 @@ export class Workspace {
     await this.workspaceApi.deleteWorkspace(this.instance.id, true)
   }
 
-  public async waitUntilStarted() {
-    const maxAttempts = 600;
-    let attempts = 0;
+  public async waitUntilStarted(timeout: number = 60) {
+    if (timeout < 0) {
+      throw new Error('Timeout must be a non-negative number');
+    }
 
-    while (attempts < maxAttempts) {
+    const checkInterval = 100; // Wait 100 ms between checks
+    const startTime = Date.now();
+
+    while (timeout === 0 || (Date.now() - startTime) < (timeout * 1000)) {
       const response = await this.workspaceApi.getWorkspace(this.id);
       const state = response.data.state;
 
@@ -172,11 +179,10 @@ export class Workspace {
       }
 
       if (state === 'error') {
-        throw new Error(`Workspace failed to start with status: ${status}`);
+        throw new Error(`Workspace failed to start with status: ${state}`);
       }
 
-      await new Promise(resolve => setTimeout(resolve, 100)); // Wait 100 ms between checks
-      attempts++;
+      await new Promise(resolve => setTimeout(resolve, checkInterval));
     }
 
     throw new Error('Workspace failed to become ready within the timeout period');
@@ -195,7 +201,7 @@ export class Workspace {
       }
 
       if (state === 'error') {
-        throw new Error(`Workspace failed to stop with status: ${status}`);
+        throw new Error(`Workspace failed to stop with status: ${state}`);
       }
 
       await new Promise(resolve => setTimeout(resolve, 100)); // Wait 100 ms between checks
