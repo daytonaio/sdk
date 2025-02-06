@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "sdk-test"
-version = "0.9.2"
+version = "0.9.4"
 authors = [
     { name = "Mirko Dzaja", email = "mirkodzaja0@gmail.com" },
 ]

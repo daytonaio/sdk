@@ -21,8 +21,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
-        with:
-          fetch-depth: 0  # Ensure full commit history for SHA resolution
 
       - name: Set up Python
         uses: actions/setup-python@v4

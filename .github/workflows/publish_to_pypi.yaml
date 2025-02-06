@@ -1,0 +1,53 @@
+name: Publish to PyPI
+
+on:
+  workflow_dispatch: # Manual trigger for official releases
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    if: github.ref == 'refs/heads/main' # Ensure it runs only for the main branch
+
+    permissions:
+      id-token: write  # Required for Trusted Publisher authentication
+
+    defaults:
+      run:
+        working-directory: packages/python  # Set working directory
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade setuptools wheel twine build
+
+      - name: Build the package (Official Release)
+        run: |
+          rm -rf dist/*
+          python3 -m build
+
+      - name: Publish to PyPI using Trusted Publisher
+        run: |
+          twine upload dist/* --verbose
+
+      - name: Display Published Package Info
+        run: |
+          PACKAGE_NAME=$(python3 -c "import tomli; from pathlib import Path; \
+            content = Path('pyproject.toml').read_text(); \
+            print(tomli.loads(content)['project']['name'])")
+
+          PACKAGE_VERSION=$(python3 -c "import tomli; from pathlib import Path; \
+            content = Path('pyproject.toml').read_text(); \
+            print(tomli.loads(content)['project']['version'])")
+
+          echo "Successfully published $PACKAGE_NAME==$PACKAGE_VERSION to PyPI!"
+          echo "Install it using:"
+          echo -e "\tpip install $PACKAGE_NAME==$PACKAGE_VERSION"
