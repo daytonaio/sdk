@@ -29,7 +29,6 @@
     "@babel/preset-typescript": "^7.22.0",
     "@types/jest": "^29.5.0",
     "@types/node": "^22.10.0",
-    "@daytonaio/api-client": "~0.12.2",
     "jest": "^29.5.0",
     "ts-jest": "^29.1.0",
     "typescript": "^5.0.0",
@@ -37,6 +36,7 @@
     "typedoc-plugin-markdown": "^3.17.1"
   },
   "dependencies": {
-    "uuid": "^11.0.3"
+    "uuid": "^11.0.3",
+    "@daytonaio/api-client": "~0.12.2"
   }
 }
