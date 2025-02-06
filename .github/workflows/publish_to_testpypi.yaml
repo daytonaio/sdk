@@ -65,6 +65,7 @@ jobs:
 
           echo "Extracted main version: $MAIN_VERSION"
           echo "New version: $NEW_VERSION"
+          echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
 
           # Update version in pyproject.toml
           python3 -c "
@@ -92,6 +93,6 @@ jobs:
             content = Path('pyproject.toml').read_text(); \
             print(tomli.loads(content)['project']['name'])")
 
-          echo "\n\ud83c\udf89 Successfully published $PACKAGE_NAME==$NEW_VERSION to TestPyPI!"
-          echo "\ud83d\udd39 Install it using:"
-          echo "pip install --i https://test.pypi.org/simple/ $PACKAGE_NAME==$NEW_VERSION"
+          echo "Successfully published $PACKAGE_NAME==$NEW_VERSION to TestPyPI!"
+          echo -e "Install it using:"
+          echo -e "\tpip install --i https://test.pypi.org/simple/ $PACKAGE_NAME==$NEW_VERSION"
