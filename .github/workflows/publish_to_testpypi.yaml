@@ -52,7 +52,7 @@ jobs:
             print(tomli.loads(content)['project']['version'])")
 
           # Convert SHA to numeric value
-          SHORT_SHA=$(echo $LAST_COMMIT_SHA | cut -c1-8)
+          SHORT_SHA=$(git rev-parse --short ${LAST_COMMIT_SHA})
           NUMERIC_SHA=$(echo "ibase=16; $(echo $SHORT_SHA | tr '[:lower:]' '[:upper:]')" | bc)
 
           # Generate new version based on event type
