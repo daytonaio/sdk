@@ -36,7 +36,7 @@ jobs:
 
       - name: Publish to PyPI using Trusted Publisher
         run: |
-          twine upload dist/* --verbose
+          twine upload --repository testpypi dist/* --verbose # TODO: Change to pypi
 
       - name: Display Published Package Info
         run: |
