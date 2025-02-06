@@ -21,18 +21,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
-
-      - name: Setup Environment (PR)  
-        if: ${{ github.event_name == 'pull_request' }}  
-        shell: bash  
-        run: |  
-          echo "LAST_COMMIT_SHA=${{ github.event.pull_request.head.sha }}" >> ${GITHUB_ENV}
-          
-      - name: Setup Environment (Push)  
-        if: ${{ github.event_name == 'push' }}  
-        shell: bash  
-        run: |  
-          echo "LAST_COMMIT_SHA=${GITHUB_SHA}" >> ${GITHUB_ENV}
+        with:
+          fetch-depth: 0  # Ensure full commit history for SHA resolution
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -43,6 +33,17 @@ jobs:
         run: |
           pip install --upgrade setuptools wheel twine tomli tomli-w build
 
+      - name: Determine Commit SHA
+        run: |
+          # Determine the correct commit SHA based on event type
+          if [ "${{ github.event_name }}" == "pull_request" ]; then
+            LAST_COMMIT_SHA=${{ github.event.pull_request.head.sha }}
+          else
+            LAST_COMMIT_SHA=${{ github.sha }}
+          fi
+
+          echo "LAST_COMMIT_SHA=$LAST_COMMIT_SHA" >> $GITHUB_ENV
+
       - name: Extract Version and Generate New Version
         run: |
           # Get main version from pyproject.toml
@@ -50,21 +51,15 @@ jobs:
             content = Path('pyproject.toml').read_text(); \
             print(tomli.loads(content)['project']['version'])")
 
-          # Get short commit SHA
-          SHORT_SHA=$(git rev-parse --short ${LAST_COMMIT_SHA})
-          # Get numeric SHA
-          NUMERIC_SHA=$(printf "%u\n" 0x$SHORT_SHA)
+          # Convert SHA to numeric value
+          SHORT_SHA=$(echo $LAST_COMMIT_SHA | cut -c1-8)
+          NUMERIC_SHA=$(echo "ibase=16; $(echo $SHORT_SHA | tr '[:lower:]' '[:upper:]')" | bc)
 
-          echo "Short SHA: $SHORT_SHA"
-          echo "Numeric SHA: $NUMERIC_SHA"
-
-          # Check if running on a PR or on main
+          # Generate new version based on event type
           if [ "${{ github.event_name }}" == "pull_request" ]; then
-            # Get PR number
             PR_NUMBER=${{ github.event.pull_request.number }}
-              NEW_VERSION="${MAIN_VERSION}rc${NUMERIC_SHA}.dev${PR_NUMBER}"
+            NEW_VERSION="${MAIN_VERSION}rc${NUMERIC_SHA}.dev${PR_NUMBER}"
           else
-            # On main branch after PR merge
             NEW_VERSION="${MAIN_VERSION}rc${NUMERIC_SHA}"
           fi
 
@@ -90,3 +85,13 @@ jobs:
       - name: Publish to TestPyPI using Trusted Publisher
         run: |
           twine upload --repository testpypi dist/* --verbose
+
+      - name: Display Package Info
+        run: |
+          PACKAGE_NAME=$(python3 -c "import tomli; from pathlib import Path; \
+            content = Path('pyproject.toml').read_text(); \
+            print(tomli.loads(content)['project']['name'])")
+
+          echo "\n\ud83c\udf89 Successfully published $PACKAGE_NAME==$NEW_VERSION to TestPyPI!"
+          echo "\ud83d\udd39 Install it using:"
+          echo "pip install --i https://test.pypi.org/simple/ $PACKAGE_NAME==$NEW_VERSION"
