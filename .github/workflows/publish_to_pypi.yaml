@@ -30,7 +30,7 @@ jobs:
           if [[ ! "$TAG_NAME" =~ ^v([0-9]+)\.([0-9]+)(\.[0-9]+)?(a[0-9]+|b[0-9]+|rc[0-9]+)?$ ]]; then
             echo "Invalid tag format: $TAG_NAME"
             echo "Allowed formats: vX.Y, vX.Y.Z, vX.Y.ZaN, vX.Y.ZbN, vX.Y.ZrcN"
-            exit 0
+            exit 1  # Force the job to fail if the tag format is invalid
           fi
 
           # Extract version from tag (remove 'v' prefix)
