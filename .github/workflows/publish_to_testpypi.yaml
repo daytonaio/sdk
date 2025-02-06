@@ -95,4 +95,4 @@ jobs:
 
           echo "Successfully published $PACKAGE_NAME==$NEW_VERSION to TestPyPI!"
           echo -e "Install it using:"
-          echo -e "\tpip install --i https://test.pypi.org/simple/ $PACKAGE_NAME==$NEW_VERSION"
+          echo -e "\tpip install -i https://test.pypi.org/simple/ $PACKAGE_NAME==$NEW_VERSION"
