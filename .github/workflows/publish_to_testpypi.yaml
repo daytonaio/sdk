@@ -21,13 +21,18 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
 
-      - name: Show GitHub context
-        env:
-          GITHUB_CONTEXT: ${{ toJson(github) }}
-        run: echo "$GITHUB_CONTEXT"
+      - name: Setup Environment (PR)  
+        if: ${{ github.event_name == 'pull_request' }}  
+        shell: bash  
+        run: |  
+          echo "LAST_COMMIT_SHA=${{ github.event.pull_request.head.sha }}" >> ${GITHUB_ENV}
+          
+      - name: Setup Environment (Push)  
+        if: ${{ github.event_name == 'push' }}  
+        shell: bash  
+        run: |  
+          echo "LAST_COMMIT_SHA=${GITHUB_SHA}" >> ${GITHUB_ENV}
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -46,7 +51,7 @@ jobs:
             print(tomli.loads(content)['project']['version'])")
 
           # Get short commit SHA
-          SHORT_SHA=$(git rev-parse --short ${{ github.sha }})
+          SHORT_SHA=$(git rev-parse --short ${LAST_COMMIT_SHA})
           # Get numeric SHA
           NUMERIC_SHA=$(printf "%u\n" 0x$SHORT_SHA)
 
