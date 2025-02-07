@@ -1,12 +1,16 @@
 [build-system]
-requires = ["setuptools>=61.0"]
+requires = [
+    "setuptools>=61.0",
+    "environs>=9.5.0,<10.0.0",
+    "daytona_api_client>=0.12.2,<1.0.0"
+]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "daytona_sdk"
-version = "0.9.0"
+name = "daytona-sdk"
+dynamic = ["version"]
 authors = [
-    { name = "Vedran Jukic", email = "vedran.jukic@gmail.com" },
+    { name = "dummy", email = "dummy@mail.com" }, # TODO: publish-pipeline; change to daytona-org
 ]
 description = "Python SDK for Daytona"
 readme = "README.md"
@@ -36,3 +40,6 @@ dev = [
     "black>=22.0.0",
     "isort>=5.10.0"
 ]
+
+[tool.setuptools.dynamic]
+version = {attr = "daytona_sdk.__version__"}

@@ -1,0 +1,87 @@
+name: Publish to npm
+
+on:
+  push:
+    tags:
+      - 'v*'  # Trigger on tags starting with 'v'
+  workflow_dispatch:
+    inputs:
+      package_version:
+        description: 'Version to publish (e.g., vX.Y, vX.Y.Z, vX.Y.ZaN, vX.Y.ZbN, vX.Y.ZrcN)'
+        required: true
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: packages/typescript  # Set working directory
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Validate And Extract Version
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            INPUT_VALUE="${{ github.event.inputs.package_version }}"
+          else
+            INPUT_VALUE="${GITHUB_REF#refs/tags/}"
+          fi
+          
+          echo "Tag/input value: $INPUT_VALUE"
+
+          # Validate tag/input format: vX.Y.Z, vX.Y, vX.Y.ZaN, vX.Y.ZbN, vX.Y.ZrcN
+          if [[ ! "$INPUT_VALUE" =~ ^v[0-9]+\.[0-9]+(\.[0-9]+)?(a[0-9]+|b[0-9]+|rc[0-9]+)?$ ]]; then
+            echo "Invalid tag/input format: $INPUT_VALUE"
+            echo "Allowed formats: vX.Y, vX.Y.Z, vX.Y.ZaN, vX.Y.ZbN, vX.Y.ZrcN"
+            exit 1
+          fi
+
+          PACKAGE_VERSION="${INPUT_VALUE#v}"
+          echo "PACKAGE_VERSION=$PACKAGE_VERSION" >> $GITHUB_ENV
+
+          # Determine npm tag based on version suffix
+          if [[ "$PACKAGE_VERSION" =~ a[0-9]+$ ]]; then
+            NPM_TAG="alpha"
+          elif [[ "$PACKAGE_VERSION" =~ b[0-9]+$ ]]; then
+            NPM_TAG="beta"
+          elif [[ "$PACKAGE_VERSION" =~ rc[0-9]+$ ]]; then
+            NPM_TAG="release-candidate"
+          else
+            NPM_TAG="latest"
+          fi
+          echo "NPM_TAG=$NPM_TAG" >> $GITHUB_ENV
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          registry-url: 'https://registry.npmjs.org/'
+
+      - name: Update Version in package.json
+        run: npm version $PACKAGE_VERSION --no-git-tag-version
+
+      - name: Install dependencies (skip postinstall scripts)
+        run: npm ci --ignore-scripts
+
+      - name: Run Lint & Build
+        run: |
+          npm run lint || echo "::warning ::Lint warnings found"
+          npm run build
+
+      - name: Audit for vulnerabilities
+        run: npm audit --audit-level=high || echo "::warning ::Vulnerabilities found"
+
+      - name: Publish to npm
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --access public --tag $NPM_TAG
+
+      - name: Display Published Package Info
+        run: |
+          PACKAGE_NAME=$(node -p "require('./package.json').name")
+          echo "Successfully published $PACKAGE_NAME@$PACKAGE_VERSION to npm with tag $NPM_TAG!"
+          echo "Install it using:"
+          echo -e "\tnpm install $PACKAGE_NAME@$PACKAGE_VERSION"
