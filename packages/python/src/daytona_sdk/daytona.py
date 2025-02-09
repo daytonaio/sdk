@@ -139,7 +139,7 @@ class Daytona:
                 name=params.name if params.name else workspace_id,
                 image=params.image,
                 user=params.os_user if params.os_user else "daytona",
-                env_vars=params.env_vars if params.env_vars else {},
+                env=params.env_vars if params.env_vars else {},
                 labels=params.labels,
                 public=params.public,
                 target=params.target if params.target else self.target,
