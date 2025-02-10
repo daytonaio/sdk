@@ -22,6 +22,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Print Head Commit SHA
+        run: |
+          echo "Head Commit SHA: ${{ github.sha }}"
+
       - name: Validate And Extract Version
         run: |
           if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then

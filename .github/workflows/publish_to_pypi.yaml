@@ -25,6 +25,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Print Head Commit SHA
+        run: |
+          echo "Head Commit SHA: ${{ github.sha }}"
+
       - name: Validate And Extract Version
         run: |
           if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
@@ -43,6 +47,7 @@ jobs:
           fi
 
           PACKAGE_VERSION="${INPUT_VALUE#v}"
+          echo "PACKAGE_VERSION=$PACKAGE_VERSION"
           echo "PACKAGE_VERSION=$PACKAGE_VERSION" >> $GITHUB_ENV
 
       - name: Set up Python
