@@ -44,18 +44,25 @@ jobs:
           fi
 
           PACKAGE_VERSION="${INPUT_VALUE#v}"
-          echo "PACKAGE_VERSION=$PACKAGE_VERSION" >> $GITHUB_ENV
 
-          # Determine npm tag based on version suffix
-          if [[ "$PACKAGE_VERSION" =~ a[0-9]+$ ]]; then
+          # Convert pre-release format; determine npm tag
+          if [[ "$PACKAGE_VERSION" =~ ^([0-9]+\.[0-9]+\.[0-9]+)a([0-9]+)$ ]]; then
+            PACKAGE_VERSION="${BASH_REMATCH[1]}-alpha.${BASH_REMATCH[2]}"
             NPM_TAG="alpha"
-          elif [[ "$PACKAGE_VERSION" =~ b[0-9]+$ ]]; then
+          elif [[ "$PACKAGE_VERSION" =~ ^([0-9]+\.[0-9]+\.[0-9]+)b([0-9]+)$ ]]; then
+            PACKAGE_VERSION="${BASH_REMATCH[1]}-beta.${BASH_REMATCH[2]}"
             NPM_TAG="beta"
-          elif [[ "$PACKAGE_VERSION" =~ rc[0-9]+$ ]]; then
+          elif [[ "$PACKAGE_VERSION" =~ ^([0-9]+\.[0-9]+\.[0-9]+)rc([0-9]+)$ ]]; then
+            PACKAGE_VERSION="${BASH_REMATCH[1]}-rc.${BASH_REMATCH[2]}"
             NPM_TAG="release-candidate"
           else
             NPM_TAG="latest"
           fi
+
+          echo "PACKAGE_VERSION=$PACKAGE_VERSION"
+          echo "PACKAGE_VERSION=$PACKAGE_VERSION" >> $GITHUB_ENV
+
+          echo "NPM_TAG=$NPM_TAG"
           echo "NPM_TAG=$NPM_TAG" >> $GITHUB_ENV
 
       - name: Set up Node.js
