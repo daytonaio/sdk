@@ -4,9 +4,9 @@ import {
   ReplaceRequest,
   ReplaceResult,
   SearchFilesResponse,
-  Workspace as WorkspaceInstance,
   ToolboxApi,
 } from '@daytonaio/api-client'
+import { WorkspaceInstance } from './Workspace'
 
 /**
  * Parameters for setting file permissions

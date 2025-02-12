@@ -1,15 +1,19 @@
 import {
   CompletionList,
   LspSymbol,
-  Workspace as WorkspaceInstance,
   ToolboxApi,
 } from '@daytonaio/api-client'
+import { WorkspaceInstance } from './Workspace'
 
 /**
  * Supported language server types
  * @typedef {('typescript')} LspLanguageId
  */
-export type LspLanguageId = 'typescript'
+export enum LspLanguageId {
+  PYTHON = 'python',
+  TYPESCRIPT = 'typescript',
+  JAVASCRIPT = 'javascript',
+}
 
 /**
  * Position in a text document
@@ -32,7 +36,11 @@ export class LspServer {
     private readonly pathToProject: string,
     private readonly toolboxApi: ToolboxApi,
     private readonly instance: WorkspaceInstance,
-  ) {}
+  ) {
+    if (!Object.values(LspLanguageId).includes(this.languageId)) {
+      throw new Error(`Invalid languageId: ${this.languageId}. Supported values are: ${Object.values(LspLanguageId).join(', ')}`);
+    }
+  }
 
   /**
    * Starts the language server

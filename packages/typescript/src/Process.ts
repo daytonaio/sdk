@@ -7,7 +7,7 @@ import {
   ToolboxApi,
   Workspace,
 } from '@daytonaio/api-client'
-import { WorkspaceCodeToolbox } from './Workspace'
+import { WorkspaceCodeToolbox, WorkspaceInstance } from './Workspace'
 
 /**
  * Handles process and code execution within a workspace
@@ -17,7 +17,7 @@ export class Process {
   constructor(
     private readonly codeToolbox: WorkspaceCodeToolbox,
     private readonly toolboxApi: ToolboxApi,
-    private readonly instance: Workspace,
+    private readonly instance: WorkspaceInstance,
   ) {}
 
   /**
