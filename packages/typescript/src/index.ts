@@ -1,11 +1,12 @@
 export { Daytona } from './Daytona'
 export type { DaytonaConfig, CreateWorkspaceParams } from './Daytona'
+export { CodeLanguage } from './Daytona'
 export { Workspace } from './Workspace'
 export type { WorkspaceCodeToolbox } from './Workspace'
 export { FileSystem } from './FileSystem'
 export { Git } from './Git'
 export { Process } from './Process'
-// export { LspServer } from './LspServer'
+export { LspLanguageId } from './LspServer'
 // export type { LspLanguageId, Position } from './LspServer'
 export { DaytonaError } from './errors/DaytonaError'
 
@@ -18,6 +19,6 @@ export type {
   GitStatus,
   ListBranchResponse,
   ExecuteResponse,
-  // CompletionList,
-  // LspSymbol,
 } from '@daytonaio/api-client'
+
+export { WorkspaceStateEnum as WorkspaceState, CreateWorkspaceTargetEnum as WorkspaceTargetRegion } from '@daytonaio/api-client'

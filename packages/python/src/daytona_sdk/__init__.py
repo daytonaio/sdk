@@ -6,8 +6,11 @@ from .daytona import (
     Workspace,
     SessionExecuteRequest,
     SessionExecuteResponse,
-    DaytonaException
+    DaytonaException,
+    WorkspaceTargetRegion,
 )
+from .lsp_server import LspLanguageId
+from .workspace import WorkspaceState
 
 __all__ = [
     "Daytona",
@@ -18,4 +21,7 @@ __all__ = [
     "SessionExecuteRequest",
     "SessionExecuteResponse",
     "DaytonaException"
+    "LspLanguageId",
+    "WorkspaceTargetRegion",
+    "WorkspaceState"
 ]

@@ -7,7 +7,6 @@ in the workspace environment.
 
 from typing import Optional, List
 from daytona_api_client import (
-    Workspace as WorkspaceInstance,
     ToolboxApi,
     ExecuteResponse,
     ExecuteRequest,
@@ -20,7 +19,7 @@ from daytona_api_client import (
 
 from daytona_sdk._utils.exceptions import intercept_exceptions
 from .code_toolbox.workspace_python_code_toolbox import WorkspacePythonCodeToolbox
-
+from .protocols import WorkspaceInstance
 
 class Process:
     """Handles process and code execution within a workspace.

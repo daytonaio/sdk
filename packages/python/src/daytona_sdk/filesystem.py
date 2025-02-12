@@ -12,10 +12,10 @@ from daytona_api_client import (
     ReplaceRequest,
     ReplaceResult,
     SearchFilesResponse,
-    Workspace as WorkspaceInstance,
     ToolboxApi,
 )
 from daytona_sdk._utils.exceptions import intercept_exceptions
+from .protocols import WorkspaceInstance
 
 
 class FileSystem:

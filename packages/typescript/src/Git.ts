@@ -1,10 +1,9 @@
 import {
-  Workspace as WorkspaceInstance,
   ToolboxApi,
   ListBranchResponse,
   GitStatus,
 } from '@daytonaio/api-client'
-import { Workspace } from './Workspace'
+import { Workspace, WorkspaceInstance } from './Workspace'
 
 /**
  * Provides Git operations within a workspace

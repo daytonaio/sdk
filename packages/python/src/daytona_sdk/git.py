@@ -9,7 +9,6 @@ from typing import List, Optional, TYPE_CHECKING
 from daytona_api_client import (
     GitStatus,
     ListBranchResponse,
-    Workspace as WorkspaceInstance,
     ToolboxApi,
     GitAddRequest,
     GitCloneRequest,
@@ -17,6 +16,7 @@ from daytona_api_client import (
     GitRepoRequest,
 )
 from daytona_sdk._utils.exceptions import intercept_exceptions
+from .protocols import WorkspaceInstance
 
 if TYPE_CHECKING:
     from .workspace import Workspace

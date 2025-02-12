@@ -4,22 +4,32 @@ Language Server Protocol (LSP) support for Daytona workspaces.
 This module provides LSP functionality for code intelligence features like
 completions, symbols, and diagnostics.
 """
-
-from typing import List, Dict, Literal
+from enum import Enum
+from typing import List
 from daytona_api_client import (
     CompletionList,
     LspSymbol,
-    Workspace as WorkspaceInstance,
     ToolboxApi,
     LspServerRequest,
     LspDocumentRequest,
     LspCompletionParams
 )
 from daytona_sdk._utils.exceptions import intercept_exceptions
+from .protocols import WorkspaceInstance
 
 
-LspLanguageId = Literal["typescript"]
+class LspLanguageId(Enum):
+    PYTHON = "python"
+    TYPESCRIPT = "typescript"
+    JAVASCRIPT = "javascript"
 
+    def __str__(self):
+        return self.value
+    
+    def __eq__(self, other):
+        if isinstance(other, str):
+            return self.value == other
+        return super().__eq__(other)
 
 class Position:
     """Represents a position in a text document.
@@ -49,8 +59,8 @@ class LspServer:
         path_to_project: str,
         toolbox_api: ToolboxApi,
         instance: WorkspaceInstance,
-    ):
-        self.language_id = language_id
+    ):            
+        self.language_id = str(language_id)
         self.path_to_project = path_to_project
         self.toolbox_api = toolbox_api
         self.instance = instance

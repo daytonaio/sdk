@@ -1,12 +1,12 @@
 import { v4 as uuidv4 } from 'uuid'
 
 import { WorkspacePythonCodeToolbox } from './code-toolbox/WorkspacePythonCodeToolbox'
-import { Workspace } from './Workspace'
+import { Workspace, WorkspaceInstance } from './Workspace'
 import {
   Configuration,
   WorkspaceApi,
   ToolboxApi,
-  CreateWorkspaceTargetEnum,
+  CreateWorkspaceTargetEnum as WorkspaceTargetRegion
 } from '@daytonaio/api-client'
 import { WorkspaceTsCodeToolbox } from './code-toolbox/WorkspaceTsCodeToolbox'
 import axios from 'axios'
@@ -22,13 +22,17 @@ export interface DaytonaConfig {
   /** URL of the Daytona server */
   serverUrl: string
   /** Target environment for workspaces */
-  target: CreateWorkspaceTargetEnum
+  target: WorkspaceTargetRegion
 }
 
-/** 
+/**
  * Supported programming languages for code execution
  */
-export type CodeLanguage = 'python' | 'javascript' | 'typescript'
+export enum CodeLanguage {
+    PYTHON = "python",
+    TYPESCRIPT = "typescript",
+    JAVASCRIPT = "javascript",
+}
 
 /**
  * Resource allocation for a workspace
@@ -57,7 +61,7 @@ export type CreateWorkspaceParams = {
   /** Optional os user to use for the workspace */
   user?: string
   /** Programming language for direct code execution */
-  language?: CodeLanguage
+  language?: CodeLanguage | string
   /** Optional environment variables to set in the workspace */
   envVars?: Record<string, string>
   /** Workspace labels */
@@ -65,7 +69,7 @@ export type CreateWorkspaceParams = {
   /** Is the workspace port preview public */
   public?: boolean
   /** Target location for the workspace */
-  target?: string
+  target?: WorkspaceTargetRegion | string
   /** Resource allocation for the workspace */
   resources?: WorkspaceResources
   /** If true, will not wait for the workspace to be ready before returning */
@@ -83,7 +87,7 @@ export type CreateWorkspaceParams = {
 export class Daytona {
   private readonly workspaceApi: WorkspaceApi
   private readonly toolboxApi: ToolboxApi
-  private readonly target: CreateWorkspaceTargetEnum
+  private readonly target: WorkspaceTargetRegion
 
   private readonly apiKey: string
   private readonly serverUrl: string
@@ -102,7 +106,7 @@ export class Daytona {
     if (!serverUrl) {
       throw new DaytonaError('Server URL is required')
     }
-    const envTarget = process.env.DAYTONA_TARGET as CreateWorkspaceTargetEnum
+    const envTarget = process.env.DAYTONA_TARGET as WorkspaceTargetRegion
     const target = config?.target || envTarget
 
     this.apiKey = apiKey
@@ -150,7 +154,7 @@ export class Daytona {
 
     const workspaceId = params?.id || `sandbox-${uuidv4().slice(0, 8)}`
 
-    const codeToolbox = this.getCodeToolbox(params?.language)
+    const codeToolbox = this.getCodeToolbox(params?.language as CodeLanguage)
 
     const labels = params?.labels || {}
     if (params?.language) {
@@ -176,10 +180,12 @@ export class Daytona {
     })
 
     const workspaceInstance = response.data
+    const workspaceInfo = Workspace.toWorkspaceInfo(workspaceInstance)
+    workspaceInstance.info = workspaceInfo
 
     const workspace = new Workspace(
       workspaceId,
-      workspaceInstance,
+      workspaceInstance as WorkspaceInstance,
       this.workspaceApi,
       this.toolboxApi,
       codeToolbox,
@@ -202,8 +208,10 @@ export class Daytona {
     const workspaceInstance = response.data
     const language = workspaceInstance.labels && workspaceInstance.labels[`code-toolbox-language`]
     const codeToolbox = this.getCodeToolbox(language as CodeLanguage)
+    const workspaceInfo = Workspace.toWorkspaceInfo(workspaceInstance)
+    workspaceInstance.info = workspaceInfo
 
-    return new Workspace(workspaceId, workspaceInstance, this.workspaceApi, this.toolboxApi, codeToolbox)
+    return new Workspace(workspaceId, workspaceInstance as WorkspaceInstance, this.workspaceApi, this.toolboxApi, codeToolbox)
   }
 
   /**
@@ -214,12 +222,12 @@ export class Daytona {
     const response = await this.workspaceApi.listWorkspaces()
     return response.data.map((workspace) => {
       const language = workspace.labels?.[`code-toolbox-language`] as CodeLanguage
-      if (language && !['python', 'javascript', 'typescript'].includes(language)) {
-        throw new DaytonaError(`Invalid code-toolbox-language: ${language}`)
-      }
+      const workspaceInfo = Workspace.toWorkspaceInfo(workspace)
+      workspace.info = workspaceInfo
+
       return new Workspace(
         workspace.id, 
-        workspace, 
+        workspace as WorkspaceInstance, 
         this.workspaceApi, 
         this.toolboxApi, 
         this.getCodeToolbox(language)
@@ -264,14 +272,14 @@ export class Daytona {
 
   private getCodeToolbox(language?: CodeLanguage) {
     switch (language) {
-      case 'javascript':
-      case 'typescript':
+      case CodeLanguage.JAVASCRIPT:
+      case CodeLanguage.TYPESCRIPT:
         return new WorkspaceTsCodeToolbox()
-      case 'python':
+      case CodeLanguage.PYTHON:
       case undefined:
         return new WorkspacePythonCodeToolbox()
       default:
-        throw new DaytonaError(`Unsupported language: ${language}`)
+        throw new DaytonaError(`Unsupported language: ${language}, supported languages: ${Object.values(CodeLanguage).join(', ')}`)
     }
   }
 }

@@ -4,12 +4,11 @@ Daytona SDK for Python
 This module provides the main entry point for interacting with Daytona Server API.
 """
 
+from enum import Enum
 import uuid
-import json
-from typing import Optional, Literal, Dict, Any, List
+from typing import Optional, Dict, List
 from dataclasses import dataclass
 from environs import Env
-import time
 from daytona_api_client import (
     Configuration,
     WorkspaceApi,
@@ -19,21 +18,33 @@ from daytona_api_client import (
     SessionExecuteRequest,
     SessionExecuteResponse
 )
-from daytona_sdk._utils.exceptions import intercept_exceptions
+from daytona_sdk._utils.exceptions import intercept_exceptions, DaytonaException
 from .code_toolbox.workspace_python_code_toolbox import WorkspacePythonCodeToolbox
 from .code_toolbox.workspace_ts_code_toolbox import WorkspaceTsCodeToolbox
-from .workspace import Workspace
-from daytona_sdk._utils.exceptions import DaytonaException
+from ._utils.enum import to_enum
+from .workspace import Workspace, WorkspaceTargetRegion
 
 
-# Type definitions
-CodeLanguage = Literal["python", "javascript", "typescript"]
+@dataclass
+class CodeLanguage(Enum):
+    """Programming languages supported by Daytona"""
+    PYTHON = "python"
+    TYPESCRIPT = "typescript"
+    JAVASCRIPT = "javascript"
+
+    def __str__(self):
+        return self.value
+
+    def __eq__(self, other):
+        if isinstance(other, str):
+            return self.value == other
+        return super().__eq__(other)
 
 
 @dataclass
 class DaytonaConfig:
     """Configuration options for initializing the Daytona client.
-    
+
     Args:
         api_key: API key for authentication with Daytona server
         server_url: URL of the Daytona server
@@ -41,7 +52,8 @@ class DaytonaConfig:
     """
     api_key: str
     server_url: str
-    target: str
+    target: WorkspaceTargetRegion
+
 
 @dataclass
 class WorkspaceResources:
@@ -50,6 +62,7 @@ class WorkspaceResources:
     memory: Optional[int] = None  # in MB
     disk: Optional[int] = None    # in GB
     gpu: Optional[int] = None
+
 
 @dataclass
 class CreateWorkspaceParams:
@@ -62,7 +75,7 @@ class CreateWorkspaceParams:
     env_vars: Optional[Dict[str, str]] = None
     labels: Optional[Dict[str, str]] = None
     public: Optional[bool] = None
-    target: Optional[str] = None
+    target: Optional[WorkspaceTargetRegion] = None
     resources: Optional[WorkspaceResources] = None
     timeout: Optional[float] = None
     auto_stop_interval: Optional[int] = None
@@ -113,11 +126,11 @@ class Daytona:
     @intercept_exceptions(message_prefix="Failed to create workspace: ")
     def create(self, params: Optional[CreateWorkspaceParams] = None) -> Workspace:
         """Creates a new workspace and waits for it to start.
-        
+
         Args:
             params: Optional parameters for workspace creation. If not provided, 
                    defaults to Python language.
-            
+
         Returns:
             The created workspace instance
         """
@@ -144,7 +157,7 @@ class Daytona:
                 env=params.env_vars if params.env_vars else {},
                 labels=params.labels,
                 public=params.public,
-                target=params.target if params.target else self.target,
+                target=str(params.target) if params.target else str(self.target),
                 auto_stop_interval=params.auto_stop_interval
             )
 
@@ -154,7 +167,11 @@ class Daytona:
                 workspace_data.disk = params.resources.disk
                 workspace_data.gpu = params.resources.gpu
 
-            response = self.workspace_api.create_workspace(create_workspace=workspace_data)
+            response = self.workspace_api.create_workspace(
+                create_workspace=workspace_data)
+            workspace_info = Workspace._to_workspace_info(response)
+            response.info = workspace_info
+
             workspace = Workspace(
                 workspace_id,
                 response,
@@ -181,20 +198,26 @@ class Daytona:
 
     def _get_code_toolbox(self, params: Optional[CreateWorkspaceParams] = None):
         """Helper method to get the appropriate code toolbox
-        
+
         Args:
             params: Optional workspace parameters. If not provided, defaults to Python toolbox.
-            
+
         Returns:
             The appropriate code toolbox instance
         """
         if not params:
             return WorkspacePythonCodeToolbox()
 
+        enum_language = to_enum(CodeLanguage, params.language)
+        if enum_language is None:
+            raise ValueError(f"Unsupported language: {params.language}")
+        else:
+            params.language = enum_language
+
         match params.language:
-            case "javascript" | "typescript":
+            case CodeLanguage.JAVASCRIPT | CodeLanguage.TYPESCRIPT:
                 return WorkspaceTsCodeToolbox()
-            case "python":
+            case CodeLanguage.PYTHON:
                 return WorkspacePythonCodeToolbox()
             case _:
                 raise DaytonaException(f"Unsupported language: {params.language}")
@@ -202,7 +225,7 @@ class Daytona:
     @intercept_exceptions(message_prefix="Failed to remove workspace: ")
     def remove(self, workspace: Workspace) -> None:
         """Removes a workspace.
-        
+
         Args:
             workspace: The workspace to remove
         """
@@ -226,7 +249,10 @@ class Daytona:
             raise DaytonaException("workspace_id is required")
 
         # Get the workspace instance
-        workspace_instance = self.workspace_api.get_workspace(workspace_id=workspace_id)
+        workspace_instance = self.workspace_api.get_workspace(
+            workspace_id=workspace_id)
+        workspace_info = Workspace._to_workspace_info(workspace_instance)
+        workspace_instance.info = workspace_info
 
         # Create and return workspace with Python code toolbox as default
         code_toolbox = WorkspacePythonCodeToolbox()
@@ -242,6 +268,11 @@ class Daytona:
     def list(self) -> List[Workspace]:
         """List all workspaces."""
         workspaces = self.workspace_api.list_workspaces()
+
+        for workspace in workspaces:
+            workspace_info = Workspace._to_workspace_info(workspace)
+            workspace.info = workspace_info
+
         return [
             Workspace(
                 workspace.id,
@@ -250,7 +281,8 @@ class Daytona:
                 self.toolbox_api,
                 self._get_code_toolbox(
                     CreateWorkspaceParams(
-                        language=self._validate_language_label(workspace.labels.get("code-toolbox-language"))
+                        language=self._validate_language_label(
+                            workspace.labels.get("code-toolbox-language"))
                     )
                 )
             )
@@ -259,50 +291,52 @@ class Daytona:
 
     def _validate_language_label(self, language: Optional[str]) -> CodeLanguage:
         """Validate the code-toolbox-language label.
-        
+
         Args:
             language: The language label to validate
-            
+
         Returns:
             CodeLanguage: The validated language, defaults to "python" if None
-            
+
         Raises:
             DaytonaException: If the language is not supported
         """
         if not language:
-            return "python"
-        
-        if language not in ["python", "javascript", "typescript"]:
-            raise DaytonaException(f"Invalid code-toolbox-language: {language}")
-            
-        return language  # type: ignore
-    
+            return CodeLanguage.PYTHON
+
+        enum_language = to_enum(CodeLanguage, language)
+        if enum_language is None:
+            raise ValueError(f"Invalid code-toolbox-language: {language}")
+        else:
+            return enum_language
+
     # def resize(self, workspace: Workspace, resources: WorkspaceResources) -> None:
     #     """Resizes a workspace.
-        
+
     #     Args:
     #         workspace: The workspace to resize
     #         resources: The new resources to set
     #     """
     #     self.workspace_api. (workspace_id=workspace.id, resources=resources)
-    
+
     def start(self, workspace: Workspace, timeout: Optional[float] = None) -> None:
         """Starts a workspace and waits for it to be ready.
-        
+
         Args:
             workspace: The workspace to start
         """
         workspace.start(timeout)
         workspace.wait_for_workspace_start()
-    
+
     def stop(self, workspace: Workspace) -> None:
         """Stops a workspace and waits for it to be stopped.
-        
+
         Args:
             workspace: The workspace to stop
         """
         workspace.stop()
         workspace.wait_for_workspace_stop()
+
 
 # Export these at module level
 __all__ = [
