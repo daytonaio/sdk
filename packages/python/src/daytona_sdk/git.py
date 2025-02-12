@@ -9,13 +9,13 @@ from typing import List, Optional, TYPE_CHECKING
 from daytona_api_client import (
     GitStatus,
     ListBranchResponse,
-    Workspace as WorkspaceInstance,
     ToolboxApi,
     GitAddRequest,
     GitCloneRequest,
     GitCommitRequest,
     GitRepoRequest,
 )
+from .protocols import WorkspaceInstance
 
 if TYPE_CHECKING:
     from .workspace import Workspace

@@ -1,10 +1,19 @@
 import { ToolboxApi, WorkspaceApi } from '@daytonaio/api-client'
-import { Workspace as WorkspaceInstance } from '@daytonaio/api-client'
+import { 
+  WorkspaceStateEnum as WorkspaceState,
+  Workspace as ApiWorkspace,
+  WorkspaceInfo as ApiWorkspaceInfo,
+  CreateWorkspaceTargetEnum as WorkspaceTargetRegion,
+  CreateWorkspaceClassEnum as WorkspaceClass
+} from '@daytonaio/api-client'
 import { FileSystem } from './FileSystem'
 import { Git } from './Git'
-//  import { LspLanguageId, LspServer } from './LspServer'
 import { Process } from './Process'
 import { LspLanguageId, LspServer } from './LspServer'
+
+export interface WorkspaceInstance extends Omit<ApiWorkspace, 'info'> {
+  info?: WorkspaceInfo;
+}
 
 /**
  * Resources allocated to a workspace
@@ -25,7 +34,7 @@ export interface WorkspaceResources {
  * Structured information about a workspace
  * @interface WorkspaceInfo
  */
-export interface WorkspaceInfo {
+export interface WorkspaceInfo extends ApiWorkspaceInfo {
   /** Unique identifier */
   id: string;
   /** Workspace name */
@@ -41,19 +50,34 @@ export interface WorkspaceInfo {
   /** Public access flag */
   public: boolean;
   /** Target location */
-  target: string;
+  target: WorkspaceTargetRegion | string;
   /** Resource allocations */
   resources: WorkspaceResources;
   /** Current state */
-  state: string;
+  state: WorkspaceState;
   /** Error reason if any */
   errorReason: string | null;
   /** Snapshot state */
   snapshotState: string | null;
   /** Snapshot state creation timestamp */
   snapshotStateCreatedAt: Date | null;
+  /** Node domain */
+  nodeDomain: string;
+  /** Region */
+  region: WorkspaceTargetRegion;
+  /** Class */
+  class: WorkspaceClass;
+  /** Updated at */
+  updatedAt: string;
+  /** Last snapshot */
+  lastSnapshot: string | null;
+  /** Auto-stop interval in minutes*/
+  autoStopInterval: number;
+  /**
+   * @deprecated Use `state`, `nodeDomain`, `region`, `class`, `updatedAt`, `lastSnapshot`, `resources`, `autoStopInterval` instead.
+   */
+  providerMetadata?: string;
 }
-
 /**
  * Interface defining methods that a code toolbox must implement
  * @interface WorkspaceCodeToolbox
@@ -114,11 +138,11 @@ export class Workspace {
    * @returns {LspServer} A new LSP server instance
    */
   public createLspServer(
-    languageId: LspLanguageId,
+    languageId: LspLanguageId | string,
     pathToProject: string,
   ): LspServer {
     return new LspServer(
-      languageId,
+      languageId as LspLanguageId,
       pathToProject,
       this.toolboxApi,
       this.instance,
@@ -218,15 +242,33 @@ export class Workspace {
   public async info(): Promise<WorkspaceInfo> {
     const response = await this.workspaceApi.getWorkspace(this.id)
     const instance = response.data
+    return Workspace.toWorkspaceInfo(instance)
+  }
+
+  /**
+   * Sets the auto-stop interval for the workspace
+   * @param {number} interval - Number of minutes after which the workspace will automatically stop (must be an integer). Set to 0 to disable auto-stop.
+   * @throws {Error} If interval is negative
+   */
+  public async setAutostopInterval(interval: number): Promise<void> {
+    if (!Number.isInteger(interval) || interval < 0) {
+      throw new Error('autoStopInterval must be a non-negative integer');
+    }
+    
+    await this.workspaceApi.setAutostopInterval(this.id, interval)
+    this.instance.autoStopInterval = interval
+  }
+
+  public static toWorkspaceInfo(instance: ApiWorkspace): WorkspaceInfo {
     const providerMetadata = JSON.parse(instance.info?.providerMetadata || '{}')
+    var resourcesData = providerMetadata.resources || providerMetadata
 
     // Extract resources with defaults
-    const resourcesData = providerMetadata.resources || {}
     const resources: WorkspaceResources = {
       cpu: String(resourcesData.cpu || '1'),
       gpu: resourcesData.gpu ? String(resourcesData.gpu) : null,
-      memory: String(resourcesData.memory || '2Gi'),
-      disk: String(resourcesData.disk || '10Gi')
+      memory: `${resourcesData.memory ?? 2}Gi`,
+      disk: `${resourcesData.disk ?? 10}Gi`
     }
 
     return {
@@ -244,21 +286,15 @@ export class Workspace {
       snapshotState: providerMetadata.snapshotState || null,
       snapshotStateCreatedAt: providerMetadata.snapshotStateCreatedAt 
         ? new Date(providerMetadata.snapshotStateCreatedAt)
-        : null
+        : null,
+      nodeDomain: providerMetadata.nodeDomain || '',
+      region: providerMetadata.region || '',
+      class: providerMetadata.class || '',
+      updatedAt: providerMetadata.updatedAt || '',
+      lastSnapshot: providerMetadata.lastSnapshot || null,
+      autoStopInterval: providerMetadata.autoStopInterval || 0,
+      created: instance.info?.created || '',
+      providerMetadata: instance.info?.providerMetadata,
     }
-  }
-
-  /**
-   * Sets the auto-stop interval for the workspace
-   * @param {number} interval - Number of minutes after which the workspace will automatically stop (must be an integer). Set to 0 to disable auto-stop.
-   * @throws {Error} If interval is negative
-   */
-  public async setAutostopInterval(interval: number): Promise<void> {
-    if (!Number.isInteger(interval) || interval < 0) {
-      throw new Error('autoStopInterval must be a non-negative integer');
-    }
-    
-    await this.workspaceApi.setAutostopInterval(this.id, interval)
-    this.instance.autoStopInterval = interval
   }
 }
