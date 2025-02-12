@@ -7,6 +7,6 @@ export class WorkspaceTsCodeToolbox implements WorkspaceCodeToolbox {
 
   public getRunCommand(code: string): string {
     const base64Code = Buffer.from(code).toString('base64')
-    return `bash -c 'echo ${base64Code} | base64 --decode | npx ts-node --compiler-options "{\\\"module\\\":\\\"CommonJS\\\"}" 2>&1 | grep -vE "npm notice|npm warn exec"'`
+    return `sh -c 'echo ${base64Code} | base64 --decode | npx ts-node --compiler-options "{\\\"module\\\":\\\"CommonJS\\\"}" 2>&1 | grep -vE "npm notice|npm warn exec"'`
   }
 }
