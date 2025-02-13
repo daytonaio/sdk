@@ -5,7 +5,7 @@ This module provides functionality for executing commands and running code
 in the workspace environment.
 """
 
-from typing import Optional, List
+from typing import Optional, List, Dict
 from daytona_api_client import (
     ToolboxApi,
     ExecuteResponse,
@@ -20,10 +20,12 @@ from daytona_api_client import (
 from daytona_sdk._utils.exceptions import intercept_exceptions
 from .code_toolbox.workspace_python_code_toolbox import WorkspacePythonCodeToolbox
 from .protocols import WorkspaceInstance
+from .code_toolbox.common import CodeRunParams
+
 
 class Process:
     """Handles process and code execution within a workspace.
-    
+
     Args:
         code_toolbox: Language-specific code execution toolbox
         toolbox_api: API client for workspace operations
@@ -43,12 +45,12 @@ class Process:
     @intercept_exceptions(message_prefix="Failed to execute command: ")
     def exec(self, command: str, cwd: Optional[str] = None, timeout: Optional[int] = None) -> ExecuteResponse:
         """Executes a shell command in the workspace.
-        
+
         Args:
             command: Command to execute
             cwd: Working directory for command execution (optional)
             timeout: Optional timeout in seconds
-            
+
         Returns:
             Command execution results
         """
@@ -57,28 +59,28 @@ class Process:
             cwd=cwd,
             timeout=timeout
         )
-        
+
         return self.toolbox_api.execute_command(
             workspace_id=self.instance.id,
             execute_request=execute_request
         )
 
-    def code_run(self, code: str) -> ExecuteResponse:
+    def code_run(self, code: str, params: Optional[CodeRunParams] = None, timeout: Optional[int] = None) -> ExecuteResponse:
         """Executes code in the workspace using the appropriate language runtime.
-        
+
         Args:
             code: Code to execute
-            
+
         Returns:
             Code execution results
         """
-        command = self.code_toolbox.get_run_command(code)
-        return self.exec(command)
+        command = self.code_toolbox.get_run_command(code, params)
+        return self.exec(command, timeout=timeout)
 
     @intercept_exceptions(message_prefix="Failed to create session: ")
     def create_session(self, session_id: str) -> None:
         """Creates a new exec session in the workspace.
-        
+
         Args:
             session_id: Unique identifier for the session
         """
@@ -91,10 +93,10 @@ class Process:
     @intercept_exceptions(message_prefix="Failed to get session: ")
     def get_session(self, session_id: str) -> Session:
         """Gets a session in the workspace.
-        
+
         Args:
             session_id: Unique identifier for the session
-            
+
         Returns:
             Session
         """
@@ -106,11 +108,11 @@ class Process:
     @intercept_exceptions(message_prefix="Failed to get session command: ")
     def get_session_command(self, session_id: str, command_id: str) -> Command:
         """Gets a command in the session.
-        
+
         Args:
             session_id: Unique identifier for the session
             command_id: Unique identifier for the command
-            
+
         Returns:
             Command
         """
@@ -121,30 +123,31 @@ class Process:
         )
 
     @intercept_exceptions(message_prefix="Failed to execute session command: ")
-    def execute_session_command(self, session_id: str, req: SessionExecuteRequest) -> SessionExecuteResponse:
+    def execute_session_command(self, session_id: str, req: SessionExecuteRequest, timeout: Optional[int] = None) -> SessionExecuteResponse:
         """Executes a command in the session.
-        
+
         Args:
             session_id: Unique identifier for the session
             req: Command to execute and async flag
-            
+
         Returns:
             Command execution results
         """
         return self.toolbox_api.execute_session_command(
             workspace_id=self.instance.id,
             session_id=session_id,
-            session_execute_request=req
+            session_execute_request=req,
+            _request_timeout=timeout
         )
 
     @intercept_exceptions(message_prefix="Failed to get session command logs: ")
     def get_session_command_logs(self, session_id: str, command_id: str) -> str:
         """Gets the logs for a command in the session.
-        
+
         Args:
             session_id: Unique identifier for the session
             command_id: Unique identifier for the command
-            
+
         Returns:
             Command logs
         """
@@ -157,7 +160,7 @@ class Process:
     @intercept_exceptions(message_prefix="Failed to list sessions: ")
     def list_sessions(self) -> List[Session]:
         """Lists all sessions in the workspace.
-        
+
         Returns:
             List of sessions
         """
@@ -168,7 +171,7 @@ class Process:
     @intercept_exceptions(message_prefix="Failed to delete session: ")
     def delete_session(self, session_id: str) -> None:
         """Deletes a session in the workspace.
-        
+
         Args:
             session_id: Unique identifier for the session
         """
@@ -176,5 +179,3 @@ class Process:
             workspace_id=self.instance.id,
             session_id=session_id
         )
-
-    

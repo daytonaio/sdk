@@ -6,7 +6,8 @@ This module provides the main entry point for interacting with Daytona Server AP
 
 from enum import Enum
 import uuid
-from typing import Optional, Dict, List
+from typing import Optional, Literal, Dict, List, Annotated
+from pydantic import BaseModel, Field
 from dataclasses import dataclass
 from environs import Env
 from daytona_api_client import (
@@ -23,6 +24,7 @@ from .code_toolbox.workspace_python_code_toolbox import WorkspacePythonCodeToolb
 from .code_toolbox.workspace_ts_code_toolbox import WorkspaceTsCodeToolbox
 from ._utils.enum import to_enum
 from .workspace import Workspace, WorkspaceTargetRegion
+from ._utils.timeout import with_timeout
 
 
 @dataclass
@@ -55,6 +57,7 @@ class DaytonaConfig:
     target: WorkspaceTargetRegion
 
 
+
 @dataclass
 class WorkspaceResources:
     """Resources configuration for workspace"""
@@ -64,8 +67,7 @@ class WorkspaceResources:
     gpu: Optional[int] = None
 
 
-@dataclass
-class CreateWorkspaceParams:
+class CreateWorkspaceParams(BaseModel):
     """Parameters for creating a new workspace."""
     language: CodeLanguage
     id: Optional[str] = None
@@ -77,7 +79,8 @@ class CreateWorkspaceParams:
     public: Optional[bool] = None
     target: Optional[WorkspaceTargetRegion] = None
     resources: Optional[WorkspaceResources] = None
-    timeout: Optional[float] = None
+    timeout: Annotated[Optional[float], Field(
+        default=None, deprecated='The `timeout` field is deprecated and will be removed in future versions. Use `timeout` argument in method calls instead.')]
     auto_stop_interval: Optional[int] = None
 
 
@@ -124,77 +127,106 @@ class Daytona:
         self.toolbox_api = ToolboxApi(api_client)
 
     @intercept_exceptions(message_prefix="Failed to create workspace: ")
-    def create(self, params: Optional[CreateWorkspaceParams] = None) -> Workspace:
+    def create(self, params: Optional[CreateWorkspaceParams] = None, timeout: Optional[float] = 60) -> Workspace:
         """Creates a new workspace and waits for it to start.
 
         Args:
             params: Optional parameters for workspace creation. If not provided, 
                    defaults to Python language.
+            timeout: Optional timeout (in seconds) for workspace creation. 0 means no timeout. Default is 60 seconds.
 
         Returns:
             The created workspace instance
+
+        Raises:
+            ValueError: If timeout is negative
+            Exception: If workspace fails to start
+            TimeoutError: If workspace fails to start within the timeout period
         """
         # If no params provided, create default params for Python
         if params is None:
             params = CreateWorkspaceParams(language="python")
 
-        workspace_id = params.id if params.id else f"sandbox-{str(uuid.uuid4())[:8]}"
-        code_toolbox = self._get_code_toolbox(params)
+        params.id = params.id if params.id else f"sandbox-{str(uuid.uuid4())[:8]}"
+
+        effective_timeout = params.timeout if params.timeout else timeout
 
         try:
-            if params.timeout and params.timeout < 0:
-                raise DaytonaException("Timeout must be a non-negative number")
-            
-            if params.auto_stop_interval is not None and params.auto_stop_interval < 0:
-                raise DaytonaException("auto_stop_interval must be a non-negative integer")
-
-            # Create workspace using dictionary
-            workspace_data = CreateWorkspace(
-                id=workspace_id,
-                name=params.name if params.name else workspace_id,
-                image=params.image,
-                user=params.os_user if params.os_user else "daytona",
-                env=params.env_vars if params.env_vars else {},
-                labels=params.labels,
-                public=params.public,
-                target=str(params.target) if params.target else str(self.target),
-                auto_stop_interval=params.auto_stop_interval
-            )
-
-            if params.resources:
-                workspace_data.cpu = params.resources.cpu
-                workspace_data.memory = params.resources.memory
-                workspace_data.disk = params.resources.disk
-                workspace_data.gpu = params.resources.gpu
-
-            response = self.workspace_api.create_workspace(
-                create_workspace=workspace_data)
-            workspace_info = Workspace._to_workspace_info(response)
-            response.info = workspace_info
-
-            workspace = Workspace(
-                workspace_id,
-                response,
-                self.workspace_api,
-                self.toolbox_api,
-                code_toolbox
-            )
-
-            # Wait for workspace to start
-            try:
-                workspace.wait_for_workspace_start(params.timeout)
-            finally:
-                # If not Daytona SaaS, we don't need to handle pulling image state
-                pass
-
-            return workspace
-
+            return self._create(params, effective_timeout)
         except Exception as e:
             try:
-                self.workspace_api.delete_workspace(workspace_id=workspace_id, force=True)
-            except:
+                self.workspace_api.delete_workspace(
+                    workspace_id=params.id, force=True)
+            except Exception:
                 pass
             raise e
+
+    @with_timeout(error_message=lambda self, timeout: f"Failed to create and start workspace within {timeout} seconds.")
+    def _create(self, params: Optional[CreateWorkspaceParams] = None, timeout: Optional[float] = 60) -> Workspace:
+        """Creates a new workspace and waits for it to start.
+
+        Args:
+            params: Optional parameters for workspace creation. If not provided, 
+                   defaults to Python language.
+            timeout: Optional timeout (in seconds) for workspace creation. To disable timeout, set to None or 0. Default is 60 seconds.
+
+        Returns:
+            The created workspace instance
+
+        Raises:
+            ValueError: If timeout is negative
+            Exception: If workspace fails to start
+            TimeoutError: If workspace fails to start within the timeout period
+        """
+        code_toolbox = self._get_code_toolbox(params)
+
+        if timeout < 0:
+            raise DaytonaException("Timeout must be a non-negative number")
+
+        if params.auto_stop_interval is not None and params.auto_stop_interval < 0:
+            raise DaytonaException(
+                "auto_stop_interval must be a non-negative integer")
+
+        # Create workspace using dictionary
+        workspace_data = CreateWorkspace(
+            id=params.id,
+            name=params.name if params.name else params.id,
+            image=params.image,
+            user=params.os_user if params.os_user else "daytona",
+            env=params.env_vars if params.env_vars else {},
+            labels=params.labels,
+            public=params.public,
+            target=params.target if params.target else self.target,
+            auto_stop_interval=params.auto_stop_interval
+        )
+
+        if params.resources:
+            workspace_data.cpu = params.resources.cpu
+            workspace_data.memory = params.resources.memory
+            workspace_data.disk = params.resources.disk
+            workspace_data.gpu = params.resources.gpu
+
+        response = self.workspace_api.create_workspace(
+            create_workspace=workspace_data, _request_timeout=timeout)
+        workspace_info = Workspace._to_workspace_info(response)
+        response.info = workspace_info
+
+        workspace = Workspace(
+            params.id,
+            response,
+            self.workspace_api,
+            self.toolbox_api,
+            code_toolbox
+        )
+
+        # Wait for workspace to start
+        try:
+            workspace.wait_for_workspace_start()
+        finally:
+            # If not Daytona SaaS, we don't need to handle pulling image state
+            pass
+
+        return workspace
 
     def _get_code_toolbox(self, params: Optional[CreateWorkspaceParams] = None):
         """Helper method to get the appropriate code toolbox
@@ -223,13 +255,17 @@ class Daytona:
                 raise DaytonaException(f"Unsupported language: {params.language}")
     
     @intercept_exceptions(message_prefix="Failed to remove workspace: ")
-    def remove(self, workspace: Workspace) -> None:
+    def remove(self, workspace: Workspace, timeout: Optional[float] = 60) -> None:
         """Removes a workspace.
 
         Args:
             workspace: The workspace to remove
+            timeout: Optional timeout (in seconds) for workspace removal. To disable timeout, set to None or 0. Default is 60 seconds.
+
+        Raises:
+            Exception: If workspace fails to remove
         """
-        return self.workspace_api.delete_workspace(workspace_id=workspace.id, force=True)
+        return self.workspace_api.delete_workspace(workspace_id=workspace.id, force=True, _request_timeout=timeout)
 
     @intercept_exceptions(message_prefix="Failed to get workspace: ")
     def get_current_workspace(self, workspace_id: str) -> Workspace:
@@ -306,7 +342,7 @@ class Daytona:
 
         enum_language = to_enum(CodeLanguage, language)
         if enum_language is None:
-            raise ValueError(f"Invalid code-toolbox-language: {language}")
+            raise DaytonaException(f"Invalid code-toolbox-language: {language}")
         else:
             return enum_language
 
@@ -319,23 +355,33 @@ class Daytona:
     #     """
     #     self.workspace_api. (workspace_id=workspace.id, resources=resources)
 
-    def start(self, workspace: Workspace, timeout: Optional[float] = None) -> None:
+    def start(self, workspace: Workspace, timeout: Optional[float] = 60) -> None:
         """Starts a workspace and waits for it to be ready.
 
         Args:
             workspace: The workspace to start
+            timeout: Optional timeout (in seconds) for workspace creation. To disable timeout, set to None or 0. Default is 60 seconds.
+
+        Raises:
+            ValueError: If timeout is negative
+            Exception: If workspace fails to start
+            TimeoutError: If workspace fails to start within the timeout period
         """
         workspace.start(timeout)
-        workspace.wait_for_workspace_start()
 
-    def stop(self, workspace: Workspace) -> None:
+    def stop(self, workspace: Workspace, timeout: Optional[float] = 60) -> None:
         """Stops a workspace and waits for it to be stopped.
 
         Args:
             workspace: The workspace to stop
+            timeout: Optional timeout (in seconds) for workspace stop. To disable timeout, set to None or 0. Default is 60 seconds.
+
+        Raises:
+            ValueError: If timeout is negative
+            Exception: If workspace fails to stop
+            TimeoutError: If workspace fails to stop within the timeout period
         """
-        workspace.stop()
-        workspace.wait_for_workspace_stop()
+        workspace.stop(timeout)
 
 
 # Export these at module level

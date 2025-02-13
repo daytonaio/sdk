@@ -22,6 +22,7 @@ from enum import Enum
 from pydantic import Field
 from typing_extensions import Annotated
 from ._utils.enum import to_enum
+from ._utils.timeout import with_timeout
 
 
 @dataclass
@@ -101,6 +102,7 @@ class WorkspaceInfo(ApiWorkspaceInfo):
 class WorkspaceInstance(ApiWorkspace):
     """Represents a Daytona workspace instance."""
     info: Optional[WorkspaceInfo]
+
 
 
 class Workspace:
@@ -198,91 +200,84 @@ class Workspace:
         return self.workspace_api.replace_labels(self.id, labels_payload)
 
     @intercept_exceptions(message_prefix="Failed to start workspace: ")
-    def start(self, timeout: Optional[float] = None):
+    @with_timeout(error_message=lambda self, timeout: f"Workspace {self.id} failed to start within the {timeout} seconds timeout period")
+    def start(self, timeout: Optional[float] = 60):
         """Starts the workspace.
 
         Args:
-            timeout: Maximum time to wait in seconds. 0 means no timeout.
+            timeout: Maximum time to wait in seconds. 0 means no timeout. Default is 60 seconds.
 
         Raises:
             DaytonaException: If timeout is negative; If workspace fails to start or times out
         """
-        self.workspace_api.start_workspace(self.id)
-        self.wait_for_workspace_start(timeout)
+        self.workspace_api.start_workspace(self.id, _request_timeout=timeout)
+        self.wait_for_workspace_start()
 
     @intercept_exceptions(message_prefix="Failed to stop workspace: ")
-    def stop(self):
-        """Stops the workspace."""
-        self.workspace_api.stop_workspace(self.id)
+    @with_timeout(error_message=lambda self, timeout: f"Workspace {self.id} failed to stop within the {timeout} seconds timeout period")
+    def stop(self, timeout: Optional[float] = 60):
+        """Stops the workspace.
+
+        Args:
+            timeout: Maximum time to wait in seconds. 0 means no timeout. Default is 60 seconds.
+
+        Raises:
+            DaytonaException: If timeout is negative; If workspace fails to stop or times out
+        """
+        self.workspace_api.stop_workspace(self.id, _request_timeout=timeout)
         self.wait_for_workspace_stop()
 
     @intercept_exceptions(message_prefix="Failure during waiting for workspace to start: ")
-    def wait_for_workspace_start(self, timeout: float = 60) -> None:
+    @with_timeout(error_message=lambda self, timeout: f"Workspace {self.id} failed to become ready within the {timeout} seconds timeout period")
+    def wait_for_workspace_start(self, timeout: Optional[float] = 60) -> None:
         """Wait for workspace to reach 'started' state.
 
         Args:
-            timeout: Maximum time to wait in seconds. 0 means no timeout.
+            timeout: Maximum time to wait in seconds. 0 means no timeout. Default is 60 seconds.
 
         Raises:
             DaytonaException: If timeout is negative; If workspace fails to start or times out
         """
-        timeout = 60 if timeout is None else timeout
-        if timeout < 0:
-            raise DaytonaException("Timeout must be a non-negative number")
-
-        check_interval = 0.1  # Wait 100ms between checks
-        start_time = time.time()
-
-        while timeout == 0 or (time.time() - start_time) < timeout:
+        state = None
+        while state != "started":
             response = self.workspace_api.get_workspace(self.id)
             provider_metadata = json.loads(response.info.provider_metadata)
             state = provider_metadata.get('state', '')
-
-            if state == "started":
-                return
 
             if state == "error":
                 raise DaytonaException(
                     f"Workspace {self.id} failed to start with state: {state}")
 
-            time.sleep(check_interval)
-
-        raise DaytonaException(
-            "Workspace {self.id} failed to become ready within the timeout period")
+            time.sleep(0.1)  # Wait 100ms between checks
 
     @intercept_exceptions(message_prefix="Failure during waiting for workspace to stop: ")
-    def wait_for_workspace_stop(self) -> None:
+    @with_timeout(error_message=lambda self, timeout: f"Workspace {self.id} failed to become stopped within the {timeout} seconds timeout period")
+    def wait_for_workspace_stop(self, timeout: Optional[float] = 60) -> None:
         """Wait for workspace to reach 'stopped' state.
 
-        Raises:
-            Exception: If workspace fails to stop or times out
-        """
-        max_attempts = 600
-        attempts = 0
+        Args:
+            timeout: Maximum time to wait in seconds. 0 means no timeout. Default is 60 seconds.
 
-        while attempts < max_attempts:
+        Raises:
+            DaytonaException: If timeout is negative; If workspace fails to stop or times out
+        """
+        state = None
+        while state != "stopped":
             try:
                 workspace_check = self.workspace_api.get_workspace(self.id)
                 provider_metadata = json.loads(
                     workspace_check.info.provider_metadata)
                 state = provider_metadata.get('state')
 
-                if state == "stopped":
-                    return
-
                 if state == "error":
-                    raise Exception(
+                    raise DaytonaException(
                         f"Workspace {self.id} failed to stop with status: {state}")
             except Exception as e:
-                print(f"Exception: {e}")
                 # If there's a validation error, continue waiting
                 if "validation error" not in str(e):
                     raise e
 
-            time.sleep(0.1)
-            attempts += 1
-            
-        raise DaytonaException(f"Workspace {self.id} failed to become stopped within the timeout period")
+            time.sleep(0.1)  # Wait 100ms between checks
 
     @intercept_exceptions(message_prefix="Failed to set auto-stop interval: ")
     def set_autostop_interval(self, interval: int) -> None:

@@ -11,6 +11,7 @@ from .daytona import (
 )
 from .lsp_server import LspLanguageId
 from .workspace import WorkspaceState
+from .code_toolbox.common import CodeRunParams
 
 __all__ = [
     "Daytona",
@@ -20,8 +21,9 @@ __all__ = [
     "Workspace",
     "SessionExecuteRequest",
     "SessionExecuteResponse",
-    "DaytonaException"
+    "DaytonaException",
     "LspLanguageId",
     "WorkspaceTargetRegion",
-    "WorkspaceState"
+    "WorkspaceState",
+    "CodeRunParams"
 ]

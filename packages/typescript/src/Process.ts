@@ -8,6 +8,22 @@ import {
   Workspace,
 } from '@daytonaio/api-client'
 import { WorkspaceCodeToolbox, WorkspaceInstance } from './Workspace'
+import { RawAxiosRequestConfig } from 'axios'
+
+/**
+ * Parameters for code execution
+ */
+export class CodeRunParams {
+  /**
+   * Command line arguments
+   */
+  argv?: string[]
+  /**
+   * Environment variables
+   */
+  env?: Record<string, string>
+}
+
 
 /**
  * Handles process and code execution within a workspace
@@ -42,16 +58,15 @@ export class Process {
   /**
    * Executes code in the workspace using the appropriate language runtime
    * @param {string} code - Code to execute
+   * @param {CodeRunParams} params - Parameters for code execution
    * @returns {Promise<ExecuteResponse>} Code execution results
    */
-  public async codeRun(code: string): Promise<ExecuteResponse> {
-    const runCommand = this.codeToolbox.getRunCommand(code)
+  public async codeRun(code: string, params?: CodeRunParams, timeout?: number): Promise<ExecuteResponse> {
+    const runCommand = this.codeToolbox.getRunCommand(code, params)
 
-    const response = await this.toolboxApi.executeCommand(this.instance.id, {
-      command: runCommand,
-    })
+    const response = await this.executeCommand(runCommand, undefined, timeout)
 
-    return response.data
+    return response
   }
 
   /**
@@ -69,10 +84,16 @@ export class Process {
    * Executes a command in the session
    * @param {string} sessionId - Unique identifier for the session
    * @param {SessionExecuteRequest} req - Command to execute and async flag
+   * @param {number} timeout - Timeout in seconds
    * @returns {Promise<SessionExecuteResponse>} Command execution results
    */
-  public async executeSessionCommand(sessionId: string, req: SessionExecuteRequest): Promise<SessionExecuteResponse> {
-    const response = await this.toolboxApi.executeSessionCommand(this.instance.id, sessionId, req)
+  public async executeSessionCommand(sessionId: string, req: SessionExecuteRequest, timeout?: number): Promise<SessionExecuteResponse> {
+    let options: RawAxiosRequestConfig = {}
+    if (timeout) {
+      options = { timeout: timeout * 1000 }
+    }
+
+    const response = await this.toolboxApi.executeSessionCommand(this.instance.id, sessionId, req, options)
     return response.data
   }
 
