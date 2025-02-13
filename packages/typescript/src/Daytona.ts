@@ -9,7 +9,8 @@ import {
   CreateWorkspaceTargetEnum,
 } from '@daytonaio/api-client'
 import { WorkspaceTsCodeToolbox } from './code-toolbox/WorkspaceTsCodeToolbox'
-
+import { AxiosError } from 'axios'
+import { TimeoutError } from './utils/errors'
 /**
  * Configuration options for initializing the Daytona client
  * @interface DaytonaConfig
@@ -68,7 +69,10 @@ export type CreateWorkspaceParams = {
   resources?: WorkspaceResources
   /** If true, will not wait for the workspace to be ready before returning */
   async?: boolean
-  /** Timeout in seconds, for the workspace to be ready (0 means no timeout) */
+  /**
+   * Timeout in seconds, for the workspace to be ready (0 means no timeout)
+   * @deprecated Use methods with `timeout` parameter instead
+   */
   timeout?: number
   /** Auto-stop interval in minutes (0 means disabled) (must be a non-negative integer) */
   autoStopInterval?: number
@@ -123,55 +127,75 @@ export class Daytona {
   /**
    * Creates a new workspace
    * @param {CreateWorkspaceParams} [params] - Parameters for workspace creation
+   * @param {number} [timeout] - Timeout in seconds (0 means no timeout, default is 60)
    * @returns {Promise<Workspace>} The created workspace instance
    */
-  public async create(params?: CreateWorkspaceParams): Promise<Workspace> {
-    if (params?.autoStopInterval !== undefined && (!Number.isInteger(params.autoStopInterval) || params.autoStopInterval < 0)) {
+  public async create(params: CreateWorkspaceParams, timeout: number = 60): Promise<Workspace> {
+    const startTime = Date.now();
+
+    if (timeout < 0) {
+      throw new Error('Timeout must be a non-negative number');
+    }
+
+    if (params == null) {
+      params = { language: 'python' }
+    }
+
+    params.id = params.id || `sandbox-${uuidv4().slice(0, 8)}`
+
+    // remove this when params.timeout is removed
+    const effectiveTimeout = params.timeout || timeout
+
+    if (params.autoStopInterval !== undefined && (!Number.isInteger(params.autoStopInterval) || params.autoStopInterval < 0)) {
       throw new Error('autoStopInterval must be a non-negative integer');
     }
 
-    const workspaceId = params?.id || `sandbox-${uuidv4().slice(0, 8)}`
-
     const codeToolbox = this.getCodeToolbox(params?.language)
 
-    const labels = params?.labels || {}
-    if (params?.language) {
-      labels[`code-toolbox-language`] = params.language
+    try {
+      const response = await this.workspaceApi.createWorkspace({
+          id: params.id,
+          name: params.id,
+          image: params.image,
+          user: params.user,
+          env: params.envVars || {},
+          labels: params.labels,
+          public: params.public,
+          target: this.target,
+          cpu: params.resources?.cpu,
+          gpu: params.resources?.gpu,
+          memory: params.resources?.memory,
+          disk: params.resources?.disk,
+          autoStopInterval: params.autoStopInterval,
+        },
+        {
+          timeout: effectiveTimeout * 1000
+        })
+
+      const workspaceInstance = response.data
+
+      const workspace = new Workspace(
+        params.id!,
+        workspaceInstance,
+        this.workspaceApi,
+        this.toolboxApi,
+        codeToolbox,
+      )
+
+      if (!params.async) {
+        const timeElapsed = Date.now() - startTime;
+        await workspace.waitUntilStarted(effectiveTimeout - (timeElapsed / 1000));
+      }
+
+      return workspace
+    } catch (error) {
+      void this.workspaceApi.deleteWorkspace(params.id!, true).catch(() => {});
+      if (error instanceof AxiosError && error.message.includes('timeout of') || error instanceof TimeoutError) {
+        throw new TimeoutError(`Failed to create and start workspace within ${effectiveTimeout} seconds.`)
+      } else {
+        throw error
+      }
     }
-
-    if (params?.timeout && params.timeout < 0) {
-      throw new Error('Timeout must be a non-negative number')
-    }
-
-    const response = await this.workspaceApi.createWorkspace({
-        id: workspaceId,
-        name: workspaceId, //  todo: remove this after project refactor
-        image: params?.image,
-        user: params?.user,
-        env: params?.envVars || {},
-        target: this.target,
-        cpu: params?.resources?.cpu,
-        gpu: params?.resources?.gpu,
-        memory: params?.resources?.memory,
-        disk: params?.resources?.disk,
-        autoStopInterval: params?.autoStopInterval,
-    })
-
-    const workspaceInstance = response.data
-
-    const workspace = new Workspace(
-      workspaceId,
-      workspaceInstance,
-      this.workspaceApi,
-      this.toolboxApi,
-      codeToolbox,
-    )
-
-    if (!params?.async) {
-      await workspace.waitUntilStarted(params?.timeout)
-    }
-
-    return workspace
   }
 
   /**
@@ -229,10 +253,11 @@ export class Daytona {
   /**
    * Removes a workspace
    * @param {Workspace} workspace - The workspace to remove
+   * @param {number} timeout - Timeout in seconds (0 means no timeout, default is 60)
    * @returns {Promise<void>}
    */
-  public async remove(workspace: Workspace) {
-    await this.workspaceApi.deleteWorkspace(workspace.id, true)
+  public async remove(workspace: Workspace, timeout: number = 60) {
+    await this.workspaceApi.deleteWorkspace(workspace.id, true, { timeout: timeout * 1000 })
   }
 
   /**
