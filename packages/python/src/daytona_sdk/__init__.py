@@ -7,6 +7,7 @@ from .daytona import (
     SessionExecuteRequest,
     SessionExecuteResponse,
 )
+from .process import CodeRunParams
 
 __all__ = [
     "Daytona",
@@ -15,5 +16,6 @@ __all__ = [
     "CodeLanguage",
     "Workspace",
     "SessionExecuteRequest",
-    "SessionExecuteResponse"
+    "SessionExecuteResponse",
+    "CodeRunParams"
 ]

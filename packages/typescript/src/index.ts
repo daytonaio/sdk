@@ -5,6 +5,7 @@ export type { WorkspaceCodeToolbox } from './Workspace'
 export { FileSystem } from './FileSystem'
 export { Git } from './Git'
 export { Process } from './Process'
+export type { TimeoutError } from './utils/errors'
 // export { LspServer } from './LspServer'
 // export type { LspLanguageId, Position } from './LspServer'
 

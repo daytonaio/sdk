@@ -3,8 +3,9 @@ import { Workspace as WorkspaceInstance } from '@daytonaio/api-client'
 import { FileSystem } from './FileSystem'
 import { Git } from './Git'
 //  import { LspLanguageId, LspServer } from './LspServer'
-import { Process } from './Process'
+import { CodeRunParams, Process } from './Process'
 import { LspLanguageId, LspServer } from './LspServer'
+import { TimeoutError } from './utils/errors'
 
 /**
  * Resources allocated to a workspace
@@ -60,7 +61,7 @@ export interface WorkspaceInfo {
  */
 export interface WorkspaceCodeToolbox {
   /** Generates a command to run the provided code */
-  getRunCommand(code: string): string
+  getRunCommand(code: string, params?: CodeRunParams): string
 }
 
 /**
@@ -135,23 +136,32 @@ export class Workspace {
   
   /**
    * Starts the workspace
+   * @param {number} timeout - Timeout in seconds (0 means no timeout, default is 60)
    * @returns {Promise<void>}
    */
-  public async start(timeout?: number): Promise<void> {
-    if (timeout != undefined && timeout < 0) {
+  public async start(timeout: number = 60): Promise<void> {
+    if (timeout < 0) {
       throw new Error('Timeout must be a non-negative number');
     }
-    await this.workspaceApi.startWorkspace(this.instance.id)
-    await this.waitUntilStarted(timeout)
+    const startTime = Date.now();
+    await this.workspaceApi.startWorkspace(this.instance.id, { timeout: timeout * 1000 })
+    const timeElapsed = Date.now() - startTime;
+    await this.waitUntilStarted(timeout - (timeElapsed / 1000))
   }
 
   /**
    * Stops the workspace
+   * @param {number} timeout - Timeout in seconds (0 means no timeout, default is 60)
    * @returns {Promise<void>}
    */
-  public async stop(): Promise<void> {
-    await this.workspaceApi.stopWorkspace(this.instance.id)
-    await this.waitUntilStopped()
+  public async stop(timeout: number = 60): Promise<void> {
+    if (timeout < 0) {
+      throw new Error('Timeout must be a non-negative number');
+    }
+    const startTime = Date.now();
+    await this.workspaceApi.stopWorkspace(this.instance.id, { timeout: timeout * 1000 })
+    const timeElapsed = Date.now() - startTime;
+    await this.waitUntilStopped(timeout - (timeElapsed / 1000))
   }
 
   /**
@@ -162,6 +172,13 @@ export class Workspace {
     await this.workspaceApi.deleteWorkspace(this.instance.id, true)
   }
 
+  /**
+   * Waits until the workspace is started
+   * @param {number} timeout - Timeout in seconds (0 means no timeout, default is 60)
+   * @returns {Promise<void>}
+   * @throws {Error} If the workspace is in an error state
+   * @throws {TimeoutError} If the workspace fails to start within the timeout period
+   */
   public async waitUntilStarted(timeout: number = 60) {
     if (timeout < 0) {
       throw new Error('Timeout must be a non-negative number');
@@ -185,14 +202,25 @@ export class Workspace {
       await new Promise(resolve => setTimeout(resolve, checkInterval));
     }
 
-    throw new Error('Workspace failed to become ready within the timeout period');
+    throw new TimeoutError(`Workspace failed to become ready within the timeout period`);
   }
 
-  public async waitUntilStopped() {
-    const maxAttempts = 600;
-    let attempts = 0;
+  /**
+   * Waits until the workspace is stopped
+   * @param {number} timeout - Timeout in seconds (0 means no timeout, default is 60)
+   * @returns {Promise<void>}
+   * @throws {Error} If the workspace fails to stop within the timeout period
+   * @throws {TimeoutError} If the workspace fails to stop within the timeout period
+   */
+  public async waitUntilStopped(timeout: number = 60) {
+    if (timeout < 0) {
+      throw new Error('Timeout must be a non-negative number');
+    }
 
-    while (attempts < maxAttempts) {
+    const checkInterval = 100; // Wait 100 ms between checks
+    const startTime = Date.now();
+
+    while (timeout === 0 || (Date.now() - startTime) < (timeout * 1000)) {
       const response = await this.workspaceApi.getWorkspace(this.id);
       const state = response.data.state;
 
@@ -204,11 +232,10 @@ export class Workspace {
         throw new Error(`Workspace failed to stop with status: ${state}`);
       }
 
-      await new Promise(resolve => setTimeout(resolve, 100)); // Wait 100 ms between checks
-      attempts++;
+      await new Promise(resolve => setTimeout(resolve, checkInterval));
     }
 
-    throw new Error('Workspace failed to become stopped within the timeout period');
+    throw new TimeoutError(`Workspace failed to become stopped within the timeout period`);
   }
 
   /**

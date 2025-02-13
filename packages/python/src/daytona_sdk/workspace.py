@@ -16,6 +16,8 @@ from daytona_api_client import Workspace as WorkspaceInstance, ToolboxApi, Works
 from .protocols import WorkspaceCodeToolbox
 from dataclasses import dataclass
 from datetime import datetime
+from ._utils.timeout import with_timeout
+
 
 @dataclass
 class WorkspaceResources:
@@ -24,6 +26,7 @@ class WorkspaceResources:
     gpu: Optional[str]
     memory: str
     disk: str
+
 
 @dataclass
 class WorkspaceInfo:
@@ -42,19 +45,20 @@ class WorkspaceInfo:
     snapshot_state: Optional[str]
     snapshot_state_created_at: Optional[datetime]
 
+
 class Workspace:
     """Represents a Daytona workspace instance.
-    
+
     A workspace provides file system operations, Git operations, process execution,
     and LSP functionality.
-    
+
     Args:
         id: Unique identifier for the workspace
         instance: The underlying workspace instance
         workspace_api: API client for workspace operations
         toolbox_api: API client for workspace operations
         code_toolbox: Language-specific toolbox implementation
-        
+
     Attributes:
         fs: File system operations interface for managing files and directories
         git: Git operations interface for version control functionality
@@ -76,28 +80,35 @@ class Workspace:
         self.code_toolbox = code_toolbox
 
         # Initialize components
-        self.fs = FileSystem(instance, self.toolbox_api)  # File system operations
+        # File system operations
+        self.fs = FileSystem(instance, self.toolbox_api)
         self.git = Git(self, self.toolbox_api, instance)  # Git operations
-        self.process = Process(self.code_toolbox, self.toolbox_api, instance)  # Process execution
+        self.process = Process(
+            self.code_toolbox, self.toolbox_api, instance)  # Process execution
 
     def info(self) -> WorkspaceInfo:
         """Get structured information about the workspace.
-        
+
         Returns:
             WorkspaceInfo: Structured workspace information
         """
-        instance = self.instance
+        instance = self.workspace_api.get_workspace(self.id)
+        self.instance = instance
         provider_metadata = json.loads(instance.info.provider_metadata)
-        
+
         # Extract resources from the correct location in provider_metadata
         # Resources might be directly in provider_metadata or in a nested structure
         resources_data = provider_metadata.get('resources', {})
         if isinstance(resources_data, dict):
             resources = WorkspaceResources(
-                cpu=str(resources_data.get('cpu', '1')),  # Default to '1' if not specified
-                gpu=str(resources_data.get('gpu')) if resources_data.get('gpu') else None,
-                memory=str(resources_data.get('memory', '2Gi')),  # Default to '2Gi' if not specified
-                disk=str(resources_data.get('disk', '10Gi'))  # Default to '10Gi' if not specified
+                # Default to '1' if not specified
+                cpu=str(resources_data.get('cpu', '1')),
+                gpu=str(resources_data.get('gpu')
+                        ) if resources_data.get('gpu') else None,
+                # Default to '2Gi' if not specified
+                memory=str(resources_data.get('memory', '2')) + 'Gi',
+                # Default to '10Gi' if not specified
+                disk=str(resources_data.get('disk', '10')) + 'Gi'
             )
         else:
             # Fallback to default values if resources structure is unexpected
@@ -121,12 +132,13 @@ class Workspace:
             state=provider_metadata.get('state', ''),
             error_reason=provider_metadata.get('error_reason'),
             snapshot_state=provider_metadata.get('snapshot_state'),
-            snapshot_state_created_at=datetime.fromisoformat(provider_metadata.get('snapshot_state_created_at')) if provider_metadata.get('snapshot_state_created_at') else None
+            snapshot_state_created_at=datetime.fromisoformat(provider_metadata.get(
+                'snapshot_state_created_at')) if provider_metadata.get('snapshot_state_created_at') else None
         )
 
     def get_workspace_root_dir(self) -> str:
         """Gets the root directory path of the workspace.
-        
+
         Returns:
             The absolute path to the workspace root
         """
@@ -139,11 +151,11 @@ class Workspace:
         self, language_id: LspLanguageId, path_to_project: str
     ) -> LspServer:
         """Creates a new Language Server Protocol (LSP) server instance.
-        
+
         Args:
             language_id: The language server type
             path_to_project: Path to the project root
-            
+
         Returns:
             A new LSP server instance
         """
@@ -151,13 +163,13 @@ class Workspace:
 
     def set_labels(self, labels: Dict[str, str]) -> Dict[str, str]:
         """Sets labels for the workspace.
-        
+
         Args:
             labels: Dictionary of key-value pairs representing workspace labels
-            
+
         Returns:
             Dictionary containing the updated workspace labels
-            
+
         Raises:
             urllib.error.HTTPError: If the server request fails
             urllib.error.URLError: If there's a network/connection error
@@ -167,7 +179,8 @@ class Workspace:
         labels_payload = {"labels": string_labels}
         return self.workspace_api.replace_labels(self.id, labels_payload)
 
-    def start(self, timeout: Optional[float] = None):
+    @with_timeout(error_message=lambda self, timeout: f"Workspace {self.id} failed to start within the {timeout} seconds timeout period")
+    def start(self, timeout: Optional[float] = 60):
         """Starts the workspace.
 
         Args:
@@ -175,18 +188,26 @@ class Workspace:
 
         Raises:
             ValueError: If timeout is negative
-            Exception: If workspace fails to start or times out
+            Exception: If workspace fails to start
+            TimeoutError: If workspace fails to start within the timeout period
         """
-        self.workspace_api.start_workspace(self.id)
-        self.wait_for_workspace_start(timeout)
+        self.workspace_api.start_workspace(self.id, _request_timeout=timeout)
+        self.wait_for_workspace_start()
 
+    @with_timeout(error_message=lambda self, timeout: f"Workspace {self.id} failed to become ready within the {timeout} seconds timeout period")
+    def stop(self, timeout: Optional[float] = 60):
+        """Stops the workspace.
 
-    def stop(self):
-        """Stops the workspace."""
-        self.workspace_api.stop_workspace(self.id)
+        Raises:
+            ValueError: If timeout is negative
+            Exception: If workspace fails to stop
+            TimeoutError: If workspace fails to stop within the timeout period
+        """
+        self.workspace_api.stop_workspace(self.id, _request_timeout=timeout)
         self.wait_for_workspace_stop()
 
-    def wait_for_workspace_start(self, timeout: float = 60) -> None:
+    @with_timeout(error_message=lambda self, timeout: f"Workspace {self.id} failed to become ready within the {timeout} seconds timeout period")
+    def wait_for_workspace_start(self, timeout: Optional[float] = 60) -> None:
         """Wait for workspace to reach 'started' state.
 
         Args:
@@ -194,62 +215,48 @@ class Workspace:
 
         Raises:
             ValueError: If timeout is negative
-            Exception: If workspace fails to start or times out
+            Exception: If workspace fails to start
+            TimeoutError: If workspace fails to start within the timeout period
         """
-        timeout = 60 if timeout is None else timeout
-        if timeout < 0:
-            raise ValueError("Timeout must be a non-negative number")
-
-        check_interval = 0.1  # Wait 100ms between checks
-        start_time = time.time()
-
-        while timeout == 0 or (time.time() - start_time) < timeout:
+        state = None
+        while state != "started":
             response = self.workspace_api.get_workspace(self.id)
             provider_metadata = json.loads(response.info.provider_metadata)
             state = provider_metadata.get('state', '')
-
-            if state == "started":
-                return
 
             if state == "error":
                 raise Exception(
                     f"Workspace {self.id} failed to start with state: {state}")
 
-            time.sleep(check_interval)
+            time.sleep(0.1)  # Wait 100ms between checks
 
-        raise Exception(
-            "Workspace {self.id} failed to become ready within the timeout period")
-
-    def wait_for_workspace_stop(self) -> None:
+    @with_timeout(error_message=lambda self, timeout: f"Workspace {self.id} failed to become stopped within the {timeout} seconds timeout period")
+    def wait_for_workspace_stop(self, timeout: Optional[float] = 60) -> None:
         """Wait for workspace to reach 'stopped' state.
-        
+
         Raises:
             Exception: If workspace fails to stop or times out
+            ValueError: If timeout is negative
+            TimeoutError: If workspace fails to stop within the timeout period
         """
-        max_attempts = 600
-        attempts = 0
-
-        while attempts < max_attempts:
+        state = None
+        while state != "stopped":
             try:
                 workspace_check = self.workspace_api.get_workspace(self.id)
-                provider_metadata = json.loads(workspace_check.info.provider_metadata)
+                provider_metadata = json.loads(
+                    workspace_check.info.provider_metadata)
                 state = provider_metadata.get('state')
 
-                if state == "stopped":
-                    return
-                    
                 if state == "error":
-                    raise Exception(f"Workspace {self.id} failed to stop with status: {state}")
+                    raise Exception(
+                        f"Workspace {self.id} failed to stop with status: {state}")
             except Exception as e:
                 print(f"Exception: {e}")
                 # If there's a validation error, continue waiting
                 if "validation error" not in str(e):
                     raise e
-                
-            time.sleep(0.1)
-            attempts += 1
-            
-        raise Exception("Workspace {self.id} failed to become stopped within the timeout period")
+
+            time.sleep(0.1)  # Wait 100ms between checks
 
     def set_autostop_interval(self, interval: int) -> None:
         """Sets the auto-stop interval for the workspace.
