@@ -261,4 +261,11 @@ export class Workspace {
     await this.workspaceApi.setAutostopInterval(this.id, interval)
     this.instance.autoStopInterval = interval
   }
+
+  /**
+   * Archives the workspace, making it inactive and preserving its state. Workspace must be stopped before archiving.
+   */
+  public async archive(): Promise<void> {
+    await this.workspaceApi.archiveWorkspace(this.id)
+  }
 }
