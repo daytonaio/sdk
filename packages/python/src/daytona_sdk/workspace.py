@@ -266,3 +266,7 @@ class Workspace:
 
         self.workspace_api.set_autostop_interval(self.id, interval)
         self.instance.auto_stop_interval = interval
+
+    def archive(self) -> None:
+        """Archives the workspace, making it inactive and preserving its state. Workspace must be stopped before archiving."""
+        self.workspace_api.archive_workspace(self.id)
