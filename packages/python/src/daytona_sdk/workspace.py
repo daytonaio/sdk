@@ -462,6 +462,15 @@ class Workspace:
 
         return f"https://{port}-{self.id}.{node_domain}"
 
+    @intercept_errors(message_prefix="Failed to archive workspace: ")
+    def archive(self) -> None:
+        """Archives the workspace, making it inactive and preserving its state. When sandboxes are archived, the entire filesystem
+        state is moved to cost-effective object storage, making it possible to keep sandboxes available for an extended period.
+        The tradeoff between archived and stopped states is that starting an archived sandbox takes more time, depending on its size.
+        Workspace must be stopped before archiving.
+        """
+        self.workspace_api.archive_workspace(self.id)
+
     @staticmethod
     def _to_workspace_info(instance: ApiWorkspace) -> WorkspaceInfo:
         """Converts an API workspace instance to a WorkspaceInfo object.
