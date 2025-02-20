@@ -1,3 +1,54 @@
+/**
+ * Core functionality for interacting with Daytona Server API.
+ * 
+ * Provides the main entry point for creating and managing Daytona workspaces.
+ * It includes functionality for workspace lifecycle management, resource allocation,
+ * and environment configuration.
+ * 
+ * @module Daytona
+ * 
+ * @example Basic usage with environment variables
+ * // Initialize using environment variables (DAYTONA_API_KEY, DAYTONA_SERVER_URL, DAYTONA_TARGET)
+ * const daytona = new Daytona();
+ * 
+ * // Create and use a workspace
+ * const workspace = await daytona.create({
+ *     language: 'typescript',
+ *     envVars: { NODE_ENV: 'development' }
+ * });
+ * 
+ * // Execute commands in the workspace
+ * const response = await workspace.process.executeCommand('echo "Hello, World!"');
+ * console.log(response.result);
+ * 
+ * // Execute code in the workspace
+ * const response = await workspace.process.codeRun('console.log("Hello, World!")');
+ * console.log(response.result);
+ * 
+ * @example Using explicit configuration
+ * // Initialize with explicit configuration
+ * const daytona = new Daytona({
+ *     apiKey: process.env.CUSTOM_API_KEY,
+ *     serverUrl: 'https://daytona.example.com',
+ *     target: 'us'
+ * });
+ * 
+ * // Create a custom workspace
+ * const workspace = await daytona.create({
+ *     language: 'typescript',
+ *     image: 'node:18',
+ *     resources: {
+ *         cpu: 2,
+ *         memory: 4 // 4GB RAM
+ *     },
+ *     autoStopInterval: 60 // Auto-stop after 1 hour of inactivity
+ * });
+ * 
+ * // Use workspace features
+ * await workspace.git.clone('https://github.com/user/repo.git');
+ * await workspace.process.executeCommand('npm test');
+ */
+
 import { v4 as uuidv4 } from 'uuid'
 
 import { WorkspacePythonCodeToolbox } from './code-toolbox/WorkspacePythonCodeToolbox'
@@ -11,8 +62,20 @@ import {
 import { WorkspaceTsCodeToolbox } from './code-toolbox/WorkspaceTsCodeToolbox'
 
 /**
- * Configuration options for initializing the Daytona client
- * @interface DaytonaConfig
+ * Configuration options for initializing the Daytona client.
+ * 
+ * @interface
+ * @property {string} apiKey - API key for authentication with Daytona server
+ * @property {string} serverUrl - URL of the Daytona server
+ * @property {CreateWorkspaceTargetEnum} target - Target location for workspaces
+ * 
+ * @example
+ * const config: DaytonaConfig = {
+ *     apiKey: "your-api-key",
+ *     serverUrl: "https://your-server.com",
+ *     target: "local"
+ * };
+ * const daytona = new Daytona(config);
  */
 export interface DaytonaConfig {
   /** API key for authentication with Daytona server */
@@ -24,13 +87,27 @@ export interface DaytonaConfig {
 }
 
 /** 
- * Supported programming languages for code execution
+ * Supported programming languages for code execution.
+ * 
+ * @type {('python' | 'javascript' | 'typescript')}
  */
 export type CodeLanguage = 'python' | 'javascript' | 'typescript'
 
 /**
- * Resource allocation for a workspace
- * @interface WorkspaceResources
+ * Resource allocation for a workspace.
+ * 
+ * @interface
+ * @property {number} [cpu] - CPU allocation for the workspace in cores
+ * @property {number} [gpu] - GPU allocation for the workspace in units
+ * @property {number} [memory] - Memory allocation for the workspace in GB
+ * @property {number} [disk] - Disk space allocation for the workspace in GB
+ * 
+ * @example
+ * const resources: WorkspaceResources = {
+ *     cpu: 2,
+ *     memory: 4,  // 4GB RAM
+ *     disk: 20    // 20GB disk
+ * };
  */
 export interface WorkspaceResources {
   /** CPU allocation for the workspace */
@@ -44,8 +121,34 @@ export interface WorkspaceResources {
 }
 
 /**
- * Parameters for creating a new workspace
- * @interface CreateWorkspaceParams
+ * Parameters for creating a new workspace.
+ * 
+ * @interface
+ * @property {string} [id] - Optional workspace ID. If not provided, a random ID will be generated
+ * @property {string} [image] - Optional Docker image to use for the workspace
+ * @property {string} [user] - Optional os user to use for the workspace
+ * @property {CodeLanguage} [language] - Programming language for direct code execution
+ * @property {Record<string, string>} [envVars] - Optional environment variables to set in the workspace
+ * @property {Record<string, string>} [labels] - Workspace labels
+ * @property {boolean} [public] - Is the workspace port preview public
+ * @property {string} [target] - Target location for the workspace
+ * @property {WorkspaceResources} [resources] - Resource allocation for the workspace
+ * @property {boolean} [async] - If true, will not wait for the workspace to be ready before returning
+ * @property {number} [timeout] - Timeout in seconds for the workspace to be ready (0 means no timeout)
+ * @property {number} [autoStopInterval] - Auto-stop interval in minutes (0 means disabled)
+ * 
+ * @example
+ * const params: CreateWorkspaceParams = {
+ *     language: 'typescript',
+ *     envVars: { NODE_ENV: 'development' },
+ *     resources: {
+ *         cpu: 2,
+ *         memory: 4 // 4GB RAM
+ *     },
+ *     timeout: 300,
+ *     autoStopInterval: 60  // Auto-stop after 1 hour of inactivity
+ * };
+ * const workspace = await daytona.create(params);
  */
 export type CreateWorkspaceParams = {
   /** Optional workspace ID. If not provided, a random ID will be generated */
@@ -75,21 +178,39 @@ export type CreateWorkspaceParams = {
 }
 
 /**
- * Main class for interacting with Daytona Server API
- * @class Daytona
+ * Main class for interacting with Daytona Server API.
+ * 
+ * Provides methods for creating, managing, and interacting with Daytona workspaces.
+ * Can be initialized either with explicit configuration or using environment variables.
+ * 
+ * 
+ * @example Using environment variables
+ * // Uses DAYTONA_API_KEY, DAYTONA_SERVER_URL, DAYTONA_TARGET
+ * const daytona = new Daytona();
+ * const workspace = await daytona.create();
+ * 
+ * @example Using explicit configuration
+ * const config: DaytonaConfig = {
+ *     apiKey: "your-api-key",
+ *     serverUrl: "https://your-server.com",
+ *     target: "us"
+ * };
+ * const daytona = new Daytona(config);
+ * 
+ * @class
  */
 export class Daytona {
   private readonly workspaceApi: WorkspaceApi
   private readonly toolboxApi: ToolboxApi
   private readonly target: CreateWorkspaceTargetEnum
-
   private readonly apiKey: string
   private readonly serverUrl: string
 
   /**
-   * Creates a new Daytona client instance
+   * Creates a new Daytona client instance.
+   * 
    * @param {DaytonaConfig} [config] - Configuration options
-   * @throws {Error} When API key or server URL is missing
+   * @throws {Error} - `Error` - When API key or server URL is missing
    */
   constructor(config?: DaytonaConfig) {
     const apiKey = config?.apiKey || process.env.DAYTONA_API_KEY
@@ -121,9 +242,31 @@ export class Daytona {
   }
 
   /**
-   * Creates a new workspace
+   * Creates a new workspace.
+   * 
    * @param {CreateWorkspaceParams} [params] - Parameters for workspace creation
    * @returns {Promise<Workspace>} The created workspace instance
+   * 
+   * @example Basic workspace creation
+   * // Create a default workspace
+   * const workspace = await daytona.create();
+   * 
+   * @example Custom workspace creation
+   * const params: CreateWorkspaceParams = {
+   *     language: 'typescript',
+   *     image: 'node:18',
+   *     envVars: { 
+   *         NODE_ENV: 'development',
+   *         DEBUG: 'true'
+   *     },
+   *     resources: {
+   *         cpu: 2,
+   *         memory: 4 // 4GB RAM
+   *     },
+   *     timeout: 300,
+   *     autoStopInterval: 60
+   * };
+   * const workspace = await daytona.create(params);
    */
   public async create(params?: CreateWorkspaceParams): Promise<Workspace> {
     if (params?.autoStopInterval !== undefined && (!Number.isInteger(params.autoStopInterval) || params.autoStopInterval < 0)) {
@@ -175,9 +318,14 @@ export class Daytona {
   }
 
   /**
-   * Gets a workspace by its ID
+   * Gets a workspace by its ID.
+   * 
    * @param {string} workspaceId - The ID of the workspace to retrieve
-   * @returns {Promise<Workspace>} The workspace instance
+   * @returns {Promise<Workspace>} The workspace
+   * 
+   * @example
+   * const workspace = await daytona.get('my-workspace-id');
+   * console.log(`Workspace state: ${workspace.instance.state}`);
    */
   public async get(workspaceId: string): Promise<Workspace> {
     const response = await this.workspaceApi.getWorkspace(workspaceId)
@@ -189,8 +337,15 @@ export class Daytona {
   }
 
   /**
-   * Lists all workspaces
-   * @returns {Promise<Workspace[]>} The list of workspaces
+   * Lists all workspaces.
+   * 
+   * @returns {Promise<Workspace[]>} Array of workspaces
+   * 
+   * @example
+   * const workspaces = await daytona.list();
+   * for (const workspace of workspaces) {
+   *     console.log(`${workspace.id}: ${workspace.instance.state}`);
+   * }
    */
   public async list(): Promise<Workspace[]> {
     const response = await this.workspaceApi.listWorkspaces()
@@ -210,40 +365,71 @@ export class Daytona {
   }
 
   /**
-   * Starts a workspace
+   * Starts a workspace and waits for it to be ready.
+   * 
    * @param {Workspace} workspace - The workspace to start
+   * @param {number} [timeout] - Optional timeout in seconds (0 means no timeout)
+   * @returns {Promise<void>}
+   * 
+   * @example
+   * const workspace = await daytona.get('my-workspace-id');
+   * // Wait up to 60 seconds for the workspace to start
+   * await daytona.start(workspace, 60);
    */
   public async start(workspace: Workspace, timeout?: number) {
     await workspace.start(timeout)
   }
 
   /**
-   * Stops a workspace
+   * Stops a workspace.
+   * 
    * @param {Workspace} workspace - The workspace to stop
    * @returns {Promise<void>}
+   * 
+   * @example
+   * const workspace = await daytona.get('my-workspace-id');
+   * await daytona.stop(workspace);
    */
   public async stop(workspace: Workspace) {
     await workspace.stop()
   }
 
   /**
-   * Removes a workspace
+   * Removes a workspace.
+   * 
    * @param {Workspace} workspace - The workspace to remove
    * @returns {Promise<void>}
+   * 
+   * @example
+   * const workspace = await daytona.get('my-workspace-id');
+   * await daytona.remove(workspace);
    */
   public async remove(workspace: Workspace) {
     await this.workspaceApi.deleteWorkspace(workspace.id, true)
   }
 
   /**
-   * Gets the current workspace by ID
+   * Gets the workspace by ID.
+   * 
    * @param {string} workspaceId - The ID of the workspace to retrieve
-   * @returns {Promise<Workspace>} The workspace instance
+   * @returns {Promise<Workspace>} The workspace
+   * 
+   * @example
+   * const workspace = await daytona.getCurrentWorkspace('my-workspace-id');
+   * console.log(`Current workspace state: ${workspace.instance.state}`);
    */
   public async getCurrentWorkspace(workspaceId: string): Promise<Workspace> {
     return this.get(workspaceId)
   }
 
+  /**
+   * Gets the appropriate code toolbox based on language.
+   * 
+   * @private
+   * @param {CodeLanguage} [language] - Programming language for the toolbox
+   * @returns {WorkspaceCodeToolbox} The appropriate code toolbox instance
+   * @throws {Error} - `Error` - When an unsupported language is specified
+   */
   private getCodeToolbox(language?: CodeLanguage) {
     switch (language) {
       case 'javascript':
