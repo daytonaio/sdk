@@ -1,11 +1,11 @@
 {
   "scripts": {
-    "docs": "mkdir -p ../../docs/python-sdk && npm run docs:daytona && npm run docs:workspace && npm run docs:filesystem && npm run docs:git && npm run docs:process && npm run docs:lsp",
-    "docs:daytona": "pydoc-markdown -I $(pwd)/src config/pydoc/pydoc-daytona.yml > ../../docs/python-sdk/daytona.md",
-    "docs:workspace": "pydoc-markdown -I $(pwd)/src config/pydoc/pydoc-workspace.yml > ../../docs/python-sdk/workspace.md",
-    "docs:filesystem": "pydoc-markdown -I $(pwd)/src config/pydoc/pydoc-filesystem.yml > ../../docs/python-sdk/filesystem.md",
-    "docs:git": "pydoc-markdown -I $(pwd)/src config/pydoc/pydoc-git.yml > ../../docs/python-sdk/git.md",
-    "docs:process": "pydoc-markdown -I $(pwd)/src config/pydoc/pydoc-process.yml > ../../docs/python-sdk/process.md",
-    "docs:lsp": "pydoc-markdown -I $(pwd)/src config/pydoc/pydoc-lsp.yml > ../../docs/python-sdk/lsp.md"
+    "docs": "rm -rf ../../docs/python-sdk/* && npm run docs:daytona && npm run docs:workspace && npm run docs:filesystem && npm run docs:git && npm run docs:process && npm run docs:lsp",
+    "docs:daytona": "TITLE='Sandbox Management' OUTPUT_FILE='../../docs/python-sdk/daytona.mdx' pydoc-markdown -m daytona_sdk.daytona pydoc-markdown.yml",
+    "docs:workspace": "TITLE='Sandbox' OUTPUT_FILE='../../docs/python-sdk/sandbox.mdx' pydoc-markdown -m daytona_sdk.workspace pydoc-markdown.yml",
+    "docs:filesystem": "TITLE='File System Operations' OUTPUT_FILE='../../docs/python-sdk/file-system.mdx' pydoc-markdown -m daytona_sdk.filesystem pydoc-markdown.yml",
+    "docs:git": "TITLE='Git Operations' OUTPUT_FILE='../../docs/python-sdk/git.mdx' pydoc-markdown -m daytona_sdk.git pydoc-markdown.yml",
+    "docs:process": "TITLE='Process and Code Execution' OUTPUT_FILE='../../docs/python-sdk/process.mdx' pydoc-markdown -m daytona_sdk.process pydoc-markdown.yml",
+    "docs:lsp": "TITLE='Language Server Protocol' OUTPUT_FILE='../../docs/python-sdk/lsp-server.mdx' pydoc-markdown -m daytona_sdk.lsp_server pydoc-markdown.yml"
   }
-} 
+}

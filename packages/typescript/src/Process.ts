@@ -1,3 +1,39 @@
+/**
+ * The Daytona SDK provides powerful process and code execution capabilities through
+ * the `process` module in Sandboxes. This guide covers all available process operations
+ * and best practices.
+ * 
+ * @module Process
+ * 
+ * @example
+ * // Execute a shell command
+ * const response = await workspace.process.executeCommand('ls -la');
+ * console.log(response.result);
+ * 
+ * // Run TypeScript code
+ * const response = await workspace.process.codeRun('console.log("Hello, World!")');
+ * console.log(response.result);
+ * 
+ * @example
+ * // Using interactive sessions
+ * // Create a new session
+ * const sessionId = 'my-session';
+ * await workspace.process.createSession(sessionId);
+ * 
+ * // Execute commands in the session
+ * const response = await workspace.process.executeSessionCommand(sessionId, {
+ *   command: 'cd /workspace'
+ * });
+ * 
+ * const response2 = await workspace.process.executeSessionCommand(sessionId, {
+ *   command: 'pwd'
+ * });
+ * console.log(response2.result);  // Should print "/workspace"
+ * 
+ * // Clean up
+ * await workspace.process.deleteSession(sessionId);
+ */
+
 import {
   Command,
   ExecuteResponse,
@@ -9,10 +45,6 @@ import {
 } from '@daytonaio/api-client'
 import { WorkspaceCodeToolbox } from './Workspace'
 
-/**
- * Handles process and code execution within a workspace
- * @class Process
- */
 export class Process {
   constructor(
     private readonly codeToolbox: WorkspaceCodeToolbox,
@@ -21,9 +53,27 @@ export class Process {
   ) {}
 
   /**
-   * Executes a shell command in the workspace
-   * @param {string} command - Command to execute
-   * @returns {Promise<ExecuteResponse>} Command execution results
+   * Executes a shell command in the Sandbox.
+   * 
+   * @param {string} command - Shell command to execute
+   * @param {string} [cwd] - Working directory for command execution. If not specified, uses the Sandbox root directory
+   * @param {number} [timeout] - Maximum time in seconds to wait for the command to complete. 0 means wait indefinitely.
+   * @returns {Promise<ExecuteResponse>} Command execution results containing:
+   *                                    - exitCode: The command's exit status
+   *                                    - result: Standard output from the command
+   * 
+   * @example
+   * // Simple command
+   * const response = await process.executeCommand('echo "Hello"');
+   * console.log(response.result);  // Prints: Hello
+   * 
+   * @example
+   * // Command with working directory
+   * const result = await process.executeCommand('ls', '/workspace/src');
+   * 
+   * @example
+   * // Command with timeout
+   * const result = await process.executeCommand('sleep 10', undefined, 5);
    */
   public async executeCommand(
     command: string,
@@ -40,9 +90,21 @@ export class Process {
   }
 
   /**
-   * Executes code in the workspace using the appropriate language runtime
+   * Executes code in the Sandbox using the appropriate language runtime.
+   * 
    * @param {string} code - Code to execute
-   * @returns {Promise<ExecuteResponse>} Code execution results
+   * @returns {Promise<ExecuteResponse>} Code execution results containing:
+   *                                    - exitCode: The execution's exit status
+   *                                    - result: Standard output from the code
+   * 
+   * @example
+   * // Run TypeScript code
+   * const response = await process.codeRun(`
+   *   const x = 10;
+   *   const y = 20;
+   *   console.log(\`Sum: \${x + y}\`);
+   * `);
+   * console.log(response.result);  // Prints: Sum: 30
    */
   public async codeRun(code: string): Promise<ExecuteResponse> {
     const runCommand = this.codeToolbox.getRunCommand(code)
@@ -55,9 +117,22 @@ export class Process {
   }
 
   /**
-   * Creates a new exec session in the workspace
-   * @param {string} sessionId - Unique identifier for the session
-   * @returns {Promise<ExecuteResponse>} Code execution results
+   * Creates a new long-running background session in the Sandbox.
+   * 
+   * Sessions are background processes that maintain state between commands, making them ideal for
+   * scenarios requiring multiple related commands or persistent environment setup. You can run
+   * long-running commands and monitor process status.
+   * 
+   * @param {string} sessionId - Unique identifier for the new session
+   * @returns {Promise<void>}
+   * 
+   * @example
+   * // Create a new session
+   * const sessionId = 'my-session';
+   * await process.createSession(sessionId);
+   * const session = await process.getSession(sessionId);
+   * // Do work...
+   * await process.deleteSession(sessionId);
    */
   public async createSession(sessionId: string): Promise<void> {
     await this.toolboxApi.createSession(this.instance.id, {
@@ -66,31 +141,18 @@ export class Process {
   }
 
   /**
-   * Executes a command in the session
-   * @param {string} sessionId - Unique identifier for the session
-   * @param {SessionExecuteRequest} req - Command to execute and async flag
-   * @returns {Promise<SessionExecuteResponse>} Command execution results
-   */
-  public async executeSessionCommand(sessionId: string, req: SessionExecuteRequest): Promise<SessionExecuteResponse> {
-    const response = await this.toolboxApi.executeSessionCommand(this.instance.id, sessionId, req)
-    return response.data
-  }
-
-  /**
-   * Gets the logs for a command in the session
-   * @param {string} sessionId - Unique identifier for the session
-   * @param {string} commandId - Unique identifier for the command
-   * @returns {Promise<string>} Command logs
-   */
-  public async getSessionCommandLogs(sessionId: string, commandId: string): Promise<string> {
-    const response = await this.toolboxApi.getSessionCommandLogs(this.instance.id, sessionId, commandId)
-    return response.data
-  }
-
-  /**
-   * Gets the session
-   * @param {string} sessionId - Unique identifier for the session
-   * @returns {Promise<Session>} Session
+   * Get a session in the workspace.
+   * 
+   * @param {string} sessionId - Unique identifier of the session to retrieve
+   * @returns {Promise<Session>} Session information including:
+   *                            - sessionId: The session's unique identifier
+   *                            - commands: List of commands executed in the session
+   * 
+   * @example
+   * const session = await process.getSession('my-session');
+   * session.commands.forEach(cmd => {
+   *   console.log(`Command: ${cmd.command}`);
+   * });
    */
   public async getSession(sessionId: string): Promise<Session> {
     const response = await this.toolboxApi.getSession(this.instance.id, sessionId)
@@ -98,10 +160,20 @@ export class Process {
   }
 
   /**
-   * Gets the session command
-   * @param {string} sessionId - Unique identifier for the session
-   * @param {string} commandId - Unique identifier for the command
-   * @returns {Promise<Command>} Session command
+   * Gets information about a specific command executed in a session.
+   * 
+   * @param {string} sessionId - Unique identifier of the session
+   * @param {string} commandId - Unique identifier of the command
+   * @returns {Promise<Command>} Command information including:
+   *                            - id: The command's unique identifier
+   *                            - command: The executed command string
+   *                            - exitCode: Command's exit status (if completed)
+   * 
+   * @example
+   * const cmd = await process.getSessionCommand('my-session', 'cmd-123');
+   * if (cmd.exitCode === 0) {
+   *   console.log(`Command ${cmd.command} completed successfully`);
+   * }
    */
   public async getSessionCommand(sessionId: string, commandId: string): Promise<Command> {
     const response = await this.toolboxApi.getSessionCommand(this.instance.id, sessionId, commandId)
@@ -109,8 +181,66 @@ export class Process {
   }
 
   /**
-   * Lists all sessions in the workspace
-   * @returns {Promise<Session[]>} List of sessions
+   * Executes a command in an existing session.
+   * 
+   * @param {string} sessionId - Unique identifier of the session to use
+   * @param {SessionExecuteRequest} req - Command execution request containing:
+   *                                     - command: The command to execute
+   *                                     - async: Whether to execute asynchronously
+   * @returns {Promise<SessionExecuteResponse>} Command execution results containing:
+   *                                           - cmdId: Unique identifier for the executed command
+   *                                           - output: Command output (if synchronous execution)
+   *                                           - exitCode: Command exit status (if synchronous execution)
+   * 
+   * @example
+   * // Execute commands in sequence, maintaining state
+   * const sessionId = 'my-session';
+   * 
+   * // Change directory
+   * await process.executeSessionCommand(sessionId, {
+   *   command: 'cd /workspace'
+   * });
+   * 
+   * // Run command in new directory
+   * const result = await process.executeSessionCommand(sessionId, {
+   *   command: 'pwd'
+   * });
+   * console.log(result.output);  // Prints: /workspace
+   */
+  public async executeSessionCommand(sessionId: string, req: SessionExecuteRequest): Promise<SessionExecuteResponse> {
+    const response = await this.toolboxApi.executeSessionCommand(this.instance.id, sessionId, req)
+    return response.data
+  }
+
+  /**
+   * Get the logs for a command executed in a session.
+   * 
+   * @param {string} sessionId - Unique identifier of the session
+   * @param {string} commandId - Unique identifier of the command
+   * @returns {Promise<string>} Command logs
+   * 
+   * @example
+   * const logs = await process.getSessionCommandLogs('my-session', 'cmd-123');
+   * console.log('Command output:', logs);
+   */
+  public async getSessionCommandLogs(sessionId: string, commandId: string): Promise<string> {
+    const response = await this.toolboxApi.getSessionCommandLogs(this.instance.id, sessionId, commandId)
+    return response.data
+  }
+
+  /**
+   * Lists all active sessions in the Sandbox.
+   * 
+   * @returns {Promise<Session[]>} Array of active sessions
+   * 
+   * @example
+   * const sessions = await process.listSessions();
+   * sessions.forEach(session => {
+   *   console.log(`Session ${session.sessionId}:`);
+   *   session.commands.forEach(cmd => {
+   *     console.log(`- ${cmd.command} (${cmd.exitCode})`);
+   *   });
+   * });
    */
   public async listSessions(): Promise<Session[]> {
     const response = await this.toolboxApi.listSessions(this.instance.id)
@@ -118,8 +248,14 @@ export class Process {
   }
 
   /**
-   * Deletes a session in the workspace
-   * @param {string} sessionId - Unique identifier for the session
+   * Delete a session from the Sandbox.
+   * 
+   * @param {string} sessionId - Unique identifier of the session to delete
+   * @returns {Promise<void>}
+   * 
+   * @example
+   * // Clean up a completed session
+   * await process.deleteSession('my-session');
    */
   public async deleteSession(sessionId: string): Promise<void> {
     await this.toolboxApi.deleteSession(this.instance.id, sessionId)

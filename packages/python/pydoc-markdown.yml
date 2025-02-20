@@ -1,0 +1,33 @@
+loaders:
+  - type: python
+
+processors:
+  - type: filter
+  - type: smart
+  - type: crossref
+
+hooks:
+  pre-render:
+    - mkdir -p "$(dirname "$OUTPUT_FILE")"
+  post-render:
+    -  #@ f"sed -i '1i ---\\ntitle: {env.TITLE}\\n---\\n' \"{env.OUTPUT_FILE}\""
+    - ./scripts/docs-reorder-sections.sh "$OUTPUT_FILE"
+    - ./scripts/docs-code-block-indentation.sh "$OUTPUT_FILE"
+
+renderer:
+  type: markdown
+  filename: #@ env.OUTPUT_FILE
+  descriptive_class_title: false
+  add_method_class_prefix: true
+  data_code_block: true
+  render_typehint_in_data_header: true
+  render_module_header: false
+  header_level_by_type:
+    Module: 2
+    Class: 2
+    Method: 4
+    Function: 4
+    Data: 5
+  source_linker:
+    type: github
+    repo: daytonaio/sdk
