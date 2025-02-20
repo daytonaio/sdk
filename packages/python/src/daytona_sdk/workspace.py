@@ -1,8 +1,37 @@
 """
-Core workspace functionality for Daytona.
+The Daytona SDK core Sandbox functionality.
 
-This module provides the main Workspace class that coordinates file system,
-Git, process execution, and LSP functionality.
+Provides the main Workspace class representing a Daytona Sandbox that coordinates file system,
+Git, process execution, and LSP functionality. It serves as the central point
+for interacting with Daytona Sandboxes.
+
+Example:
+    Basic Sandbox operations:
+    ```python
+    from daytona_sdk import Daytona
+    daytona = Daytona()
+    workspace = daytona.create()
+    
+    # File operations
+    workspace.fs.upload_file("/workspace/test.txt", b"Hello, World!")
+    content = workspace.fs.download_file("/workspace/test.txt")
+    
+    # Git operations
+    workspace.git.clone("https://github.com/user/repo.git")
+    
+    # Process execution
+    response = workspace.process.exec("ls -la")
+    print(response.result)
+    
+    # LSP functionality
+    lsp = workspace.create_lsp_server("python", "/workspace/project")
+    lsp.did_open("/workspace/project/src/index.ts")
+    completions = lsp.completions("/workspace/project/src/index.ts", Position(line=10, character=15))
+    print(completions)
+    ```
+
+Note:
+    The Sandbox must be in a 'started' state before performing operations.
 """
 
 import json
@@ -41,9 +70,27 @@ class WorkspaceTargetRegion(Enum):
         return super().__eq__(other)
 
 
+
 @dataclass
 class WorkspaceResources:
-    """Resources allocated to a workspace."""
+    """Resources allocated to a Sandbox.
+
+    Attributes:
+        cpu (str): Number of CPU cores allocated (e.g., "1", "2").
+        gpu (Optional[str]): Number of GPUs allocated (e.g., "1") or None if no GPU.
+        memory (str): Amount of memory allocated with unit (e.g., "2Gi", "4Gi").
+        disk (str): Amount of disk space allocated with unit (e.g., "10Gi", "20Gi").
+
+    Example:
+        ```python
+        resources = WorkspaceResources(
+            cpu="2",
+            gpu="1",
+            memory="4Gi",
+            disk="20Gi"
+        )
+        ```
+    """
     cpu: str
     gpu: Optional[str]
     memory: str
@@ -52,7 +99,7 @@ class WorkspaceResources:
 
 @dataclass
 class WorkspaceState(Enum):
-    """States of a workspace."""
+    """States of a Sandbox."""
     CREATING = "creating"
     RESTORING = "restoring"
     DESTROYED = "destroyed"
@@ -76,7 +123,34 @@ class WorkspaceState(Enum):
 
 
 class WorkspaceInfo(ApiWorkspaceInfo):
-    """Structured information about a workspace."""
+    """Structured information about a Sandbox.
+
+    This class provides detailed information about a Sandbox's configuration,
+    resources, and current state.
+
+    Attributes:
+        id (str): Unique identifier for the Sandbox.
+        name (str): Display name of the Sandbox.
+        image (str): Docker image used for the Sandbox.
+        user (str): OS user running in the Sandbox.
+        env (Dict[str, str]): Environment variables set in the Sandbox.
+        labels (Dict[str, str]): Custom labels attached to the Sandbox.
+        public (bool): Whether the Sandbox is publicly accessible.
+        target (str): Target environment where the Sandbox runs.
+        resources (WorkspaceResources): Resource allocations for the Sandbox.
+        state (str): Current state of the Sandbox (e.g., "started", "stopped").
+        error_reason (Optional[str]): Error message if Sandbox is in error state.
+        snapshot_state (Optional[str]): Current state of Sandbox snapshot.
+        snapshot_state_created_at (Optional[datetime]): When the snapshot state was created.
+
+    Example:
+        ```python
+        workspace = daytona.create()
+        info = workspace.info()
+        print(f"Workspace {info.name} is {info.state}")
+        print(f"Resources: {info.resources.cpu} CPU, {info.resources.memory} RAM")
+        ```
+    """
     id: str
     name: str
     image: str
@@ -105,23 +179,21 @@ class WorkspaceInstance(ApiWorkspace):
 
 
 
+
 class Workspace:
-    """Represents a Daytona workspace instance.
+    """Represents a Daytona Sandbox.
 
-    A workspace provides file system operations, Git operations, process execution,
-    and LSP functionality.
-
-    Args:
-        id: Unique identifier for the workspace
-        instance: The underlying workspace instance
-        workspace_api: API client for workspace operations
-        toolbox_api: API client for workspace operations
-        code_toolbox: Language-specific toolbox implementation
+    A Sandbox provides file system operations, Git operations, process execution,
+    and LSP functionality. It serves as the main interface for interacting with
+    a Daytona Sandbox.
 
     Attributes:
-        fs: File system operations interface for managing files and directories
-        git: Git operations interface for version control functionality
-        process: Process execution interface for running commands and code
+        id (str): Unique identifier for the Sandbox.
+        instance (WorkspaceInstance): The underlying Sandbox instance.
+        code_toolbox (WorkspaceCodeToolbox): Language-specific toolbox implementation.
+        fs (FileSystem): File system operations interface.
+        git (Git): Git operations interface.
+        process (Process): Process execution interface.
     """
 
     def __init__(
@@ -132,6 +204,15 @@ class Workspace:
         toolbox_api: ToolboxApi,
         code_toolbox: WorkspaceCodeToolbox,
     ):
+        """Initialize a new Workspace instance.
+
+        Args:
+            id (str): Unique identifier for the Sandbox.
+            instance (WorkspaceInstance): The underlying Sandbox instance.
+            workspace_api (WorkspaceApi): API client for Sandbox operations.
+            toolbox_api (ToolboxApi): API client for toolbox operations.
+            code_toolbox (WorkspaceCodeToolbox): Language-specific toolbox implementation.
+        """
         self.id = id
         self.instance = instance
         self.workspace_api = workspace_api
@@ -146,20 +227,35 @@ class Workspace:
             self.code_toolbox, self.toolbox_api, instance)  # Process execution
 
     def info(self) -> WorkspaceInfo:
-        """Get structured information about the workspace.
+        """Gets structured information about the Sandbox.
 
         Returns:
-            WorkspaceInfo: Structured workspace information
+            WorkspaceInfo: Detailed information about the Sandbox including its
+                configuration, resources, and current state.
+
+        Example:
+            ```python
+            info = workspace.info()
+            print(f"Workspace {info.name}:")
+            print(f"State: {info.state}")
+            print(f"Resources: {info.resources.cpu} CPU, {info.resources.memory} RAM")
+            ```
         """
         instance = self.workspace_api.get_workspace(self.id)
         return Workspace._to_workspace_info(instance)
 
     @intercept_exceptions(message_prefix="Failed to get workspace root directory: ")
     def get_workspace_root_dir(self) -> str:
-        """Gets the root directory path of the workspace.
+        """Gets the root directory path of the Sandbox.
 
         Returns:
-            The absolute path to the workspace root
+            str: The absolute path to the Sandbox root directory.
+
+        Example:
+            ```python
+            root_dir = workspace.get_workspace_root_dir()
+            print(f"Workspace root: {root_dir}")
+            ```
         """
         response = self.toolbox_api.get_project_dir(
             workspace_id=self.instance.id
@@ -171,27 +267,44 @@ class Workspace:
     ) -> LspServer:
         """Creates a new Language Server Protocol (LSP) server instance.
 
+        The LSP server provides language-specific features like code completion,
+        diagnostics, and more.
+
         Args:
-            language_id: The language server type
-            path_to_project: Path to the project root
+            language_id (LspLanguageId): The language server type (e.g., LspLanguageId.PYTHON).
+            path_to_project (str): Absolute path to the project root directory.
 
         Returns:
-            A new LSP server instance
+            LspServer: A new LSP server instance configured for the specified language.
+
+        Example:
+            ```python
+            lsp = workspace.create_lsp_server("python", "/workspace/project")
+            ```
         """
         return LspServer(language_id, path_to_project, self.toolbox_api, self.instance)
 
     @intercept_exceptions(message_prefix="Failed to set labels: ")
     def set_labels(self, labels: Dict[str, str]) -> Dict[str, str]:
-        """Sets labels for the workspace.
+        """Sets labels for the Sandbox.
+
+        Labels are key-value pairs that can be used to organize and identify Sandboxes.
 
         Args:
-            labels: Dictionary of key-value pairs representing workspace labels
+            labels (Dict[str, str]): Dictionary of key-value pairs representing Sandbox labels.
 
         Returns:
-            Dictionary containing the updated workspace labels
+            Dict[str, str]: Dictionary containing the updated Sandbox labels.
 
-        Raises:
-            DaytonaException: If the server request fails; If there's a network/connection error
+        Example:
+            ```python
+            new_labels = workspace.set_labels({
+                "project": "my-project",
+                "environment": "development",
+                "team": "backend"
+            })
+            print(f"Updated labels: {new_labels}")
+            ```
         """
         # Convert all values to strings and create the expected labels structure
         string_labels = {k: str(v).lower() if isinstance(
@@ -202,13 +315,22 @@ class Workspace:
     @intercept_exceptions(message_prefix="Failed to start workspace: ")
     @with_timeout(error_message=lambda self, timeout: f"Workspace {self.id} failed to start within the {timeout} seconds timeout period")
     def start(self, timeout: Optional[float] = 60):
-        """Starts the workspace.
+        """Starts the Sandbox.
+
+        This method starts the Sandbox and waits for it to be ready.
 
         Args:
-            timeout: Maximum time to wait in seconds. 0 means no timeout. Default is 60 seconds.
+            timeout (Optional[float]): Maximum time to wait in seconds. 0 means no timeout. Default is 60 seconds.
 
         Raises:
-            DaytonaException: If timeout is negative; If workspace fails to start or times out
+            DaytonaException: If timeout is negative. If workspace fails to start or times out.
+
+        Example:
+            ```python
+            workspace = daytona.get_current_workspace("my-workspace")
+            workspace.start(timeout=40)  # Wait up to 40 seconds
+            print("Workspace started successfully")
+            ```
         """
         self.workspace_api.start_workspace(self.id, _request_timeout=timeout)
         self.wait_for_workspace_start()
@@ -216,13 +338,22 @@ class Workspace:
     @intercept_exceptions(message_prefix="Failed to stop workspace: ")
     @with_timeout(error_message=lambda self, timeout: f"Workspace {self.id} failed to stop within the {timeout} seconds timeout period")
     def stop(self, timeout: Optional[float] = 60):
-        """Stops the workspace.
+        """Stops the Sandbox.
+
+        This method stops the Sandbox and waits for it to be fully stopped.
 
         Args:
             timeout: Maximum time to wait in seconds. 0 means no timeout. Default is 60 seconds.
 
         Raises:
             DaytonaException: If timeout is negative; If workspace fails to stop or times out
+
+        Example:
+            ```python
+            workspace = daytona.get_current_workspace("my-workspace")
+            workspace.stop()
+            print("Workspace stopped successfully")
+            ```
         """
         self.workspace_api.stop_workspace(self.id, _request_timeout=timeout)
         self.wait_for_workspace_stop()
@@ -230,7 +361,10 @@ class Workspace:
     @intercept_exceptions(message_prefix="Failure during waiting for workspace to start: ")
     @with_timeout(error_message=lambda self, timeout: f"Workspace {self.id} failed to become ready within the {timeout} seconds timeout period")
     def wait_for_workspace_start(self, timeout: Optional[float] = 60) -> None:
-        """Wait for workspace to reach 'started' state.
+        """Waits for the Sandbox to reach the 'started' state.
+
+        This method polls the Sandbox status until it reaches the 'started' state
+        or encounters an error.
 
         Args:
             timeout: Maximum time to wait in seconds. 0 means no timeout. Default is 60 seconds.
@@ -253,13 +387,16 @@ class Workspace:
     @intercept_exceptions(message_prefix="Failure during waiting for workspace to stop: ")
     @with_timeout(error_message=lambda self, timeout: f"Workspace {self.id} failed to become stopped within the {timeout} seconds timeout period")
     def wait_for_workspace_stop(self, timeout: Optional[float] = 60) -> None:
-        """Wait for workspace to reach 'stopped' state.
+        """Waits for the Sandbox to reach the 'stopped' state.
+
+        This method polls the Sandbox status until it reaches the 'stopped' state
+        or encounters an error. It will wait up to 60 seconds for the Sandbox to stop.
 
         Args:
-            timeout: Maximum time to wait in seconds. 0 means no timeout. Default is 60 seconds.
+            timeout (Optional[float]): Maximum time to wait in seconds. 0 means no timeout. Default is 60 seconds.
 
         Raises:
-            DaytonaException: If timeout is negative; If workspace fails to stop or times out
+            DaytonaException: If timeout is negative. If Sandbox fails to stop or times out.
         """
         state = None
         while state != "stopped":
@@ -281,14 +418,26 @@ class Workspace:
 
     @intercept_exceptions(message_prefix="Failed to set auto-stop interval: ")
     def set_autostop_interval(self, interval: int) -> None:
-        """Sets the auto-stop interval for the workspace.
+        """Sets the auto-stop interval for the Sandbox.
+
+        The Sandbox will automatically stop after being idle (no new events) for the specified interval.
+        Events include any state changes or interactions with the Sandbox through the SDK.
+        Interactions using Sandbox Previews are not included.
 
         Args:
-            interval: Number of minutes after which the workspace will automatically stop.
-                    Set to 0 to disable auto-stop.
+            interval (int): Number of minutes of inactivity before auto-stopping.
+                Set to 0 to disable auto-stop. Defaults to 15.
 
         Raises:
             DaytonaException: If interval is negative
+
+        Example:
+            ```python
+            # Auto-stop after 1 hour
+            workspace.set_autostop_interval(60)
+            # Or disable auto-stop
+            workspace.set_autostop_interval(0)
+            ```
         """
         if not isinstance(interval, int) or interval < 0:
             raise DaytonaException("Auto-stop interval must be a non-negative integer")

@@ -1,24 +1,39 @@
 {
-  "$schema": "https://typedoc.org/schema.json",
-  "entryPoints": ["./src/index.ts"],
-  "out": "../../docs/typescript-sdk",
   "name": "Daytona TypeScript SDK",
   "includeVersion": true,
+  "readme": "none",
+  
+  "$schema": "https://typedoc-plugin-markdown.org/schema.json",
+  "entryPoints": ["./src/*.ts"],
+  "exclude": ["src/index.ts"],
+  "out": "../../docs/typescript-sdk",
   "excludePrivate": true,
   "excludeProtected": true,
   "excludeExternals": true,
-  "plugin": ["typedoc-plugin-markdown"],
+  "excludeNotDocumented": false,
+  "plugin": ["typedoc-plugin-markdown", "./hooks/typedoc-custom.mjs"],
   "theme": "markdown",
-  "readme": "none",
-  "categoryOrder": [
-    "Core",
-    "Workspace",
-    "FileSystem",
-    "Git",
-    "Process",
-    "LSP",
-    "*"
-  ],
-  "categorizeByGroup": true,
-  "cleanOutputDir": true
-} 
+  "sort": ["static-first", "alphabetical"],
+
+  "membersWithOwnFile": [],
+  "flattenOutputFiles": true,
+
+  "hidePageHeader": true,
+  "hideBreadcrumbs": true,
+  "hidePageTitle": true,
+  "hideGroupHeadings": true,
+  "useCodeBlocks": true,
+  "expandObjects": true,
+  "expandParameters": true,
+  "indexFormat": "table",
+  "parametersFormat": "table",
+  "interfacePropertiesFormat": "table",
+  "classPropertiesFormat": "table",
+  "enumMembersFormat": "table",
+  "propertyMembersFormat": "table",
+  "typeDeclarationFormat": "table",
+  "propertiesFormat": "table",
+  "tableColumnSettings": {
+    "hideSources": true,
+  }
+}

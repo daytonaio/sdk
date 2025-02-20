@@ -1,7 +1,7 @@
 import functools
 import concurrent.futures
 from typing import Callable, Optional, Any
-
+from daytona_sdk._utils.exceptions import DaytonaException
 
 def with_timeout(error_message: Optional[Callable[[Any, float], str]] = None):
     """Decorator to add a timeout mechanism with an optional custom error message.
@@ -28,7 +28,7 @@ def with_timeout(error_message: Optional[Callable[[Any, float], str]] = None):
                 return func(*args, **kwargs)
 
             if timeout < 0:
-                raise ValueError("Timeout must be a non-negative number or None.")
+                raise DaytonaException("Timeout must be a non-negative number or None.")
 
             with concurrent.futures.ThreadPoolExecutor() as executor:
                 future = executor.submit(func, *args, **kwargs)

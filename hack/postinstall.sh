@@ -7,7 +7,7 @@ python3 -m pip install --upgrade pip setuptools wheel black
 
 # Install dependencies
 echo "Installing Python packages..."
-python3 -m pip install "aiohttp>=3.8.5" "pydantic>=2.4.2" "python-dateutil>=2.8.2" "typing-extensions>=4.7.1" "urllib3>=1.25.3"
+python3 -m pip install "aiohttp>=3.8.5" "pydantic>=2.4.2" "python-dateutil>=2.8.2" "typing-extensions>=4.7.1" "urllib3>=1.25.3" "pydoc-markdown>=4.8.0"
 python3 -m pip install environs build
 
 # Install the local package in editable mode
