@@ -1,8 +1,45 @@
 """
 Git operations within a Daytona workspace.
 
-This module provides functionality for managing Git repositories, including cloning,
-committing changes, pushing/pulling, and checking repository status.
+Provides functionality for managing Git repositories, including cloning,
+committing changes, pushing/pulling, and checking repository status. It implements
+a high-level interface to Git operations that can be performed within a Daytona
+workspace.
+
+Example:
+    Basic Git workflow:
+    ```python
+    workspace = daytona.create()
+    
+    # Clone a repository
+    workspace.git.clone(
+        url="https://github.com/user/repo.git",
+        path="/workspace/repo"
+    )
+    
+    # Make some changes
+    workspace.fs.upload_file("/workspace/repo/test.txt", "Hello, World!")
+    
+    # Stage and commit changes
+    workspace.git.add("/workspace/repo", ["test.txt"])
+    workspace.git.commit(
+        path="/workspace/repo",
+        message="Add test file",
+        author="John Doe",
+        email="john@example.com"
+    )
+    
+    # Push changes (with authentication)
+    workspace.git.push(
+        path="/workspace/repo",
+        username="user",
+        password="token"
+    )
+    ```
+
+Note:
+    All paths should be absolute paths within the workspace if not explicitly
+    stated otherwise.
 """
 
 from typing import List, Optional, TYPE_CHECKING
@@ -23,11 +60,38 @@ if TYPE_CHECKING:
 
 class Git:
     """Provides Git operations within a workspace.
-    
-    Args:
-        workspace: The parent workspace instance
-        toolbox_api: API client for workspace operations
-        instance: The workspace instance
+
+    This class implements a high-level interface to Git operations that can be
+    performed within a Daytona workspace. It supports common Git operations like
+    cloning repositories, staging and committing changes, pushing and pulling
+    changes, and checking repository status.
+
+    Attributes:
+        workspace (Workspace): The parent workspace instance.
+        toolbox_api (ToolboxApi): API client for workspace operations.
+        instance (WorkspaceInstance): The workspace instance this Git handler belongs to.
+
+    Example:
+        ```python
+        # Clone a repository
+        workspace.git.clone(
+            url="https://github.com/user/repo.git",
+            path="/workspace/repo"
+        )
+
+        # Check repository status
+        status = workspace.git.status("/workspace/repo")
+        print(f"Modified files: {status.modified}")
+
+        # Stage and commit changes
+        workspace.git.add("/workspace/repo", ["file.txt"])
+        workspace.git.commit(
+            path="/workspace/repo",
+            message="Update file",
+            author="John Doe",
+            email="john@example.com"
+        )
+        ```
     """
 
     def __init__(
@@ -36,16 +100,39 @@ class Git:
         toolbox_api: ToolboxApi,
         instance: WorkspaceInstance,
     ):
+        """Initialize a new Git handler instance.
+
+        Args:
+            workspace (Workspace): The parent workspace instance.
+            toolbox_api (ToolboxApi): API client for workspace operations.
+            instance (WorkspaceInstance): The workspace instance this Git handler belongs to.
+        """
         self.workspace = workspace
         self.toolbox_api = toolbox_api
         self.instance = instance
 
     def add(self, path: str, files: List[str]) -> None:
-        """Stages files for commit.
-        
+        """Stage files for commit.
+
+        This method stages the specified files for the next commit, similar to
+        running 'git add' on the command line.
+
         Args:
-            path: Repository path
-            files: List of file paths to stage
+            path (str): Absolute path to the Git repository root.
+            files (List[str]): List of file paths or directories to stage, relative to the repository root.
+
+        Example:
+            ```python
+            # Stage a single file
+            workspace.git.add("/workspace/repo", ["file.txt"])
+
+            # Stage multiple files
+            workspace.git.add("/workspace/repo", [
+                "src/main.py",
+                "tests/test_main.py",
+                "README.md"
+            ])
+            ```
         """
         self.toolbox_api.git_add_files(
             workspace_id=self.instance.id,
@@ -56,13 +143,21 @@ class Git:
         )
 
     def branches(self, path: str) -> ListBranchResponse:
-        """Lists branches in the repository.
-        
+        """List branches in the repository.
+
+        This method returns information about all branches in the repository.
+
         Args:
-            path: Repository path
-        
+            path (str): Absolute path to the Git repository root.
+
         Returns:
-            List of branches and their information
+            ListBranchResponse: List of branches in the repository.
+
+        Example:
+            ```python
+            response = workspace.git.branches("/workspace/repo")
+            print(f"Branches: {response.branches}")
+            ```
         """
         return self.toolbox_api.git_list_branches(
             workspace_id=self.instance.id,
@@ -78,15 +173,46 @@ class Git:
         username: Optional[str] = None,
         password: Optional[str] = None,
     ) -> None:
-        """Clones a Git repository.
-        
+        """Clone a Git repository.
+
+        This method clones a Git repository into the specified path. It supports
+        cloning specific branches or commits, and can authenticate with the remote
+        repository if credentials are provided.
+
         Args:
-            url: Repository URL
-            path: Destination path
-            branch: Branch to clone (optional)
-            commit_id: Specific commit to clone (optional)
-            username: Git username for authentication (optional)
-            password: Git password/token for authentication (optional)
+            url (str): Repository URL to clone from.
+            path (str): Absolute path where the repository should be cloned.
+            branch (Optional[str]): Specific branch to clone. If not specified,
+                clones the default branch.
+            commit_id (Optional[str]): Specific commit to clone. If specified,
+                the repository will be left in a detached HEAD state at this commit.
+            username (Optional[str]): Git username for authentication.
+            password (Optional[str]): Git password or token for authentication.
+
+        Example:
+            ```python
+            # Clone the default branch
+            workspace.git.clone(
+                url="https://github.com/user/repo.git",
+                path="/workspace/repo"
+            )
+
+            # Clone a specific branch with authentication
+            workspace.git.clone(
+                url="https://github.com/user/private-repo.git",
+                path="/workspace/private",
+                branch="develop",
+                username="user",
+                password="token"
+            )
+
+            # Clone a specific commit
+            workspace.git.clone(
+                url="https://github.com/user/repo.git",
+                path="/workspace/repo-old",
+                commit_id="abc123"
+            )
+            ```
         """
         self.toolbox_api.git_clone_repository(
             workspace_id=self.instance.id,
@@ -101,13 +227,28 @@ class Git:
         )
 
     def commit(self, path: str, message: str, author: str, email: str) -> None:
-        """Commits staged changes.
-        
+        """Commit staged changes.
+
+        This method creates a new commit with the staged changes. Make sure to stage
+        changes using the add() method before committing.
+
         Args:
-            path: Repository path
-            message: Commit message
-            author: Name of the commit author
-            email: Email of the commit author
+            path (str): Absolute path to the Git repository root.
+            message (str): Commit message describing the changes.
+            author (str): Name of the commit author.
+            email (str): Email address of the commit author.
+
+        Example:
+            ```python
+            # Stage and commit changes
+            workspace.git.add("/workspace/repo", ["README.md"])
+            workspace.git.commit(
+                path="/workspace/repo",
+                message="Update documentation",
+                author="John Doe",
+                email="john@example.com"
+            )
+            ```
         """
         self.toolbox_api.git_commit_changes(
             workspace_id=self.instance.id,
@@ -122,12 +263,29 @@ class Git:
     def push(
         self, path: str, username: Optional[str] = None, password: Optional[str] = None
     ) -> None:
-        """Pushes local commits to the remote repository.
-        
+        """Push local commits to the remote repository.
+
+        This method pushes all local commits on the current branch to the remote
+        repository. If the remote repository requires authentication, provide
+        username and password/token.
+
         Args:
-            path: Repository path
-            username: Git username for authentication (optional)
-            password: Git password/token for authentication (optional)
+            path (str): Absolute path to the Git repository root.
+            username (Optional[str]): Git username for authentication.
+            password (Optional[str]): Git password or token for authentication.
+
+        Example:
+            ```python
+            # Push without authentication (for public repos or SSH)
+            workspace.git.push("/workspace/repo")
+
+            # Push with authentication
+            workspace.git.push(
+                path="/workspace/repo",
+                username="user",
+                password="github_token"
+            )
+            ```
         """
         self.toolbox_api.git_push_changes(
             workspace_id=self.instance.id,
@@ -141,12 +299,29 @@ class Git:
     def pull(
         self, path: str, username: Optional[str] = None, password: Optional[str] = None
     ) -> None:
-        """Pulls changes from the remote repository.
-        
+        """Pull changes from the remote repository.
+
+        This method fetches and merges changes from the remote repository into
+        the current branch. If the remote repository requires authentication,
+        provide username and password/token.
+
         Args:
-            path: Repository path
-            username: Git username for authentication (optional)
-            password: Git password/token for authentication (optional)
+            path (str): Absolute path to the Git repository root.
+            username (Optional[str]): Git username for authentication.
+            password (Optional[str]): Git password or token for authentication.
+
+        Example:
+            ```python
+            # Pull without authentication
+            workspace.git.pull("/workspace/repo")
+
+            # Pull with authentication
+            workspace.git.pull(
+                path="/workspace/repo",
+                username="user",
+                password="github_token"
+            )
+            ```
         """
         self.toolbox_api.git_pull_changes(
             workspace_id=self.instance.id,
@@ -158,13 +333,29 @@ class Git:
         )
 
     def status(self, path: str) -> GitStatus:
-        """Gets the current Git repository status.
-        
+        """Get the current Git repository status.
+
+        This method returns detailed information about the current state of the
+        repository, including staged, unstaged, and untracked files.
+
         Args:
-            path: Repository path
-        
+            path (str): Absolute path to the Git repository root.
+
         Returns:
-            Repository status information including staged, unstaged, and untracked files
+            GitStatus: Repository status information including:
+                - current_branch: Current branch name
+                - file_status: List of file statuses
+                - ahead: Number of local commits not pushed to remote
+                - behind: Number of remote commits not pulled locally
+                - branch_published: Whether the branch has been published to the remote repository
+
+        Example:
+            ```python
+            status = workspace.git.status("/workspace/repo")
+            print(f"On branch: {status.current_branch}")
+            print(f"Commits ahead: {status.ahead}")
+            print(f"Commits behind: {status.behind}")
+            ```
         """
         return self.toolbox_api.git_get_status(
             workspace_id=self.instance.id,
