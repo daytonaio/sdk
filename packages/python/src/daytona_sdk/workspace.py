@@ -266,3 +266,19 @@ class Workspace:
 
         self.workspace_api.set_autostop_interval(self.id, interval)
         self.instance.auto_stop_interval = interval
+
+    def get_preview_link(self, port: int) -> str:
+        """Gets the preview link for the workspace at a specific port. If the port is not open, it will open it and return the link.
+        
+        Args:
+            port: The port to open the preview link on
+            
+        Returns:
+            The preview link for the workspace at the specified port
+        """
+        provider_metadata = json.loads(self.instance.info.provider_metadata)
+        node_domain = provider_metadata.get('nodeDomain', '')
+        if not node_domain:
+            raise Exception("Cannot get preview link. Node domain not found in provider metadata. Please contact support.")
+        
+        return f"https://{port}-{self.id}.{node_domain}"

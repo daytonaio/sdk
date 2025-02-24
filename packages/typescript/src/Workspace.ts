@@ -261,4 +261,19 @@ export class Workspace {
     await this.workspaceApi.setAutostopInterval(this.id, interval)
     this.instance.autoStopInterval = interval
   }
+
+  /**
+   * Gets the preview link for the workspace at a specific port. If the port is not open, it will open it and return the link.
+   * @param {number} port - The port to open the preview link on
+   * @returns {string} The preview link for the workspace at the specified port
+   * @throws {Error} If the node domain is not found in the provider metadata
+   */
+  public getPreviewLink(port: number): string {
+    const providerMetadata = JSON.parse(this.instance.info?.providerMetadata || '{}')
+    const nodeDomain = providerMetadata.nodeDomain || ''
+    if (!nodeDomain) {
+      throw new Error("Cannot get preview link. Node domain not found in provider metadata. Please contact support.")
+    }
+    return `https://${port}-${this.id}.${nodeDomain}`
+  }
 }
