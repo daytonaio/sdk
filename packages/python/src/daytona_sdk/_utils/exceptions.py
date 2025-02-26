@@ -4,6 +4,11 @@ from typing import Callable, Optional
 from daytona_api_client.exceptions import OpenApiException
 
 
+class DaytonaException(Exception):
+    """Base exception for Daytona SDK."""
+    pass
+
+
 def intercept_exceptions(message_prefix: Optional[str] = ""):
     """Decorator to intercept exceptions, process them, and optionally add a message prefix.
     If the exception is an OpenApiException, it will be processed to extract the most meaningful exception message.
@@ -19,12 +24,12 @@ def intercept_exceptions(message_prefix: Optional[str] = ""):
             except OpenApiException as e:
                 message = _get_open_api_exception_message(e)
 
-                raise Exception(f"{message_prefix}{message}") from None
+                raise DaytonaException(f"{message_prefix}{message}") from None
             except Exception as e:
                 if message_prefix:
                     message = f"{message_prefix}{str(e)}"
-                    raise e.__class__(message)
-                raise e
+                    raise DaytonaException(message)
+                raise DaytonaException(str(e))
 
         return wrapper
     return decorator

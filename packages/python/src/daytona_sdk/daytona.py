@@ -23,6 +23,7 @@ from daytona_sdk._utils.exceptions import intercept_exceptions
 from .code_toolbox.workspace_python_code_toolbox import WorkspacePythonCodeToolbox
 from .code_toolbox.workspace_ts_code_toolbox import WorkspaceTsCodeToolbox
 from .workspace import Workspace
+from daytona_sdk._utils.exceptions import DaytonaException
 
 
 # Type definitions
@@ -77,7 +78,7 @@ class Daytona:
             config: Optional DaytonaConfig object containing api_key, server_url, and target
 
         Raises:
-            ValueError: If API key or Server URL is not provided either through config or environment variables
+            DaytonaException: If API key or Server URL is not provided either through config or environment variables
         """
         if config is None:
             # Initialize env - it automatically reads from .env and .env.local
@@ -95,10 +96,10 @@ class Daytona:
             self.target = config.target
 
         if not self.api_key:
-            raise ValueError("API key is required")
+            raise DaytonaException("API key is required")
 
         if not self.server_url:
-            raise ValueError("Server URL is required")
+            raise DaytonaException("Server URL is required")
 
         # Create API configuration without api_key
         configuration = Configuration(host=self.server_url)
@@ -129,10 +130,10 @@ class Daytona:
 
         try:
             if params.timeout and params.timeout < 0:
-                raise ValueError("Timeout must be a non-negative number")
+                raise DaytonaException("Timeout must be a non-negative number")
             
             if params.auto_stop_interval is not None and params.auto_stop_interval < 0:
-                raise ValueError("auto_stop_interval must be a non-negative integer")
+                raise DaytonaException("auto_stop_interval must be a non-negative integer")
 
             # Create workspace using dictionary
             workspace_data = CreateWorkspace(
@@ -196,7 +197,7 @@ class Daytona:
             case "python":
                 return WorkspacePythonCodeToolbox()
             case _:
-                raise ValueError(f"Unsupported language: {params.language}")
+                raise DaytonaException(f"Unsupported language: {params.language}")
     
     @intercept_exceptions(message_prefix="Failed to remove workspace: ")
     def remove(self, workspace: Workspace) -> None:
@@ -219,10 +220,10 @@ class Daytona:
             Workspace: The workspace instance
 
         Raises:
-            ValueError: If workspace_id is not provided
+            DaytonaException: If workspace_id is not provided
         """
         if not workspace_id:
-            raise ValueError("workspace_id is required")
+            raise DaytonaException("workspace_id is required")
 
         # Get the workspace instance
         workspace_instance = self.workspace_api.get_workspace(workspace_id=workspace_id)
@@ -266,13 +267,13 @@ class Daytona:
             CodeLanguage: The validated language, defaults to "python" if None
             
         Raises:
-            ValueError: If the language is not supported
+            DaytonaException: If the language is not supported
         """
         if not language:
             return "python"
         
         if language not in ["python", "javascript", "typescript"]:
-            raise ValueError(f"Invalid code-toolbox-language: {language}")
+            raise DaytonaException(f"Invalid code-toolbox-language: {language}")
             
         return language  # type: ignore
     

@@ -6,6 +6,7 @@ from .daytona import (
     Workspace,
     SessionExecuteRequest,
     SessionExecuteResponse,
+    DaytonaException
 )
 
 __all__ = [
@@ -15,5 +16,6 @@ __all__ = [
     "CodeLanguage",
     "Workspace",
     "SessionExecuteRequest",
-    "SessionExecuteResponse"
+    "SessionExecuteResponse",
+    "DaytonaException"
 ]

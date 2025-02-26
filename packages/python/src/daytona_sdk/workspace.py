@@ -17,6 +17,7 @@ from daytona_api_client import Workspace as WorkspaceInstance, ToolboxApi, Works
 from .protocols import WorkspaceCodeToolbox
 from dataclasses import dataclass
 from datetime import datetime
+from daytona_sdk._utils.exceptions import DaytonaException
 
 @dataclass
 class WorkspaceResources:
@@ -162,8 +163,7 @@ class Workspace:
             Dictionary containing the updated workspace labels
             
         Raises:
-            urllib.error.HTTPError: If the server request fails
-            urllib.error.URLError: If there's a network/connection error
+            DaytonaException: If the server request fails; If there's a network/connection error
         """
         # Convert all values to strings and create the expected labels structure
         string_labels = {k: str(v).lower() if isinstance(v, bool) else str(v) for k, v in labels.items()}
@@ -178,8 +178,7 @@ class Workspace:
             timeout: Maximum time to wait in seconds. 0 means no timeout.
 
         Raises:
-            ValueError: If timeout is negative
-            Exception: If workspace fails to start or times out
+            DaytonaException: If timeout is negative; If workspace fails to start or times out
         """
         self.workspace_api.start_workspace(self.id)
         self.wait_for_workspace_start(timeout)
@@ -198,12 +197,11 @@ class Workspace:
             timeout: Maximum time to wait in seconds. 0 means no timeout.
 
         Raises:
-            ValueError: If timeout is negative
-            Exception: If workspace fails to start or times out
+            DaytonaException: If timeout is negative; If workspace fails to start or times out
         """
         timeout = 60 if timeout is None else timeout
         if timeout < 0:
-            raise ValueError("Timeout must be a non-negative number")
+            raise DaytonaException("Timeout must be a non-negative number")
 
         check_interval = 0.1  # Wait 100ms between checks
         start_time = time.time()
@@ -217,12 +215,12 @@ class Workspace:
                 return
 
             if state == "error":
-                raise Exception(
+                raise DaytonaException(
                     f"Workspace {self.id} failed to start with state: {state}")
 
             time.sleep(check_interval)
 
-        raise Exception(
+        raise DaytonaException(
             "Workspace {self.id} failed to become ready within the timeout period")
 
     @intercept_exceptions(message_prefix="Failure during waiting for workspace to stop: ")
@@ -255,7 +253,7 @@ class Workspace:
             time.sleep(0.1)
             attempts += 1
             
-        raise Exception("Workspace {self.id} failed to become stopped within the timeout period")
+        raise DaytonaException(f"Workspace {self.id} failed to become stopped within the timeout period")
 
     @intercept_exceptions(message_prefix="Failed to set auto-stop interval: ")
     def set_autostop_interval(self, interval: int) -> None:
@@ -266,10 +264,10 @@ class Workspace:
                     Set to 0 to disable auto-stop.
 
         Raises:
-            ValueError: If interval is negative
+            DaytonaException: If interval is negative
         """
         if not isinstance(interval, int) or interval < 0:
-            raise ValueError("Auto-stop interval must be a non-negative integer")
+            raise DaytonaException("Auto-stop interval must be a non-negative integer")
 
         self.workspace_api.set_autostop_interval(self.id, interval)
         self.instance.auto_stop_interval = interval
@@ -287,6 +285,6 @@ class Workspace:
         provider_metadata = json.loads(self.instance.info.provider_metadata)
         node_domain = provider_metadata.get('nodeDomain', '')
         if not node_domain:
-            raise Exception("Node domain not found in provider metadata. Please contact support.")
+            raise DaytonaException("Node domain not found in provider metadata. Please contact support.")
         
         return f"https://{port}-{self.id}.{node_domain}"
