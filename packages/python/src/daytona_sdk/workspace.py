@@ -8,6 +8,7 @@ Git, process execution, and LSP functionality.
 import json
 import time
 from typing import Dict, Optional
+from daytona_sdk._utils.exceptions import intercept_exceptions
 from .filesystem import FileSystem
 from .git import Git
 from .process import Process
@@ -124,6 +125,7 @@ class Workspace:
             snapshot_state_created_at=datetime.fromisoformat(provider_metadata.get('snapshot_state_created_at')) if provider_metadata.get('snapshot_state_created_at') else None
         )
 
+    @intercept_exceptions(message_prefix="Failed to get workspace root directory: ")
     def get_workspace_root_dir(self) -> str:
         """Gets the root directory path of the workspace.
         
@@ -149,6 +151,7 @@ class Workspace:
         """
         return LspServer(language_id, path_to_project, self.toolbox_api, self.instance)
 
+    @intercept_exceptions(message_prefix="Failed to set labels: ")
     def set_labels(self, labels: Dict[str, str]) -> Dict[str, str]:
         """Sets labels for the workspace.
         
@@ -167,6 +170,7 @@ class Workspace:
         labels_payload = {"labels": string_labels}
         return self.workspace_api.replace_labels(self.id, labels_payload)
 
+    @intercept_exceptions(message_prefix="Failed to start workspace: ")
     def start(self, timeout: Optional[float] = None):
         """Starts the workspace.
 
@@ -180,12 +184,13 @@ class Workspace:
         self.workspace_api.start_workspace(self.id)
         self.wait_for_workspace_start(timeout)
 
-
+    @intercept_exceptions(message_prefix="Failed to stop workspace: ")
     def stop(self):
         """Stops the workspace."""
         self.workspace_api.stop_workspace(self.id)
         self.wait_for_workspace_stop()
 
+    @intercept_exceptions(message_prefix="Failure during waiting for workspace to start: ")
     def wait_for_workspace_start(self, timeout: float = 60) -> None:
         """Wait for workspace to reach 'started' state.
 
@@ -220,6 +225,7 @@ class Workspace:
         raise Exception(
             "Workspace {self.id} failed to become ready within the timeout period")
 
+    @intercept_exceptions(message_prefix="Failure during waiting for workspace to stop: ")
     def wait_for_workspace_stop(self) -> None:
         """Wait for workspace to reach 'stopped' state.
         
@@ -251,6 +257,7 @@ class Workspace:
             
         raise Exception("Workspace {self.id} failed to become stopped within the timeout period")
 
+    @intercept_exceptions(message_prefix="Failed to set auto-stop interval: ")
     def set_autostop_interval(self, interval: int) -> None:
         """Sets the auto-stop interval for the workspace.
 
@@ -267,6 +274,7 @@ class Workspace:
         self.workspace_api.set_autostop_interval(self.id, interval)
         self.instance.auto_stop_interval = interval
 
+    @intercept_exceptions(message_prefix="Failed to get preview link: ")
     def get_preview_link(self, port: int) -> str:
         """Gets the preview link for the workspace at a specific port. If the port is not open, it will open it and return the link.
         
@@ -279,6 +287,6 @@ class Workspace:
         provider_metadata = json.loads(self.instance.info.provider_metadata)
         node_domain = provider_metadata.get('nodeDomain', '')
         if not node_domain:
-            raise Exception("Cannot get preview link. Node domain not found in provider metadata. Please contact support.")
+            raise Exception("Node domain not found in provider metadata. Please contact support.")
         
         return f"https://{port}-{self.id}.{node_domain}"

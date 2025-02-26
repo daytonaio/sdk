@@ -19,7 +19,7 @@ from daytona_api_client import (
     SessionExecuteRequest,
     SessionExecuteResponse
 )
-
+from daytona_sdk._utils.exceptions import intercept_exceptions
 from .code_toolbox.workspace_python_code_toolbox import WorkspacePythonCodeToolbox
 from .code_toolbox.workspace_ts_code_toolbox import WorkspaceTsCodeToolbox
 from .workspace import Workspace
@@ -109,6 +109,7 @@ class Daytona:
         self.workspace_api = WorkspaceApi(api_client)
         self.toolbox_api = ToolboxApi(api_client)
 
+    @intercept_exceptions(message_prefix="Failed to create workspace: ")
     def create(self, params: Optional[CreateWorkspaceParams] = None) -> Workspace:
         """Creates a new workspace and waits for it to start.
         
@@ -172,10 +173,10 @@ class Daytona:
 
         except Exception as e:
             try:
-                self.workspace_api.remove_workspace(workspace_id=workspace_id)
+                self.workspace_api.delete_workspace(workspace_id=workspace_id, force=True)
             except:
                 pass
-            raise Exception(f"Failed to create workspace: {str(e)}") from e
+            raise e
 
     def _get_code_toolbox(self, params: Optional[CreateWorkspaceParams] = None):
         """Helper method to get the appropriate code toolbox
@@ -196,7 +197,8 @@ class Daytona:
                 return WorkspacePythonCodeToolbox()
             case _:
                 raise ValueError(f"Unsupported language: {params.language}")
-            
+    
+    @intercept_exceptions(message_prefix="Failed to remove workspace: ")
     def remove(self, workspace: Workspace) -> None:
         """Removes a workspace.
         
@@ -205,6 +207,7 @@ class Daytona:
         """
         return self.workspace_api.delete_workspace(workspace_id=workspace.id, force=True)
 
+    @intercept_exceptions(message_prefix="Failed to get workspace: ")
     def get_current_workspace(self, workspace_id: str) -> Workspace:
         """
         Get a workspace by its ID.
@@ -233,7 +236,8 @@ class Daytona:
             self.toolbox_api,
             code_toolbox
         )
-    
+
+    @intercept_exceptions(message_prefix="Failed to list workspaces: ")
     def list(self) -> List[Workspace]:
         """List all workspaces."""
         workspaces = self.workspace_api.list_workspaces()

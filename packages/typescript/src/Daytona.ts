@@ -9,6 +9,7 @@ import {
   CreateWorkspaceTargetEnum,
 } from '@daytonaio/api-client'
 import { WorkspaceTsCodeToolbox } from './code-toolbox/WorkspaceTsCodeToolbox'
+import axios from 'axios'
 
 /**
  * Configuration options for initializing the Daytona client
@@ -116,8 +117,24 @@ export class Daytona {
       },
     })
 
-    this.workspaceApi = new WorkspaceApi(configuration)
-    this.toolboxApi = new ToolboxApi(configuration)
+    const axiosInstance = axios.create();
+    axiosInstance.interceptors.response.use(
+      (response) => {
+        return response
+      },
+      (error) => {
+        const errorMessage =
+          error.response?.data?.message ||
+          error.response?.data ||
+          error.message ||
+          String(error);
+
+        throw new Error(errorMessage);
+      }
+    )
+
+    this.workspaceApi = new WorkspaceApi(configuration, '', axiosInstance)
+    this.toolboxApi = new ToolboxApi(configuration, '', axiosInstance)
   }
 
   /**
