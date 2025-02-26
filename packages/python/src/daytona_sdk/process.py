@@ -17,6 +17,8 @@ from daytona_api_client import (
     CreateSessionRequest,
     Command
 )
+
+from daytona_sdk._utils.exceptions import intercept_exceptions
 from .code_toolbox.workspace_python_code_toolbox import WorkspacePythonCodeToolbox
 
 
@@ -39,6 +41,7 @@ class Process:
         self.toolbox_api = toolbox_api
         self.instance = instance
 
+    @intercept_exceptions(message_prefix="Failed to execute command: ")
     def exec(self, command: str, cwd: Optional[str] = None, timeout: Optional[int] = None) -> ExecuteResponse:
         """Executes a shell command in the workspace.
         
@@ -73,6 +76,7 @@ class Process:
         command = self.code_toolbox.get_run_command(code)
         return self.exec(command)
 
+    @intercept_exceptions(message_prefix="Failed to create session: ")
     def create_session(self, session_id: str) -> None:
         """Creates a new exec session in the workspace.
         
@@ -85,6 +89,7 @@ class Process:
             create_session_request=request
         )
 
+    @intercept_exceptions(message_prefix="Failed to get session: ")
     def get_session(self, session_id: str) -> Session:
         """Gets a session in the workspace.
         
@@ -98,7 +103,8 @@ class Process:
             workspace_id=self.instance.id,
             session_id=session_id
         )
-    
+
+    @intercept_exceptions(message_prefix="Failed to get session command: ")
     def get_session_command(self, session_id: str, command_id: str) -> Command:
         """Gets a command in the session.
         
@@ -115,6 +121,7 @@ class Process:
             command_id=command_id
         )
 
+    @intercept_exceptions(message_prefix="Failed to execute session command: ")
     def execute_session_command(self, session_id: str, req: SessionExecuteRequest) -> SessionExecuteResponse:
         """Executes a command in the session.
         
@@ -131,6 +138,7 @@ class Process:
             session_execute_request=req
         )
 
+    @intercept_exceptions(message_prefix="Failed to get session command logs: ")
     def get_session_command_logs(self, session_id: str, command_id: str) -> str:
         """Gets the logs for a command in the session.
         
@@ -147,6 +155,7 @@ class Process:
             command_id=command_id
         )
 
+    @intercept_exceptions(message_prefix="Failed to list sessions: ")
     def list_sessions(self) -> List[Session]:
         """Lists all sessions in the workspace.
         
@@ -157,6 +166,7 @@ class Process:
             workspace_id=self.instance.id
         )
 
+    @intercept_exceptions(message_prefix="Failed to delete session: ")
     def delete_session(self, session_id: str) -> None:
         """Deletes a session in the workspace.
         

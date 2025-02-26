@@ -9,6 +9,8 @@ import {
   CreateWorkspaceTargetEnum,
 } from '@daytonaio/api-client'
 import { WorkspaceTsCodeToolbox } from './code-toolbox/WorkspaceTsCodeToolbox'
+import axios from 'axios'
+import { DaytonaError } from './errors/DaytonaError'
 
 /**
  * Configuration options for initializing the Daytona client
@@ -89,16 +91,16 @@ export class Daytona {
   /**
    * Creates a new Daytona client instance
    * @param {DaytonaConfig} [config] - Configuration options
-   * @throws {Error} When API key or server URL is missing
+   * @throws {DaytonaError} When API key or server URL is missing
    */
   constructor(config?: DaytonaConfig) {
     const apiKey = config?.apiKey || process.env.DAYTONA_API_KEY
     if (!apiKey) {
-      throw new Error('API key is required')
+      throw new DaytonaError('API key is required')
     }
     const serverUrl = config?.serverUrl || process.env.DAYTONA_SERVER_URL
     if (!serverUrl) {
-      throw new Error('Server URL is required')
+      throw new DaytonaError('Server URL is required')
     }
     const envTarget = process.env.DAYTONA_TARGET as CreateWorkspaceTargetEnum
     const target = config?.target || envTarget
@@ -116,8 +118,24 @@ export class Daytona {
       },
     })
 
-    this.workspaceApi = new WorkspaceApi(configuration)
-    this.toolboxApi = new ToolboxApi(configuration)
+    const axiosInstance = axios.create();
+    axiosInstance.interceptors.response.use(
+      (response) => {
+        return response
+      },
+      (error) => {
+        const errorMessage =
+          error.response?.data?.message ||
+          error.response?.data ||
+          error.message ||
+          String(error);
+
+        throw new DaytonaError(errorMessage);
+      }
+    )
+
+    this.workspaceApi = new WorkspaceApi(configuration, '', axiosInstance)
+    this.toolboxApi = new ToolboxApi(configuration, '', axiosInstance)
   }
 
   /**
@@ -127,7 +145,7 @@ export class Daytona {
    */
   public async create(params?: CreateWorkspaceParams): Promise<Workspace> {
     if (params?.autoStopInterval !== undefined && (!Number.isInteger(params.autoStopInterval) || params.autoStopInterval < 0)) {
-      throw new Error('autoStopInterval must be a non-negative integer');
+      throw new DaytonaError('autoStopInterval must be a non-negative integer');
     }
 
     const workspaceId = params?.id || `sandbox-${uuidv4().slice(0, 8)}`
@@ -140,7 +158,7 @@ export class Daytona {
     }
 
     if (params?.timeout && params.timeout < 0) {
-      throw new Error('Timeout must be a non-negative number')
+      throw new DaytonaError('Timeout must be a non-negative number')
     }
 
     const response = await this.workspaceApi.createWorkspace({
@@ -197,7 +215,7 @@ export class Daytona {
     return response.data.map((workspace) => {
       const language = workspace.labels?.[`code-toolbox-language`] as CodeLanguage
       if (language && !['python', 'javascript', 'typescript'].includes(language)) {
-        throw new Error(`Invalid code-toolbox-language: ${language}`)
+        throw new DaytonaError(`Invalid code-toolbox-language: ${language}`)
       }
       return new Workspace(
         workspace.id, 
@@ -253,7 +271,7 @@ export class Daytona {
       case undefined:
         return new WorkspacePythonCodeToolbox()
       default:
-        throw new Error(`Unsupported language: ${language}`)
+        throw new DaytonaError(`Unsupported language: ${language}`)
     }
   }
 }

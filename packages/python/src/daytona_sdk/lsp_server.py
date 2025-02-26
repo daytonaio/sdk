@@ -15,6 +15,8 @@ from daytona_api_client import (
     LspDocumentRequest,
     LspCompletionParams
 )
+from daytona_sdk._utils.exceptions import intercept_exceptions
+
 
 LspLanguageId = Literal["typescript"]
 
@@ -53,6 +55,7 @@ class LspServer:
         self.toolbox_api = toolbox_api
         self.instance = instance
 
+    @intercept_exceptions(message_prefix="Failed to start LSP server: ")
     def start(self) -> None:
         """Starts the language server."""
         self.toolbox_api.lsp_start(
@@ -63,6 +66,7 @@ class LspServer:
             ),
         )
 
+    @intercept_exceptions(message_prefix="Failed to stop LSP server: ")
     def stop(self) -> None:
         """Stops the language server.
         
@@ -76,6 +80,7 @@ class LspServer:
             ),
         )
 
+    @intercept_exceptions(message_prefix="Failed to open file: ")
     def did_open(self, path: str) -> None:
         """Notifies the language server that a file has been opened.
         
@@ -94,6 +99,7 @@ class LspServer:
             ),
         )
 
+    @intercept_exceptions(message_prefix="Failed to close file: ")
     def did_close(self, path: str) -> None:
         """Notifies the language server that a file has been closed.
         
@@ -112,6 +118,7 @@ class LspServer:
             ),
         )
 
+    @intercept_exceptions(message_prefix="Failed to get symbols from document: ")
     def document_symbols(self, path: str) -> List[LspSymbol]:
         """Gets symbol information from a document.
         
@@ -128,6 +135,7 @@ class LspServer:
             uri=f"file://{path}",
         )
 
+    @intercept_exceptions(message_prefix="Failed to get symbols from workspace: ")
     def workspace_symbols(self, query: str) -> List[LspSymbol]:
         """Searches for symbols across the workspace.
         
@@ -144,6 +152,7 @@ class LspServer:
             query=query,
         )
 
+    @intercept_exceptions(message_prefix="Failed to get completions: ")
     def completions(self, path: str, position: Position) -> CompletionList:
         """Gets completion suggestions at a position in a file.
         

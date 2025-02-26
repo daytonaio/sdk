@@ -7,6 +7,7 @@ export { Git } from './Git'
 export { Process } from './Process'
 // export { LspServer } from './LspServer'
 // export type { LspLanguageId, Position } from './LspServer'
+export { DaytonaError } from './errors/DaytonaError'
 
 // Re-export necessary types from client
 export type {

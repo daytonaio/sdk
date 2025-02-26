@@ -16,6 +16,7 @@ from daytona_api_client import (
     GitCommitRequest,
     GitRepoRequest,
 )
+from daytona_sdk._utils.exceptions import intercept_exceptions
 
 if TYPE_CHECKING:
     from .workspace import Workspace
@@ -40,6 +41,7 @@ class Git:
         self.toolbox_api = toolbox_api
         self.instance = instance
 
+    @intercept_exceptions(message_prefix="Failed to add files: ")
     def add(self, path: str, files: List[str]) -> None:
         """Stages files for commit.
         
@@ -55,6 +57,7 @@ class Git:
             ),
         )
 
+    @intercept_exceptions(message_prefix="Failed to list branches: ")
     def branches(self, path: str) -> ListBranchResponse:
         """Lists branches in the repository.
         
@@ -69,6 +72,7 @@ class Git:
             path=path,
         )
 
+    @intercept_exceptions(message_prefix="Failed to clone repository: ")
     def clone(
         self,
         url: str,
@@ -100,6 +104,7 @@ class Git:
             )
         )
 
+    @intercept_exceptions(message_prefix="Failed to commit changes: ")
     def commit(self, path: str, message: str, author: str, email: str) -> None:
         """Commits staged changes.
         
@@ -119,6 +124,7 @@ class Git:
             ),
         )
 
+    @intercept_exceptions(message_prefix="Failed to push changes: ")
     def push(
         self, path: str, username: Optional[str] = None, password: Optional[str] = None
     ) -> None:
@@ -138,6 +144,7 @@ class Git:
             ),
         )
 
+    @intercept_exceptions(message_prefix="Failed to pull changes: ")
     def pull(
         self, path: str, username: Optional[str] = None, password: Optional[str] = None
     ) -> None:
@@ -157,6 +164,7 @@ class Git:
             ),
         )
 
+    @intercept_exceptions(message_prefix="Failed to get status: ")
     def status(self, path: str) -> GitStatus:
         """Gets the current Git repository status.
         

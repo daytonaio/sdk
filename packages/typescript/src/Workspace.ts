@@ -5,6 +5,7 @@ import { Git } from './Git'
 //  import { LspLanguageId, LspServer } from './LspServer'
 import { Process } from './Process'
 import { LspLanguageId, LspServer } from './LspServer'
+import { DaytonaError } from './errors/DaytonaError'
 
 /**
  * Resources allocated to a workspace
@@ -139,7 +140,7 @@ export class Workspace {
    */
   public async start(timeout?: number): Promise<void> {
     if (timeout != undefined && timeout < 0) {
-      throw new Error('Timeout must be a non-negative number');
+      throw new DaytonaError('Timeout must be a non-negative number');
     }
     await this.workspaceApi.startWorkspace(this.instance.id)
     await this.waitUntilStarted(timeout)
@@ -164,7 +165,7 @@ export class Workspace {
 
   public async waitUntilStarted(timeout: number = 60) {
     if (timeout < 0) {
-      throw new Error('Timeout must be a non-negative number');
+      throw new DaytonaError('Timeout must be a non-negative number');
     }
 
     const checkInterval = 100; // Wait 100 ms between checks
@@ -179,13 +180,13 @@ export class Workspace {
       }
 
       if (state === 'error') {
-        throw new Error(`Workspace failed to start with status: ${state}`);
+        throw new DaytonaError(`Workspace failed to start with status: ${state}`);
       }
 
       await new Promise(resolve => setTimeout(resolve, checkInterval));
     }
 
-    throw new Error('Workspace failed to become ready within the timeout period');
+    throw new DaytonaError('Workspace failed to become ready within the timeout period');
   }
 
   public async waitUntilStopped() {
@@ -201,14 +202,14 @@ export class Workspace {
       }
 
       if (state === 'error') {
-        throw new Error(`Workspace failed to stop with status: ${state}`);
+        throw new DaytonaError(`Workspace failed to stop with status: ${state}`);
       }
 
       await new Promise(resolve => setTimeout(resolve, 100)); // Wait 100 ms between checks
       attempts++;
     }
 
-    throw new Error('Workspace failed to become stopped within the timeout period');
+    throw new DaytonaError('Workspace failed to become stopped within the timeout period');
   }
 
   /**
@@ -251,11 +252,11 @@ export class Workspace {
   /**
    * Sets the auto-stop interval for the workspace
    * @param {number} interval - Number of minutes after which the workspace will automatically stop (must be an integer). Set to 0 to disable auto-stop.
-   * @throws {Error} If interval is negative
+   * @throws {DaytonaError} If interval is negative
    */
   public async setAutostopInterval(interval: number): Promise<void> {
     if (!Number.isInteger(interval) || interval < 0) {
-      throw new Error('autoStopInterval must be a non-negative integer');
+      throw new DaytonaError('autoStopInterval must be a non-negative integer');
     }
     
     await this.workspaceApi.setAutostopInterval(this.id, interval)
@@ -266,13 +267,13 @@ export class Workspace {
    * Gets the preview link for the workspace at a specific port. If the port is not open, it will open it and return the link.
    * @param {number} port - The port to open the preview link on
    * @returns {string} The preview link for the workspace at the specified port
-   * @throws {Error} If the node domain is not found in the provider metadata
+   * @throws {DaytonaError} If the node domain is not found in the provider metadata
    */
   public getPreviewLink(port: number): string {
     const providerMetadata = JSON.parse(this.instance.info?.providerMetadata || '{}')
     const nodeDomain = providerMetadata.nodeDomain || ''
     if (!nodeDomain) {
-      throw new Error("Cannot get preview link. Node domain not found in provider metadata. Please contact support.")
+      throw new DaytonaError("Cannot get preview link. Node domain not found in provider metadata. Please contact support.")
     }
     return `https://${port}-${this.id}.${nodeDomain}`
   }
