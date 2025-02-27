@@ -180,7 +180,7 @@ export class Workspace {
    */
   public async stop(timeout: number = 60): Promise<void> {
     if (timeout < 0) {
-      throw new Error('Timeout must be a non-negative number');
+      throw new DaytonaError('Timeout must be a non-negative number');
     }
     const startTime = Date.now();
     await this.workspaceApi.stopWorkspace(this.instance.id, { timeout: timeout * 1000 })
@@ -200,8 +200,7 @@ export class Workspace {
    * Waits until the workspace is started
    * @param {number} timeout - Timeout in seconds (0 means no timeout, default is 60)
    * @returns {Promise<void>}
-   * @throws {Error} If the workspace is in an error state
-   * @throws {TimeoutError} If the workspace fails to start within the timeout period
+   * @throws {DaytonaError} If the workspace ends up in an error state or fails to start within the timeout period
    */
   public async waitUntilStarted(timeout: number = 60) {
     if (timeout < 0) {
@@ -233,12 +232,11 @@ export class Workspace {
    * Waits until the workspace is stopped
    * @param {number} timeout - Timeout in seconds (0 means no timeout, default is 60)
    * @returns {Promise<void>}
-   * @throws {Error} If the workspace fails to stop within the timeout period
-   * @throws {TimeoutError} If the workspace fails to stop within the timeout period
+   * @throws {DaytonaError} If the workspace fails to stop within the timeout period
    */
   public async waitUntilStopped(timeout: number = 60) {
     if (timeout < 0) {
-      throw new Error('Timeout must be a non-negative number');
+      throw new DaytonaError('Timeout must be a non-negative number');
     }
 
     const checkInterval = 100; // Wait 100 ms between checks

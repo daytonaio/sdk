@@ -161,7 +161,7 @@ class Daytona:
                 pass
             raise e
 
-    @with_timeout(error_message=lambda self, timeout: f"Failed to create and start workspace within {timeout} seconds.")
+    @with_timeout(error_message=lambda self, timeout: f"Failed to create and start workspace within {timeout} seconds timeout period.")
     def _create(self, params: Optional[CreateWorkspaceParams] = None, timeout: Optional[float] = 60) -> Workspace:
         """Creates a new workspace and waits for it to start.
 
