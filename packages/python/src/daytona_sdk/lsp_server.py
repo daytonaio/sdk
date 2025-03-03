@@ -43,7 +43,7 @@ from daytona_api_client import (
     LspDocumentRequest,
     LspCompletionParams
 )
-from daytona_sdk._utils.exceptions import intercept_exceptions
+from daytona_sdk._utils.errors import intercept_errors
 from .protocols import WorkspaceInstance
 
 
@@ -54,11 +54,12 @@ class LspLanguageId(Enum):
 
     def __str__(self):
         return self.value
-    
+
     def __eq__(self, other):
         if isinstance(other, str):
             return self.value == other
         return super().__eq__(other)
+
 
 class Position:
     """Represents a position in a text document.
@@ -114,7 +115,7 @@ class LspServer:
         self.toolbox_api = toolbox_api
         self.instance = instance
 
-    @intercept_exceptions(message_prefix="Failed to start LSP server: ")
+    @intercept_errors(message_prefix="Failed to start LSP server: ")
     def start(self) -> None:
         """Starts the language server.
 
@@ -136,7 +137,7 @@ class LspServer:
             ),
         )
 
-    @intercept_exceptions(message_prefix="Failed to stop LSP server: ")
+    @intercept_errors(message_prefix="Failed to stop LSP server: ")
     def stop(self) -> None:
         """Stops the language server.
 
@@ -157,7 +158,7 @@ class LspServer:
             ),
         )
 
-    @intercept_exceptions(message_prefix="Failed to open file: ")
+    @intercept_errors(message_prefix="Failed to open file: ")
     def did_open(self, path: str) -> None:
         """Notifies the language server that a file has been opened.
 
@@ -184,7 +185,7 @@ class LspServer:
             ),
         )
 
-    @intercept_exceptions(message_prefix="Failed to close file: ")
+    @intercept_errors(message_prefix="Failed to close file: ")
     def did_close(self, path: str) -> None:
         """Notify the language server that a file has been closed.
 
@@ -208,7 +209,7 @@ class LspServer:
             ),
         )
 
-    @intercept_exceptions(message_prefix="Failed to get symbols from document: ")
+    @intercept_errors(message_prefix="Failed to get symbols from document: ")
     def document_symbols(self, path: str) -> List[LspSymbol]:
         """Gets symbol information from a document.
 
@@ -239,7 +240,7 @@ class LspServer:
             uri=f"file://{path}",
         )
 
-    @intercept_exceptions(message_prefix="Failed to get symbols from workspace: ")
+    @intercept_errors(message_prefix="Failed to get symbols from workspace: ")
     def workspace_symbols(self, query: str) -> List[LspSymbol]:
         """Searches for symbols across the entire Sandbox.
 
@@ -272,7 +273,7 @@ class LspServer:
             query=query,
         )
 
-    @intercept_exceptions(message_prefix="Failed to get completions: ")
+    @intercept_errors(message_prefix="Failed to get completions: ")
     def completions(self, path: str, position: Position) -> CompletionList:
         """Gets completion suggestions at a position in a file.
 

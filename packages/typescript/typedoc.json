@@ -4,14 +4,14 @@
   "readme": "none",
   
   "$schema": "https://typedoc-plugin-markdown.org/schema.json",
-  "entryPoints": ["./src/*.ts"],
+  "entryPoints": ["./src/*.ts", "./src/errors/*.ts"],
   "exclude": ["src/index.ts"],
   "out": "../../docs/typescript-sdk",
   "excludePrivate": true,
   "excludeProtected": true,
   "excludeExternals": true,
   "excludeNotDocumented": false,
-  "plugin": ["typedoc-plugin-markdown", "./hooks/typedoc-custom.mjs"],
+  "plugin": ["typedoc-plugin-markdown", "./hooks/typedoc-custom.mjs", "typedoc-plugin-merge-modules"],
   "theme": "markdown",
   "sort": ["static-first", "alphabetical"],
 
@@ -35,5 +35,7 @@
   "propertiesFormat": "table",
   "tableColumnSettings": {
     "hideSources": true,
-  }
+  },
+
+  "mergeModulesMergeMode": "module"
 }

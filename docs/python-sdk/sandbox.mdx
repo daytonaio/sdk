@@ -39,13 +39,14 @@ print(completions)
 
   The Sandbox must be in a 'started' state before performing operations.
 
+<a id="daytona_sdk.workspace.Workspace"></a>
 ## Workspace
 
 ```python
 class Workspace()
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/1bf7e6102792baef2ef717000a1bb95e187794e2/packages/python/src/daytona_sdk/workspace.py#L121)
+[[view_source]](https://github.com/daytonaio/sdk/blob/b89000d9591190e660eb82338365eda00baab694/packages/python/src/daytona_sdk/workspace.py#L181)
 
 Represents a Daytona Sandbox.
 
@@ -57,14 +58,11 @@ a Daytona Sandbox.
 
 - `id` _str_ - Unique identifier for the Sandbox.
 - `instance` _WorkspaceInstance_ - The underlying Sandbox instance.
-- `workspace_api` _WorkspaceApi_ - API client for Sandbox operations.
-- `toolbox_api` _ToolboxApi_ - API client for toolbox operations.
 - `code_toolbox` _WorkspaceCodeToolbox_ - Language-specific toolbox implementation.
 - `fs` _FileSystem_ - File system operations interface.
 - `git` _Git_ - Git operations interface.
 - `process` _Process_ - Process execution interface.
 
-<a id="daytona_sdk.workspace.Workspace.__init__"></a>
 
 #### Workspace.\_\_init\_\_
 
@@ -73,7 +71,7 @@ def __init__(id: str, instance: WorkspaceInstance, workspace_api: WorkspaceApi,
              toolbox_api: ToolboxApi, code_toolbox: WorkspaceCodeToolbox)
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/1bf7e6102792baef2ef717000a1bb95e187794e2/packages/python/src/daytona_sdk/workspace.py#L139)
+[[view_source]](https://github.com/daytonaio/sdk/blob/b89000d9591190e660eb82338365eda00baab694/packages/python/src/daytona_sdk/workspace.py#L197)
 
 Initialize a new Workspace instance.
 
@@ -85,7 +83,6 @@ Initialize a new Workspace instance.
 - `toolbox_api` _ToolboxApi_ - API client for toolbox operations.
 - `code_toolbox` _WorkspaceCodeToolbox_ - Language-specific toolbox implementation.
 
-<a id="daytona_sdk.workspace.Workspace.info"></a>
 
 #### Workspace.info
 
@@ -93,7 +90,7 @@ Initialize a new Workspace instance.
 def info() -> WorkspaceInfo
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/1bf7e6102792baef2ef717000a1bb95e187794e2/packages/python/src/daytona_sdk/workspace.py#L169)
+[[view_source]](https://github.com/daytonaio/sdk/blob/b89000d9591190e660eb82338365eda00baab694/packages/python/src/daytona_sdk/workspace.py#L227)
 
 Gets structured information about the Sandbox.
 
@@ -112,15 +109,15 @@ print(f"State: {info.state}")
 print(f"Resources: {info.resources.cpu} CPU, {info.resources.memory} RAM")
 ```
 
-<a id="daytona_sdk.workspace.Workspace.get_workspace_root_dir"></a>
 
 #### Workspace.get\_workspace\_root\_dir
 
 ```python
+@intercept_errors(message_prefix="Failed to get workspace root directory: ")
 def get_workspace_root_dir() -> str
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/1bf7e6102792baef2ef717000a1bb95e187794e2/packages/python/src/daytona_sdk/workspace.py#L227)
+[[view_source]](https://github.com/daytonaio/sdk/blob/b89000d9591190e660eb82338365eda00baab694/packages/python/src/daytona_sdk/workspace.py#L246)
 
 Gets the root directory path of the Sandbox.
 
@@ -136,7 +133,6 @@ root_dir = workspace.get_workspace_root_dir()
 print(f"Workspace root: {root_dir}")
 ```
 
-<a id="daytona_sdk.workspace.Workspace.create_lsp_server"></a>
 
 #### Workspace.create\_lsp\_server
 
@@ -145,7 +141,7 @@ def create_lsp_server(language_id: LspLanguageId,
                       path_to_project: str) -> LspServer
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/1bf7e6102792baef2ef717000a1bb95e187794e2/packages/python/src/daytona_sdk/workspace.py#L244)
+[[view_source]](https://github.com/daytonaio/sdk/blob/b89000d9591190e660eb82338365eda00baab694/packages/python/src/daytona_sdk/workspace.py#L263)
 
 Creates a new Language Server Protocol (LSP) server instance.
 
@@ -154,7 +150,7 @@ diagnostics, and more.
 
 **Arguments**:
 
-- `language_id` _LspLanguageId_ - The language server type (e.g., "python", "typescript").
+- `language_id` _LspLanguageId_ - The language server type (e.g., LspLanguageId.PYTHON).
 - `path_to_project` _str_ - Absolute path to the project root directory.
   
 
@@ -169,15 +165,15 @@ diagnostics, and more.
 lsp = workspace.create_lsp_server("python", "/workspace/project")
 ```
 
-<a id="daytona_sdk.workspace.Workspace.set_labels"></a>
 
 #### Workspace.set\_labels
 
 ```python
+@intercept_errors(message_prefix="Failed to set labels: ")
 def set_labels(labels: Dict[str, str]) -> Dict[str, str]
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/1bf7e6102792baef2ef717000a1bb95e187794e2/packages/python/src/daytona_sdk/workspace.py#L266)
+[[view_source]](https://github.com/daytonaio/sdk/blob/b89000d9591190e660eb82338365eda00baab694/packages/python/src/daytona_sdk/workspace.py#L286)
 
 Sets labels for the Sandbox.
 
@@ -204,15 +200,19 @@ new_labels = workspace.set_labels({
 print(f"Updated labels: {new_labels}")
 ```
 
-<a id="daytona_sdk.workspace.Workspace.start"></a>
 
 #### Workspace.start
 
 ```python
-def start(timeout: Optional[float] = None)
+@intercept_errors(message_prefix="Failed to start workspace: ")
+@with_timeout(
+    error_message=lambda self, timeout:
+    f"Workspace {self.id} failed to start within the {timeout} seconds timeout period"
+)
+def start(timeout: Optional[float] = 60)
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/1bf7e6102792baef2ef717000a1bb95e187794e2/packages/python/src/daytona_sdk/workspace.py#L293)
+[[view_source]](https://github.com/daytonaio/sdk/blob/b89000d9591190e660eb82338365eda00baab694/packages/python/src/daytona_sdk/workspace.py#L315)
 
 Starts the Sandbox.
 
@@ -220,14 +220,12 @@ This method starts the Sandbox and waits for it to be ready.
 
 **Arguments**:
 
-- `timeout` _Optional[float]_ - Maximum time to wait in seconds. 0 means no timeout.
-  Defaults to 60-second timeout.
+- `timeout` _Optional[float]_ - Maximum time to wait in seconds. 0 means no timeout. Default is 60 seconds.
   
 
 **Raises**:
 
-- `ValueError` - If timeout is negative.
-- `Exception` - If Sandbox fails to start or times out.
+- `DaytonaError` - If timeout is negative. If workspace fails to start or times out.
   
 
 **Example**:
@@ -238,19 +236,33 @@ workspace.start(timeout=40)  # Wait up to 40 seconds
 print("Workspace started successfully")
 ```
 
-<a id="daytona_sdk.workspace.Workspace.stop"></a>
 
 #### Workspace.stop
 
 ```python
-def stop()
+@intercept_errors(message_prefix="Failed to stop workspace: ")
+@with_timeout(
+    error_message=lambda self, timeout:
+    f"Workspace {self.id} failed to stop within the {timeout} seconds timeout period"
+)
+def stop(timeout: Optional[float] = 60)
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/1bf7e6102792baef2ef717000a1bb95e187794e2/packages/python/src/daytona_sdk/workspace.py#L316)
+[[view_source]](https://github.com/daytonaio/sdk/blob/b89000d9591190e660eb82338365eda00baab694/packages/python/src/daytona_sdk/workspace.py#L338)
 
 Stops the Sandbox.
 
 This method stops the Sandbox and waits for it to be fully stopped.
+
+**Arguments**:
+
+- `timeout` _Optional[float]_ - Maximum time to wait in seconds. 0 means no timeout. Default is 60 seconds.
+  
+
+**Raises**:
+
+- `DaytonaError` - If timeout is negative; If workspace fails to stop or times out
+  
 
 **Example**:
 
@@ -260,15 +272,20 @@ workspace.stop()
 print("Workspace stopped successfully")
 ```
 
-<a id="daytona_sdk.workspace.Workspace.wait_for_workspace_start"></a>
 
 #### Workspace.wait\_for\_workspace\_start
 
 ```python
-def wait_for_workspace_start(timeout: float = 60) -> None
+@intercept_errors(
+    message_prefix="Failure during waiting for workspace to start: ")
+@with_timeout(
+    error_message=lambda self, timeout:
+    f"Workspace {self.id} failed to become ready within the {timeout} seconds timeout period"
+)
+def wait_for_workspace_start(timeout: Optional[float] = 60) -> None
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/1bf7e6102792baef2ef717000a1bb95e187794e2/packages/python/src/daytona_sdk/workspace.py#L331)
+[[view_source]](https://github.com/daytonaio/sdk/blob/b89000d9591190e660eb82338365eda00baab694/packages/python/src/daytona_sdk/workspace.py#L361)
 
 Waits for the Sandbox to reach the 'started' state.
 
@@ -277,43 +294,51 @@ or encounters an error.
 
 **Arguments**:
 
-- `timeout` _float_ - Maximum time to wait in seconds. 0 means no timeout.
-  Defaults to 60 seconds.
+- `timeout` _Optional[float]_ - Maximum time to wait in seconds. 0 means no timeout. Default is 60 seconds.
   
 
 **Raises**:
 
-- `ValueError` - If timeout is negative.
-- `Exception` - If Sandbox fails to start or times out.
+- `DaytonaError` - If timeout is negative; If workspace fails to start or times out
 
-<a id="daytona_sdk.workspace.Workspace.wait_for_workspace_stop"></a>
 
 #### Workspace.wait\_for\_workspace\_stop
 
 ```python
-def wait_for_workspace_stop() -> None
+@intercept_errors(
+    message_prefix="Failure during waiting for workspace to stop: ")
+@with_timeout(
+    error_message=lambda self, timeout:
+    f"Workspace {self.id} failed to become stopped within the {timeout} seconds timeout period"
+)
+def wait_for_workspace_stop(timeout: Optional[float] = 60) -> None
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/1bf7e6102792baef2ef717000a1bb95e187794e2/packages/python/src/daytona_sdk/workspace.py#L369)
+[[view_source]](https://github.com/daytonaio/sdk/blob/b89000d9591190e660eb82338365eda00baab694/packages/python/src/daytona_sdk/workspace.py#L387)
 
 Waits for the Sandbox to reach the 'stopped' state.
 
 This method polls the Sandbox status until it reaches the 'stopped' state
 or encounters an error. It will wait up to 60 seconds for the Sandbox to stop.
 
+**Arguments**:
+
+- `timeout` _Optional[float]_ - Maximum time to wait in seconds. 0 means no timeout. Default is 60 seconds.
+  
+
 **Raises**:
 
-- `Exception` - If Sandbox fails to stop or times out.
+- `DaytonaError` - If timeout is negative. If Sandbox fails to stop or times out.
 
-<a id="daytona_sdk.workspace.Workspace.set_autostop_interval"></a>
 
 #### Workspace.set\_autostop\_interval
 
 ```python
+@intercept_errors(message_prefix="Failed to set auto-stop interval: ")
 def set_autostop_interval(interval: int) -> None
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/1bf7e6102792baef2ef717000a1bb95e187794e2/packages/python/src/daytona_sdk/workspace.py#L406)
+[[view_source]](https://github.com/daytonaio/sdk/blob/b89000d9591190e660eb82338365eda00baab694/packages/python/src/daytona_sdk/workspace.py#L418)
 
 Sets the auto-stop interval for the Sandbox.
 
@@ -327,6 +352,11 @@ Interactions using Sandbox Previews are not included.
   Set to 0 to disable auto-stop. Defaults to 15.
   
 
+**Raises**:
+
+- `DaytonaError` - If interval is negative
+  
+
 **Example**:
 
 ```python
@@ -336,8 +366,80 @@ workspace.set_autostop_interval(60)
 workspace.set_autostop_interval(0)
 ```
 
-<a id="daytona_sdk.workspace.WorkspaceResources"></a>
 
+#### Workspace.get\_preview\_link
+
+```python
+@intercept_errors(message_prefix="Failed to get preview link: ")
+def get_preview_link(port: int) -> str
+```
+
+[[view_source]](https://github.com/daytonaio/sdk/blob/b89000d9591190e660eb82338365eda00baab694/packages/python/src/daytona_sdk/workspace.py#L448)
+
+Gets the preview link for the workspace at a specific port. If the port is not open, it will open it and return the link.
+
+**Arguments**:
+
+- `port` _int_ - The port to open the preview link on
+  
+
+**Returns**:
+
+  The preview link for the workspace at the specified port
+
+
+The Daytona SDK core Sandbox functionality.
+
+Provides the main Workspace class representing a Daytona Sandbox that coordinates file system,
+Git, process execution, and LSP functionality. It serves as the central point
+for interacting with Daytona Sandboxes.
+
+**Example**:
+
+  Basic Sandbox operations:
+```python
+from daytona_sdk import Daytona
+daytona = Daytona()
+workspace = daytona.create()
+
+# File operations
+workspace.fs.upload_file("/workspace/test.txt", b"Hello, World!")
+content = workspace.fs.download_file("/workspace/test.txt")
+
+# Git operations
+workspace.git.clone("https://github.com/user/repo.git")
+
+# Process execution
+response = workspace.process.exec("ls -la")
+print(response.result)
+
+# LSP functionality
+lsp = workspace.create_lsp_server("python", "/workspace/project")
+lsp.did_open("/workspace/project/src/index.ts")
+completions = lsp.completions("/workspace/project/src/index.ts", Position(line=10, character=15))
+print(completions)
+```
+  
+
+**Notes**:
+
+  The Sandbox must be in a 'started' state before performing operations.
+
+
+<a id="daytona_sdk.workspace.WorkspaceTargetRegion"></a>
+## WorkspaceTargetRegion
+
+```python
+@dataclass
+class WorkspaceTargetRegion(Enum)
+```
+
+[[view_source]](https://github.com/daytonaio/sdk/blob/b89000d9591190e660eb82338365eda00baab694/packages/python/src/daytona_sdk/workspace.py#L58)
+
+Target regions for workspaces
+
+
+<a id="daytona_sdk.workspace.WorkspaceResources"></a>
 ## WorkspaceResources
 
 ```python
@@ -345,7 +447,7 @@ workspace.set_autostop_interval(0)
 class WorkspaceResources()
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/1bf7e6102792baef2ef717000a1bb95e187794e2/packages/python/src/daytona_sdk/workspace.py#L51)
+[[view_source]](https://github.com/daytonaio/sdk/blob/b89000d9591190e660eb82338365eda00baab694/packages/python/src/daytona_sdk/workspace.py#L74)
 
 Resources allocated to a Sandbox.
 
@@ -368,16 +470,28 @@ resources = WorkspaceResources(
 )
 ```
 
-<a id="daytona_sdk.workspace.WorkspaceInfo"></a>
 
-## WorkspaceInfo
+<a id="daytona_sdk.workspace.WorkspaceState"></a>
+## WorkspaceState
 
 ```python
 @dataclass
-class WorkspaceInfo()
+class WorkspaceState(Enum)
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/1bf7e6102792baef2ef717000a1bb95e187794e2/packages/python/src/daytona_sdk/workspace.py#L77)
+[[view_source]](https://github.com/daytonaio/sdk/blob/b89000d9591190e660eb82338365eda00baab694/packages/python/src/daytona_sdk/workspace.py#L100)
+
+States of a Sandbox.
+
+
+<a id="daytona_sdk.workspace.WorkspaceInfo"></a>
+## WorkspaceInfo
+
+```python
+class WorkspaceInfo(ApiWorkspaceInfo)
+```
+
+[[view_source]](https://github.com/daytonaio/sdk/blob/b89000d9591190e660eb82338365eda00baab694/packages/python/src/daytona_sdk/workspace.py#L124)
 
 Structured information about a Sandbox.
 
@@ -410,5 +524,16 @@ print(f"Workspace {info.name} is {info.state}")
 print(f"Resources: {info.resources.cpu} CPU, {info.resources.memory} RAM")
 ```
 
-<a id="daytona_sdk.workspace.Workspace"></a>
+
+<a id="daytona_sdk.workspace.WorkspaceInstance"></a>
+## WorkspaceInstance
+
+```python
+class WorkspaceInstance(ApiWorkspace)
+```
+
+[[view_source]](https://github.com/daytonaio/sdk/blob/b89000d9591190e660eb82338365eda00baab694/packages/python/src/daytona_sdk/workspace.py#L176)
+
+Represents a Daytona workspace instance.
+
 

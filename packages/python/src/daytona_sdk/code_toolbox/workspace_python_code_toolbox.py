@@ -1,6 +1,6 @@
 import base64
 from typing import Optional
-from .common import CodeRunParams
+from ..common.code_run_params import CodeRunParams
 
 
 class WorkspacePythonCodeToolbox:

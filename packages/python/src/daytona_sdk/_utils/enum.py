@@ -3,6 +3,15 @@ from typing import Optional
 
 
 def to_enum(enum_class: type, value: str) -> Optional[Enum]:
+    """Convert a string to an enum.
+
+    Args:
+        enum_class (type): The enum class to convert to.
+        value (str): The value to convert to an enum.
+
+    Returns:
+        The enum value, or None if the value is not a valid enum.
+    """
     if isinstance(value, enum_class):
         return value
     str_value = str(value)

@@ -46,14 +46,13 @@ workspace.git.push(
   stated otherwise.
 
 <a id="daytona_sdk.git.Git"></a>
-
 ## Git
 
 ```python
 class Git()
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/1bf7e6102792baef2ef717000a1bb95e187794e2/packages/python/src/daytona_sdk/git.py#L59)
+[[view_source]](https://github.com/daytonaio/sdk/blob/b89000d9591190e660eb82338365eda00baab694/packages/python/src/daytona_sdk/git.py#L60)
 
 Provides Git operations within a Sandbox.
 
@@ -91,7 +90,6 @@ workspace.git.commit(
 )
 ```
 
-<a id="daytona_sdk.git.Git.__init__"></a>
 
 #### Git.\_\_init\_\_
 
@@ -100,7 +98,7 @@ def __init__(workspace: "Workspace", toolbox_api: ToolboxApi,
              instance: WorkspaceInstance)
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/1bf7e6102792baef2ef717000a1bb95e187794e2/packages/python/src/daytona_sdk/git.py#L94)
+[[view_source]](https://github.com/daytonaio/sdk/blob/b89000d9591190e660eb82338365eda00baab694/packages/python/src/daytona_sdk/git.py#L95)
 
 Initializes a new Git handler instance.
 
@@ -110,15 +108,15 @@ Initializes a new Git handler instance.
 - `toolbox_api` _ToolboxApi_ - API client for Sandbox operations.
 - `instance` _WorkspaceInstance_ - The Sandbox instance this Git handler belongs to.
 
-<a id="daytona_sdk.git.Git.add"></a>
 
 #### Git.add
 
 ```python
+@intercept_errors(message_prefix="Failed to add files: ")
 def add(path: str, files: List[str]) -> None
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/1bf7e6102792baef2ef717000a1bb95e187794e2/packages/python/src/daytona_sdk/git.py#L111)
+[[view_source]](https://github.com/daytonaio/sdk/blob/b89000d9591190e660eb82338365eda00baab694/packages/python/src/daytona_sdk/git.py#L113)
 
 Stages files for commit.
 
@@ -145,15 +143,15 @@ workspace.git.add("/workspace/repo", [
 ])
 ```
 
-<a id="daytona_sdk.git.Git.branches"></a>
 
 #### Git.branches
 
 ```python
+@intercept_errors(message_prefix="Failed to list branches: ")
 def branches(path: str) -> ListBranchResponse
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/1bf7e6102792baef2ef717000a1bb95e187794e2/packages/python/src/daytona_sdk/git.py#L142)
+[[view_source]](https://github.com/daytonaio/sdk/blob/b89000d9591190e660eb82338365eda00baab694/packages/python/src/daytona_sdk/git.py#L145)
 
 Lists branches in the repository.
 
@@ -176,11 +174,11 @@ response = workspace.git.branches("/workspace/repo")
 print(f"Branches: {response.branches}")
 ```
 
-<a id="daytona_sdk.git.Git.clone"></a>
 
 #### Git.clone
 
 ```python
+@intercept_errors(message_prefix="Failed to clone repository: ")
 def clone(url: str,
           path: str,
           branch: Optional[str] = None,
@@ -189,7 +187,7 @@ def clone(url: str,
           password: Optional[str] = None) -> None
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/1bf7e6102792baef2ef717000a1bb95e187794e2/packages/python/src/daytona_sdk/git.py#L164)
+[[view_source]](https://github.com/daytonaio/sdk/blob/b89000d9591190e660eb82338365eda00baab694/packages/python/src/daytona_sdk/git.py#L168)
 
 Clones a Git repository.
 
@@ -235,15 +233,15 @@ workspace.git.clone(
 )
 ```
 
-<a id="daytona_sdk.git.Git.commit"></a>
 
 #### Git.commit
 
 ```python
+@intercept_errors(message_prefix="Failed to commit changes: ")
 def commit(path: str, message: str, author: str, email: str) -> None
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/1bf7e6102792baef2ef717000a1bb95e187794e2/packages/python/src/daytona_sdk/git.py#L226)
+[[view_source]](https://github.com/daytonaio/sdk/blob/b89000d9591190e660eb82338365eda00baab694/packages/python/src/daytona_sdk/git.py#L231)
 
 Commits staged changes.
 
@@ -271,17 +269,17 @@ workspace.git.commit(
 )
 ```
 
-<a id="daytona_sdk.git.Git.push"></a>
 
 #### Git.push
 
 ```python
+@intercept_errors(message_prefix="Failed to push changes: ")
 def push(path: str,
          username: Optional[str] = None,
          password: Optional[str] = None) -> None
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/1bf7e6102792baef2ef717000a1bb95e187794e2/packages/python/src/daytona_sdk/git.py#L260)
+[[view_source]](https://github.com/daytonaio/sdk/blob/b89000d9591190e660eb82338365eda00baab694/packages/python/src/daytona_sdk/git.py#L266)
 
 Pushes local commits to the remote repository.
 
@@ -310,17 +308,17 @@ workspace.git.push(
 )
 ```
 
-<a id="daytona_sdk.git.Git.pull"></a>
 
 #### Git.pull
 
 ```python
+@intercept_errors(message_prefix="Failed to pull changes: ")
 def pull(path: str,
          username: Optional[str] = None,
          password: Optional[str] = None) -> None
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/1bf7e6102792baef2ef717000a1bb95e187794e2/packages/python/src/daytona_sdk/git.py#L296)
+[[view_source]](https://github.com/daytonaio/sdk/blob/b89000d9591190e660eb82338365eda00baab694/packages/python/src/daytona_sdk/git.py#L303)
 
 Pulls changes from the remote repository.
 
@@ -349,15 +347,15 @@ workspace.git.pull(
 )
 ```
 
-<a id="daytona_sdk.git.Git.status"></a>
 
 #### Git.status
 
 ```python
+@intercept_errors(message_prefix="Failed to get status: ")
 def status(path: str) -> GitStatus
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/1bf7e6102792baef2ef717000a1bb95e187794e2/packages/python/src/daytona_sdk/git.py#L332)
+[[view_source]](https://github.com/daytonaio/sdk/blob/b89000d9591190e660eb82338365eda00baab694/packages/python/src/daytona_sdk/git.py#L340)
 
 Gets the current Git repository status.
 
@@ -387,4 +385,49 @@ print(f"On branch: {status.current_branch}")
 print(f"Commits ahead: {status.ahead}")
 print(f"Commits behind: {status.behind}")
 ```
+
+
+The Daytona SDK provides built-in Git support. This guide covers all available Git
+operations and best practices. Daytona SDK provides an option to clone, check status,
+and manage Git repositories in Sandboxes. You can interact with Git repositories using
+the `git` module.
+
+**Example**:
+
+  Basic Git workflow:
+```python
+workspace = daytona.create()
+
+# Clone a repository
+workspace.git.clone(
+    url="https://github.com/user/repo.git",
+    path="/workspace/repo"
+)
+
+# Make some changes
+workspace.fs.upload_file("/workspace/repo/test.txt", "Hello, World!")
+
+# Stage and commit changes
+workspace.git.add("/workspace/repo", ["test.txt"])
+workspace.git.commit(
+    path="/workspace/repo",
+    message="Add test file",
+    author="John Doe",
+    email="john@example.com"
+)
+
+# Push changes (with authentication)
+workspace.git.push(
+    path="/workspace/repo",
+    username="user",
+    password="token"
+)
+```
+  
+
+**Notes**:
+
+  All paths should be absolute paths within the Sandbox if not explicitly
+  stated otherwise.
+
 

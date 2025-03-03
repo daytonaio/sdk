@@ -61,13 +61,14 @@ workspace.git.clone("https://github.com/user/repo.git")
 workspace.process.execute_command("python -m pytest")
 ```
 
+<a id="daytona_sdk.daytona.Daytona"></a>
 ## Daytona
 
 ```python
 class Daytona()
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/1bf7e6102792baef2ef717000a1bb95e187794e2/packages/python/src/daytona_sdk/daytona.py#L185)
+[[view_source]](https://github.com/daytonaio/sdk/blob/b89000d9591190e660eb82338365eda00baab694/packages/python/src/daytona_sdk/daytona.py#L198)
 
 Main class for interacting with Daytona Server API.
 
@@ -98,7 +99,6 @@ config = DaytonaConfig(
 daytona = Daytona(config)
 ```
 
-<a id="daytona_sdk.daytona.Daytona.__init__"></a>
 
 #### Daytona.\_\_init\_\_
 
@@ -106,7 +106,7 @@ daytona = Daytona(config)
 def __init__(config: Optional[DaytonaConfig] = None)
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/1bf7e6102792baef2ef717000a1bb95e187794e2/packages/python/src/daytona_sdk/daytona.py#L213)
+[[view_source]](https://github.com/daytonaio/sdk/blob/b89000d9591190e660eb82338365eda00baab694/packages/python/src/daytona_sdk/daytona.py#L226)
 
 Initializes Daytona instance with optional configuration.
 
@@ -122,8 +122,7 @@ If no config is provided, reads from environment variables:
 
 **Raises**:
 
-- `ValueError` - If API key or Server URL is not provided either through config
-  or environment variables.
+- `DaytonaError` - If API key or Server URL is not provided either through config or environment variables
   
 
 **Example**:
@@ -141,15 +140,16 @@ config = DaytonaConfig(
 daytona2 = Daytona(config)
 ```
 
-<a id="daytona_sdk.daytona.Daytona.create"></a>
 
 #### Daytona.create
 
 ```python
-def create(params: Optional[CreateWorkspaceParams] = None) -> Workspace
+@intercept_errors(message_prefix="Failed to create workspace: ")
+def create(params: Optional[CreateWorkspaceParams] = None,
+           timeout: Optional[float] = 60) -> Workspace
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/1bf7e6102792baef2ef717000a1bb95e187794e2/packages/python/src/daytona_sdk/daytona.py#L272)
+[[view_source]](https://github.com/daytonaio/sdk/blob/b89000d9591190e660eb82338365eda00baab694/packages/python/src/daytona_sdk/daytona.py#L285)
 
 Creates Sandboxes with default or custom configurations. You can specify various parameters,
 including language, image, resources, environment variables, and volumes for the Sandbox.
@@ -158,6 +158,7 @@ including language, image, resources, environment variables, and volumes for the
 
 - `params` _Optional[CreateWorkspaceParams]_ - Parameters for Sandbox creation. If not provided,
   defaults to Python language.
+- `timeout` _Optional[float]_ - Timeout (in seconds) for workspace creation. 0 means no timeout. Default is 60 seconds.
   
 
 **Returns**:
@@ -167,8 +168,7 @@ including language, image, resources, environment variables, and volumes for the
 
 **Raises**:
 
-- `ValueError` - If timeout or auto_stop_interval is negative.
-- `Exception` - If Sandbox creation fails.
+- `DaytonaError` - If timeout or auto_stop_interval is negative; If workspace fails to start or times out
   
 
 **Example**:
@@ -186,27 +186,32 @@ params = CreateWorkspaceParams(
     image="debian:12.9",
     env_vars={"DEBUG": "true"},
     resources=WorkspaceResources(cpu=2, memory=4096),
-    timeout=300,
     auto_stop_interval=0
 )
-workspace = daytona.create(params)
+workspace = daytona.create(params, 40)
 ```
 
-<a id="daytona_sdk.daytona.Daytona.remove"></a>
 
 #### Daytona.remove
 
 ```python
-def remove(workspace: Workspace) -> None
+@intercept_errors(message_prefix="Failed to remove workspace: ")
+def remove(workspace: Workspace, timeout: Optional[float] = 60) -> None
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/1bf7e6102792baef2ef717000a1bb95e187794e2/packages/python/src/daytona_sdk/daytona.py#L390)
+[[view_source]](https://github.com/daytonaio/sdk/blob/b89000d9591190e660eb82338365eda00baab694/packages/python/src/daytona_sdk/daytona.py#L432)
 
 Removes a Sandbox.
 
 **Arguments**:
 
 - `workspace` _Workspace_ - The Sandbox instance to remove.
+- `timeout` _Optional[float]_ - Timeout (in seconds) for workspace removal. 0 means no timeout. Default is 60 seconds.
+  
+
+**Raises**:
+
+- `DaytonaError` - If workspace fails to remove or times out
   
 
 **Example**:
@@ -217,15 +222,15 @@ workspace = daytona.create()
 daytona.remove(workspace)  # Clean up when done
 ```
 
-<a id="daytona_sdk.daytona.Daytona.get_current_workspace"></a>
 
 #### Daytona.get\_current\_workspace
 
 ```python
+@intercept_errors(message_prefix="Failed to get workspace: ")
 def get_current_workspace(workspace_id: str) -> Workspace
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/1bf7e6102792baef2ef717000a1bb95e187794e2/packages/python/src/daytona_sdk/daytona.py#L405)
+[[view_source]](https://github.com/daytonaio/sdk/blob/b89000d9591190e660eb82338365eda00baab694/packages/python/src/daytona_sdk/daytona.py#L452)
 
 Get a Sandbox by its ID.
 
@@ -241,7 +246,7 @@ Get a Sandbox by its ID.
 
 **Raises**:
 
-- `ValueError` - If workspace_id is not provided.
+- `DaytonaError` - If workspace_id is not provided.
   
 
 **Example**:
@@ -251,15 +256,15 @@ workspace = daytona.get_current_workspace("my-workspace-id")
 print(workspace.status)
 ```
 
-<a id="daytona_sdk.daytona.Daytona.list"></a>
 
 #### Daytona.list
 
 ```python
+@intercept_errors(message_prefix="Failed to list workspaces: ")
 def list() -> List[Workspace]
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/1bf7e6102792baef2ef717000a1bb95e187794e2/packages/python/src/daytona_sdk/daytona.py#L440)
+[[view_source]](https://github.com/daytonaio/sdk/blob/b89000d9591190e660eb82338365eda00baab694/packages/python/src/daytona_sdk/daytona.py#L490)
 
 Lists all Sandboxes.
 
@@ -276,57 +281,123 @@ for workspace in workspaces:
     print(f"{workspace.id}: {workspace.status}")
 ```
 
-<a id="daytona_sdk.daytona.Daytona.start"></a>
 
 #### Daytona.start
 
 ```python
-def start(workspace: Workspace, timeout: Optional[float] = None) -> None
+def start(workspace: Workspace, timeout: Optional[float] = 60) -> None
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/1bf7e6102792baef2ef717000a1bb95e187794e2/packages/python/src/daytona_sdk/daytona.py#L490)
+[[view_source]](https://github.com/daytonaio/sdk/blob/b89000d9591190e660eb82338365eda00baab694/packages/python/src/daytona_sdk/daytona.py#L555)
 
 Starts a Sandbox and waits for it to be ready.
 
 **Arguments**:
 
 - `workspace` _Workspace_ - The Sandbox to start.
-- `timeout` _Optional[float]_ - Optional timeout in seconds to wait for the Sandbox to start. If set to 0, it will wait indefinitely.
+- `timeout` _Optional[float]_ - Optional timeout in seconds to wait for the Sandbox to start. 0 means no timeout. Default is 60 seconds.
   
 
-**Example**:
+**Raises**:
 
-```python
-workspace = daytona.get_current_workspace("my-workspace-id")
-daytona.start(workspace, timeout=40)  # Wait up to 40 seconds
-```
+- `DaytonaError` - If timeout is negative; If Sandbox fails to start or times out
 
-<a id="daytona_sdk.daytona.Daytona.stop"></a>
 
 #### Daytona.stop
 
 ```python
-def stop(workspace: Workspace) -> None
+def stop(workspace: Workspace, timeout: Optional[float] = 60) -> None
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/1bf7e6102792baef2ef717000a1bb95e187794e2/packages/python/src/daytona_sdk/daytona.py#L506)
+[[view_source]](https://github.com/daytonaio/sdk/blob/b89000d9591190e660eb82338365eda00baab694/packages/python/src/daytona_sdk/daytona.py#L567)
 
 Stops a Sandbox and waits for it to be stopped.
 
 **Arguments**:
 
-- `workspace` _Workspace_ - The Sandbox to stop.
+- `workspace` _Workspace_ - The workspace to stop
+- `timeout` _Optional[float]_ - Optional timeout (in seconds) for workspace stop. 0 means no timeout. Default is 60 seconds.
   
 
-**Example**:
+**Raises**:
 
+- `DaytonaError` - If timeout is negative; If Sandbox fails to stop or times out
+
+
+Sandboxes are isolated development environments managed by Daytona.
+This guide covers how to create, manage, and remove Sandboxes using the SDK.
+
+**Examples**:
+
+  Basic usage with environment variables:
 ```python
-workspace = daytona.get_current_workspace("my-workspace-id")
-daytona.stop(workspace)
+from daytona_sdk import Daytona
+# Initialize using environment variables
+daytona = Daytona()  # Uses env vars DAYTONA_API_KEY, DAYTONA_SERVER_URL, DAYTONA_TARGET
+
+# Create a default Python workspace with custom environment variables
+workspace = daytona.create(CreateWorkspaceParams(
+    language="python",
+    env_vars={"PYTHON_ENV": "development"}
+))
+
+# Execute commands in the workspace
+response = workspace.process.execute_command('echo "Hello, World!"')
+print(response.result)
+
+# Run Python code securely inside the workspace
+response = workspace.process.code_run('print("Hello from Python!")')
+print(response.result)
+
+# Remove the workspace after use
+daytona.remove(workspace)
+```
+  
+  Usage with explicit configuration:
+```python
+from daytona_sdk import Daytona, DaytonaConfig, CreateWorkspaceParams, WorkspaceResources
+
+# Initialize with explicit configuration
+config = DaytonaConfig(
+    api_key="your-api-key",
+    server_url="https://your-server.com",
+    target="us"
+)
+daytona = Daytona(config)
+
+# Create a custom workspace with specific resources and settings
+workspace = daytona.create(CreateWorkspaceParams(
+    language="python",
+    image="python:3.11",
+    resources=WorkspaceResources(
+        cpu=2,
+        memory=4,  # 4GB RAM
+        disk=20    # 20GB disk
+    ),
+    env_vars={"PYTHON_ENV": "development"},
+    auto_stop_interval=60  # Auto-stop after 1 hour of inactivity
+))
+
+# Use workspace features
+workspace.git.clone("https://github.com/user/repo.git")
+workspace.process.execute_command("python -m pytest")
 ```
 
-<a id="daytona_sdk.daytona.DaytonaConfig"></a>
 
+<a id="daytona_sdk.daytona.CodeLanguage"></a>
+## CodeLanguage
+
+```python
+@dataclass
+class CodeLanguage(Enum)
+```
+
+[[view_source]](https://github.com/daytonaio/sdk/blob/b89000d9591190e660eb82338365eda00baab694/packages/python/src/daytona_sdk/daytona.py#L85)
+
+Programming languages supported by Daytona
+
+
+<a id="daytona_sdk.daytona.DaytonaConfig"></a>
 ## DaytonaConfig
 
 ```python
@@ -334,7 +405,7 @@ daytona.stop(workspace)
 class DaytonaConfig()
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/1bf7e6102792baef2ef717000a1bb95e187794e2/packages/python/src/daytona_sdk/daytona.py#L87)
+[[view_source]](https://github.com/daytonaio/sdk/blob/b89000d9591190e660eb82338365eda00baab694/packages/python/src/daytona_sdk/daytona.py#L101)
 
 Configuration options for initializing the Daytona client.
 
@@ -356,8 +427,8 @@ config = DaytonaConfig(
 daytona = Daytona(config)
 ```
 
-<a id="daytona_sdk.daytona.WorkspaceResources"></a>
 
+<a id="daytona_sdk.daytona.WorkspaceResources"></a>
 ## WorkspaceResources
 
 ```python
@@ -365,7 +436,7 @@ daytona = Daytona(config)
 class WorkspaceResources()
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/1bf7e6102792baef2ef717000a1bb95e187794e2/packages/python/src/daytona_sdk/daytona.py#L111)
+[[view_source]](https://github.com/daytonaio/sdk/blob/b89000d9591190e660eb82338365eda00baab694/packages/python/src/daytona_sdk/daytona.py#L125)
 
 Resources configuration for Sandbox.
 
@@ -392,16 +463,15 @@ params = CreateWorkspaceParams(
 )
 ```
 
-<a id="daytona_sdk.daytona.CreateWorkspaceParams"></a>
 
+<a id="daytona_sdk.daytona.CreateWorkspaceParams"></a>
 ## CreateWorkspaceParams
 
 ```python
-@dataclass
-class CreateWorkspaceParams()
+class CreateWorkspaceParams(BaseModel)
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/1bf7e6102792baef2ef717000a1bb95e187794e2/packages/python/src/daytona_sdk/daytona.py#L141)
+[[view_source]](https://github.com/daytonaio/sdk/blob/b89000d9591190e660eb82338365eda00baab694/packages/python/src/daytona_sdk/daytona.py#L154)
 
 Parameters for creating a new Sandbox.
 
@@ -418,7 +488,7 @@ Parameters for creating a new Sandbox.
 - `target` _Optional[str]_ - Target location for the Sandbox. Can be "us", "eu", or "asia".
 - `resources` _Optional[WorkspaceResources]_ - Resource configuration for the Sandbox.
 - `timeout` _Optional[float]_ - Timeout in seconds for Sandbox to be created and started.
-- `auto_stop_interval` _Optional[int]_ - Interval in minutes after which Sandbox will automatically stop if no Sandbox event occurs during that time. Default is 15 minutes. If set to 0, the Sandbox will not be automatically stopped.
+- `auto_stop_interval` _Optional[int]_ - Interval in minutes after which Sandbox will automatically stop if no Sandbox event occurs during that time. Default is 15 minutes. 0 means no auto-stop.
   
 
 **Example**:
@@ -429,11 +499,9 @@ params = CreateWorkspaceParams(
     name="my-workspace",
     env_vars={"DEBUG": "true"},
     resources=WorkspaceResources(cpu=2, memory=4),
-    timeout=60,
     auto_stop_interval=20
 )
-workspace = daytona.create(params)
+workspace = daytona.create(params, 50)
 ```
 
-<a id="daytona_sdk.daytona.Daytona"></a>
 

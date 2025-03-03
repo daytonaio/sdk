@@ -48,10 +48,10 @@ from daytona_api_client import (
     Command
 )
 
-from daytona_sdk._utils.exceptions import intercept_exceptions
+from daytona_sdk._utils.errors import intercept_errors
 from .code_toolbox.workspace_python_code_toolbox import WorkspacePythonCodeToolbox
 from .protocols import WorkspaceInstance
-from .code_toolbox.common import CodeRunParams
+from .common.code_run_params import CodeRunParams
 
 
 class Process:
@@ -83,7 +83,7 @@ class Process:
         self.toolbox_api = toolbox_api
         self.instance = instance
 
-    @intercept_exceptions(message_prefix="Failed to execute command: ")
+    @intercept_errors(message_prefix="Failed to execute command: ")
     def exec(self, command: str, cwd: Optional[str] = None, timeout: Optional[int] = None) -> ExecuteResponse:
         """Execute a shell command in the Sandbox.
 
@@ -151,7 +151,7 @@ class Process:
         command = self.code_toolbox.get_run_command(code, params)
         return self.exec(command, timeout=timeout)
 
-    @intercept_exceptions(message_prefix="Failed to create session: ")
+    @intercept_errors(message_prefix="Failed to create session: ")
     def create_session(self, session_id: str) -> None:
         """Create a new long-running background session in the Sandbox.
 
@@ -178,7 +178,7 @@ class Process:
             create_session_request=request
         )
 
-    @intercept_exceptions(message_prefix="Failed to get session: ")
+    @intercept_errors(message_prefix="Failed to get session: ")
     def get_session(self, session_id: str) -> Session:
         """Get a session in the Sandbox.
 
@@ -202,7 +202,7 @@ class Process:
             session_id=session_id
         )
 
-    @intercept_exceptions(message_prefix="Failed to get session command: ")
+    @intercept_errors(message_prefix="Failed to get session command: ")
     def get_session_command(self, session_id: str, command_id: str) -> Command:
         """Get information about a specific command executed in a session.
 
@@ -229,7 +229,7 @@ class Process:
             command_id=command_id
         )
 
-    @intercept_exceptions(message_prefix="Failed to execute session command: ")
+    @intercept_errors(message_prefix="Failed to execute session command: ")
     def execute_session_command(self, session_id: str, req: SessionExecuteRequest, timeout: Optional[int] = None) -> SessionExecuteResponse:
         """Executes a command in the session.
 
@@ -271,7 +271,7 @@ class Process:
             _request_timeout=timeout
         )
 
-    @intercept_exceptions(message_prefix="Failed to get session command logs: ")
+    @intercept_errors(message_prefix="Failed to get session command logs: ")
     def get_session_command_logs(self, session_id: str, command_id: str) -> str:
         """Get the logs for a command executed in a session.
 
@@ -311,7 +311,7 @@ class Process:
             command_id=command_id
         )
 
-    @intercept_exceptions(message_prefix="Failed to list sessions: ")
+    @intercept_errors(message_prefix="Failed to list sessions: ")
     def list_sessions(self) -> List[Session]:
         """List all sessions in the Sandbox.
 
@@ -330,7 +330,7 @@ class Process:
             workspace_id=self.instance.id
         )
 
-    @intercept_exceptions(message_prefix="Failed to delete session: ")
+    @intercept_errors(message_prefix="Failed to delete session: ")
     def delete_session(self, session_id: str) -> None:
         """Delete an interactive session from the Sandbox.
 

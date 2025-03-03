@@ -38,9 +38,36 @@ console.log(response2.result);  // Should print "/workspace"
 await workspace.process.deleteSession(sessionId);
 ```
 
+## CodeRunParams
+
+[[view_source]](https://github.com/MDzaja/sdk/blob/b89000d9591190e660eb82338365eda00baab694/packages/typescript/src/Process.ts#L52)
+
+Parameters for code execution
+
+### Constructors
+
+#### new CodeRunParams()
+
+```ts
+new CodeRunParams(): CodeRunParams
+```
+
+##### Returns
+
+`CodeRunParams`
+
+### Properties
+
+| Property | Type | Description |
+| ------ | ------ | ------ |
+| `argv?` | `string[]` | Command line arguments |
+| `env?` | `Record<string, string>` | Environment variables |
+
+***
+
 ## Process
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/1bf7e6102792baef2ef717000a1bb95e187794e2/packages/typescript/src/Process.ts#L48)
+[[view_source]](https://github.com/MDzaja/sdk/blob/b89000d9591190e660eb82338365eda00baab694/packages/typescript/src/Process.ts#L64)
 
 ### Constructors
 
@@ -50,10 +77,10 @@ await workspace.process.deleteSession(sessionId);
 new Process(
    codeToolbox: WorkspaceCodeToolbox, 
    toolboxApi: ToolboxApi, 
-   instance: Workspace): Process
+   instance: WorkspaceInstance): Process
 ```
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/1bf7e6102792baef2ef717000a1bb95e187794e2/packages/typescript/src/Process.ts#L49)
+[[view_source]](https://github.com/MDzaja/sdk/blob/b89000d9591190e660eb82338365eda00baab694/packages/typescript/src/Process.ts#L65)
 
 ##### Parameters
 
@@ -61,7 +88,7 @@ new Process(
 | ------ | ------ |
 | `codeToolbox` | `WorkspaceCodeToolbox` |
 | `toolboxApi` | `ToolboxApi` |
-| `instance` | `Workspace` |
+| `instance` | `WorkspaceInstance` |
 
 ##### Returns
 
@@ -72,10 +99,13 @@ new Process(
 #### codeRun()
 
 ```ts
-codeRun(code: string): Promise<ExecuteResponse>
+codeRun(
+   code: string, 
+   params?: CodeRunParams, 
+timeout?: number): Promise<ExecuteResponse>
 ```
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/1bf7e6102792baef2ef717000a1bb95e187794e2/packages/typescript/src/Process.ts#L109)
+[[view_source]](https://github.com/MDzaja/sdk/blob/b89000d9591190e660eb82338365eda00baab694/packages/typescript/src/Process.ts#L126)
 
 Executes code in the Sandbox using the appropriate language runtime.
 
@@ -84,6 +114,8 @@ Executes code in the Sandbox using the appropriate language runtime.
 | Parameter | Type | Description |
 | ------ | ------ | ------ |
 | `code` | `string` | Code to execute |
+| `params?` | `CodeRunParams` | Parameters for code execution |
+| `timeout?` | `number` | - |
 
 ##### Returns
 
@@ -113,7 +145,7 @@ console.log(response.result);  // Prints: Sum: 30
 createSession(sessionId: string): Promise<void>
 ```
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/1bf7e6102792baef2ef717000a1bb95e187794e2/packages/typescript/src/Process.ts#L137)
+[[view_source]](https://github.com/MDzaja/sdk/blob/b89000d9591190e660eb82338365eda00baab694/packages/typescript/src/Process.ts#L152)
 
 Creates a new long-running background session in the Sandbox.
 
@@ -150,7 +182,7 @@ await process.deleteSession(sessionId);
 deleteSession(sessionId: string): Promise<void>
 ```
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/1bf7e6102792baef2ef717000a1bb95e187794e2/packages/typescript/src/Process.ts#L260)
+[[view_source]](https://github.com/MDzaja/sdk/blob/b89000d9591190e660eb82338365eda00baab694/packages/typescript/src/Process.ts#L281)
 
 Delete a session from the Sandbox.
 
@@ -182,7 +214,7 @@ executeCommand(
 timeout?: number): Promise<ExecuteResponse>
 ```
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/1bf7e6102792baef2ef717000a1bb95e187794e2/packages/typescript/src/Process.ts#L78)
+[[view_source]](https://github.com/MDzaja/sdk/blob/b89000d9591190e660eb82338365eda00baab694/packages/typescript/src/Process.ts#L94)
 
 Executes a shell command in the Sandbox.
 
@@ -225,10 +257,13 @@ const result = await process.executeCommand('sleep 10', undefined, 5);
 #### executeSessionCommand()
 
 ```ts
-executeSessionCommand(sessionId: string, req: SessionExecuteRequest): Promise<SessionExecuteResponse>
+executeSessionCommand(
+   sessionId: string, 
+   req: SessionExecuteRequest, 
+timeout?: number): Promise<SessionExecuteResponse>
 ```
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/1bf7e6102792baef2ef717000a1bb95e187794e2/packages/typescript/src/Process.ts#L210)
+[[view_source]](https://github.com/MDzaja/sdk/blob/b89000d9591190e660eb82338365eda00baab694/packages/typescript/src/Process.ts#L226)
 
 Executes a command in an existing session.
 
@@ -238,6 +273,7 @@ Executes a command in an existing session.
 | ------ | ------ | ------ |
 | `sessionId` | `string` | Unique identifier of the session to use |
 | `req` | `SessionExecuteRequest` | Command execution request containing: - command: The command to execute - async: Whether to execute asynchronously |
+| `timeout?` | `number` | Timeout in seconds |
 
 ##### Returns
 
@@ -274,7 +310,7 @@ console.log(result.output);  // Prints: /workspace
 getSession(sessionId: string): Promise<Session>
 ```
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/1bf7e6102792baef2ef717000a1bb95e187794e2/packages/typescript/src/Process.ts#L157)
+[[view_source]](https://github.com/MDzaja/sdk/blob/b89000d9591190e660eb82338365eda00baab694/packages/typescript/src/Process.ts#L172)
 
 Get a session in the workspace.
 
@@ -309,7 +345,7 @@ session.commands.forEach(cmd => {
 getSessionCommand(sessionId: string, commandId: string): Promise<Command>
 ```
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/1bf7e6102792baef2ef717000a1bb95e187794e2/packages/typescript/src/Process.ts#L178)
+[[view_source]](https://github.com/MDzaja/sdk/blob/b89000d9591190e660eb82338365eda00baab694/packages/typescript/src/Process.ts#L193)
 
 Gets information about a specific command executed in a session.
 
@@ -346,7 +382,7 @@ if (cmd.exitCode === 0) {
 getSessionCommandLogs(sessionId: string, commandId: string): Promise<string>
 ```
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/1bf7e6102792baef2ef717000a1bb95e187794e2/packages/typescript/src/Process.ts#L226)
+[[view_source]](https://github.com/MDzaja/sdk/blob/b89000d9591190e660eb82338365eda00baab694/packages/typescript/src/Process.ts#L247)
 
 Get the logs for a command executed in a session.
 
@@ -378,7 +414,7 @@ console.log('Command output:', logs);
 listSessions(): Promise<Session[]>
 ```
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/1bf7e6102792baef2ef717000a1bb95e187794e2/packages/typescript/src/Process.ts#L245)
+[[view_source]](https://github.com/MDzaja/sdk/blob/b89000d9591190e660eb82338365eda00baab694/packages/typescript/src/Process.ts#L266)
 
 Lists all active sessions in the Sandbox.
 

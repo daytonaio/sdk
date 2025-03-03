@@ -11,7 +11,7 @@ hooks:
     - mkdir -p "$(dirname "$OUTPUT_FILE")"
   post-render:
     -  #@ f"sed -i '1i ---\\ntitle: {env.TITLE}\\n---\\n' \"{env.OUTPUT_FILE}\""
-    - ./scripts/docs-reorder-sections.sh "$OUTPUT_FILE"
+    - ./scripts/docs-reorder-sections.sh "$OUTPUT_FILE" #@ env.FIRST_SECTION or ""
     - ./scripts/docs-code-block-indentation.sh "$OUTPUT_FILE"
 
 renderer:

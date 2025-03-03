@@ -73,7 +73,7 @@ from daytona_api_client import (
     SearchFilesResponse,
     ToolboxApi,
 )
-from daytona_sdk._utils.exceptions import intercept_exceptions
+from daytona_sdk._utils.errors import intercept_errors
 from .protocols import WorkspaceInstance
 
 
@@ -99,7 +99,7 @@ class FileSystem:
         self.instance = instance
         self.toolbox_api = toolbox_api
 
-    @intercept_exceptions(message_prefix="Failed to create folder: ")
+    @intercept_errors(message_prefix="Failed to create folder: ")
     def create_folder(self, path: str, mode: str) -> None:
         """Creates a new directory in the Sandbox.
 
@@ -123,7 +123,7 @@ class FileSystem:
             workspace_id=self.instance.id, path=path, mode=mode
         )
 
-    @intercept_exceptions(message_prefix="Failed to delete file: ")
+    @intercept_errors(message_prefix="Failed to delete file: ")
     def delete_file(self, path: str) -> None:
         """Deletes a file from the Sandbox.
 
@@ -142,7 +142,7 @@ class FileSystem:
             workspace_id=self.instance.id, path=path
         )
 
-    @intercept_exceptions(message_prefix="Failed to download file: ")
+    @intercept_errors(message_prefix="Failed to download file: ")
     def download_file(self, path: str) -> bytes:
         """Downloads a file from the Sandbox.
 
@@ -170,7 +170,7 @@ class FileSystem:
             workspace_id=self.instance.id, path=path
         )
 
-    @intercept_exceptions(message_prefix="Failed to find files: ")
+    @intercept_errors(message_prefix="Failed to find files: ")
     def find_files(self, path: str, pattern: str) -> List[Match]:
         """Searches for files containing a pattern.
 
@@ -199,7 +199,7 @@ class FileSystem:
             workspace_id=self.instance.id, path=path, pattern=pattern
         )
 
-    @intercept_exceptions(message_prefix="Failed to get file info: ")
+    @intercept_errors(message_prefix="Failed to get file info: ")
     def get_file_info(self, path: str) -> FileInfo:
         """Gets detailed information about a file.
 
@@ -238,7 +238,7 @@ class FileSystem:
             workspace_id=self.instance.id, path=path
         )
 
-    @intercept_exceptions(message_prefix="Failed to list files: ")
+    @intercept_errors(message_prefix="Failed to list files: ")
     def list_files(self, path: str) -> List[FileInfo]:
         """Lists files and directories in a given path.
 
@@ -271,7 +271,7 @@ class FileSystem:
             workspace_id=self.instance.id, path=path
         )
 
-    @intercept_exceptions(message_prefix="Failed to move files: ")
+    @intercept_errors(message_prefix="Failed to move files: ")
     def move_files(self, source: str, destination: str) -> None:
         """Moves files from one location to another.
 
@@ -309,7 +309,7 @@ class FileSystem:
             destination=destination,
         )
 
-    @intercept_exceptions(message_prefix="Failed to replace in files: ")
+    @intercept_errors(message_prefix="Failed to replace in files: ")
     def replace_in_files(
         self, files: List[str], pattern: str, new_value: str
     ) -> List[ReplaceResult]:
@@ -354,7 +354,7 @@ class FileSystem:
             workspace_id=self.instance.id, replace_request=replace_request
         )
 
-    @intercept_exceptions(message_prefix="Failed to search files: ")
+    @intercept_errors(message_prefix="Failed to search files: ")
     def search_files(self, path: str, pattern: str) -> SearchFilesResponse:
         """Searches for files and directories matching a pattern in their names.
 
@@ -386,7 +386,7 @@ class FileSystem:
             workspace_id=self.instance.id, path=path, pattern=pattern
         )
 
-    @intercept_exceptions(message_prefix="Failed to set file permissions: ")
+    @intercept_errors(message_prefix="Failed to set file permissions: ")
     def set_file_permissions(
         self, path: str, mode: str = None, owner: str = None, group: str = None
     ) -> None:
@@ -427,7 +427,7 @@ class FileSystem:
             group=group,
         )
 
-    @intercept_exceptions(message_prefix="Failed to upload file: ")
+    @intercept_errors(message_prefix="Failed to upload file: ")
     def upload_file(self, path: str, file: bytes) -> None:
         """Uploads a file to the Sandbox.
 

@@ -1,5 +1,8 @@
-export class DaytonaError extends Error {
-  constructor(message: string) {
-    super(message);
-  }
-}
+/**
+ * @module Errors
+ */
+
+/**
+ * Base error for Daytona SDK.
+ */
+export class DaytonaError extends Error {}

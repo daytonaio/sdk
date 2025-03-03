@@ -1,56 +1,112 @@
 #!/bin/bash
 
-# Check if a file argument is provided.
-[ -z "$1" ] && echo "Usage: $0 <file.mdx>" && exit 1
+# Check if a file argument is provided
+[ -z "$1" ] && echo "Usage: $0 <file.mdx> [section_title]" && exit 1
+
+# Check if section title is provided, if not exit
+[ -z "$2" ] && echo "No section title provided, exiting." && exit 0
 
 FILE="$1"
-TEMP_FILE=$(mktemp)       # Temporary file for front matter and introduction.
-BODY_FILE=$(mktemp)       # Temporary file for the main body (sections).
-LAST_SECTION_FILE=$(mktemp)  # Temporary file for the last section.
-MIDDLE_FILE=$(mktemp)     # Temporary file for the remaining sections.
+SECTION_TITLE="$2"
+TEMP_FILE=$(mktemp)
+RESULT_FILE=$(mktemp)
 
-# Extract front matter and introduction (everything before the first anchor or section header).
-awk '/^<a id=|^## / {exit} {print}' "$FILE" > "$TEMP_FILE"
+# First, extract the frontmatter and content before any sections or anchors
+awk '
+BEGIN { in_frontmatter = 0; found_content = 0 }
+/^---$/ { 
+    if (in_frontmatter) {
+        print
+        in_frontmatter = 0
+        next
+    } else {
+        in_frontmatter = 1
+        print
+        next
+    }
+}
+in_frontmatter { print; next }
+/<a id=|^## / { exit }
+{ print }
+' "$FILE" >"$TEMP_FILE"
 
-# Extract the rest of the content (from the first anchor or section header to the end).
-awk '/^<a id=|^## /,EOF' "$FILE" > "$BODY_FILE"
+# Now process the sections and their content
+awk -v section="$SECTION_TITLE" '
+BEGIN {
+    in_target = 0
+    found_target = 0
+    target_content = ""
+    other_content = ""
+    anchor = ""
+    in_frontmatter = 0
+    passed_frontmatter = 0
+}
 
-# Count the number of sections by matching lines starting with "## ".
-SECTION_COUNT=$(grep -c "^## " "$BODY_FILE")
-if [ "$SECTION_COUNT" -eq 0 ]; then
-  echo "No sections found in the file!"
-  rm -f "$TEMP_FILE" "$BODY_FILE"
-  exit 1
-fi
+# Skip frontmatter
+/^---$/ {
+    if (!in_frontmatter) {
+        in_frontmatter = 1
+        next
+    } else {
+        in_frontmatter = 0
+        passed_frontmatter = 1
+        next
+    }
+}
+in_frontmatter { next }
+!passed_frontmatter { next }
 
-# If there's only one section, no reordering is necessary.
-if [ "$SECTION_COUNT" -eq 1 ]; then
-  echo "Only one section found, no reordering needed."
-  cat "$TEMP_FILE" "$BODY_FILE" > "$FILE"
-  rm -f "$TEMP_FILE" "$BODY_FILE"
-  exit 0
-fi
+# Store potential anchor for next section
+/<a id=/ {
+    anchor = $0
+    next
+}
 
-# Identify the starting line of the last section (using the last occurrence of a section header).
-LAST_SECTION_START=$(grep -n "^## " "$BODY_FILE" | tail -n 1 | cut -d: -f1)
+# When we hit a section header
+/^## / {
+    # If this is our target section
+    if ($0 ~ "^## " section "$") {
+        # Store this section (with its anchor if we just saw one)
+        if (anchor != "") {
+            target_content = anchor "\n" $0 "\n"
+            anchor = ""
+        } else {
+            target_content = $0 "\n"
+        }
+        in_target = 1
+        found_target = 1
+    } else {
+        # For other sections, add them to other_content
+        if (anchor != "") {
+            other_content = other_content anchor "\n" $0 "\n"
+            anchor = ""
+        } else {
+            other_content = other_content $0 "\n"
+        }
+        in_target = 0
+    }
+    next
+}
 
-# Split the BODY_FILE:
-#  - Everything before LAST_SECTION_START becomes the "middle" sections.
-#  - Everything from LAST_SECTION_START to the end is the last section.
-head -n $((LAST_SECTION_START - 1)) "$BODY_FILE" > "$MIDDLE_FILE"
-tail -n +$LAST_SECTION_START "$BODY_FILE" > "$LAST_SECTION_FILE"
-
-# Reconstruct the file:
-#  1. Front matter and introduction.
-#  2. The last section (moved to the top of the body).
-#  3. The remaining sections.
+# Handle content lines
 {
-  cat "$TEMP_FILE"
-  cat "$LAST_SECTION_FILE"
-  cat "$MIDDLE_FILE"
-} > "$FILE"
+    if (in_target) {
+        target_content = target_content $0 "\n"
+    } else if (passed_frontmatter) {
+        other_content = other_content $0 "\n"
+    }
+}
 
-# Cleanup temporary files.
-rm -f "$TEMP_FILE" "$BODY_FILE" "$LAST_SECTION_FILE" "$MIDDLE_FILE"
+END {
+    # Print in desired order
+    printf "%s", target_content
+    printf "%s", other_content
+}' "$FILE" >"$RESULT_FILE"
 
-echo "Successfully reordered sections in $FILE."
+# Combine the files
+cat "$TEMP_FILE" "$RESULT_FILE" >"$FILE"
+
+# Cleanup
+rm -f "$TEMP_FILE" "$RESULT_FILE"
+
+echo "Successfully reordered sections in $FILE, moved '$SECTION_TITLE' to the top."

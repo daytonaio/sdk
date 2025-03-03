@@ -2,19 +2,15 @@ import json
 import functools
 from typing import Callable, Optional
 from daytona_api_client.exceptions import OpenApiException
+from daytona_sdk.common.errors import DaytonaError
 
 
-class DaytonaException(Exception):
-    """Base exception for Daytona SDK."""
-    pass
-
-
-def intercept_exceptions(message_prefix: Optional[str] = ""):
-    """Decorator to intercept exceptions, process them, and optionally add a message prefix.
-    If the exception is an OpenApiException, it will be processed to extract the most meaningful exception message.
+def intercept_errors(message_prefix: Optional[str] = ""):
+    """Decorator to intercept errors, process them, and optionally add a message prefix.
+    If the error is an OpenApiException, it will be processed to extract the most meaningful error message.
 
     Args:
-        message_prefix (Optional[str]): Custom message prefix for the exception.
+        message_prefix (Optional[str]): Custom message prefix for the error.
     """
     def decorator(func: Callable):
         @functools.wraps(func)
@@ -24,12 +20,12 @@ def intercept_exceptions(message_prefix: Optional[str] = ""):
             except OpenApiException as e:
                 message = _get_open_api_exception_message(e)
 
-                raise DaytonaException(f"{message_prefix}{message}") from None
+                raise DaytonaError(f"{message_prefix}{message}") from None
             except Exception as e:
                 if message_prefix:
                     message = f"{message_prefix}{str(e)}"
-                    raise DaytonaException(message)
-                raise DaytonaException(str(e))
+                    raise DaytonaError(message)
+                raise DaytonaError(str(e))
 
         return wrapper
     return decorator
@@ -45,10 +41,10 @@ def _get_open_api_exception_message(exception: OpenApiException) -> str:
     3. If the body is not valid JSON or does not contain a 'message' field, uses the raw body string
 
     Args:
-        exception: The OpenApiException to process
+        exception (OpenApiException): The OpenApiException to process
 
     Returns:
-        Exception with processed message
+        Processed message
     """
     if not hasattr(exception, 'body') or not exception.body:
         return str(exception)

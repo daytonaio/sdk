@@ -420,6 +420,12 @@ export class Workspace {
     return Workspace.toWorkspaceInfo(instance)
   }
 
+  /**
+   * Converts an API workspace instance to a WorkspaceInfo object.
+   * 
+   * @param {ApiWorkspace} instance - The API workspace instance to convert
+   * @returns {WorkspaceInfo} The converted WorkspaceInfo object
+   */
   public static toWorkspaceInfo(instance: ApiWorkspace): WorkspaceInfo {
     const providerMetadata = JSON.parse(instance.info?.providerMetadata || '{}')
     var resourcesData = providerMetadata.resources || providerMetadata

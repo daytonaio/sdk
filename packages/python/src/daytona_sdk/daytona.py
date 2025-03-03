@@ -73,7 +73,7 @@ from daytona_api_client import (
     SessionExecuteRequest,
     SessionExecuteResponse
 )
-from daytona_sdk._utils.exceptions import intercept_exceptions, DaytonaException
+from daytona_sdk._utils.errors import intercept_errors, DaytonaError
 from .code_toolbox.workspace_python_code_toolbox import WorkspacePythonCodeToolbox
 from .code_toolbox.workspace_ts_code_toolbox import WorkspaceTsCodeToolbox
 from ._utils.enum import to_enum
@@ -119,8 +119,6 @@ class DaytonaConfig:
     api_key: str
     server_url: str
     target: WorkspaceTargetRegion
-
-
 
 
 @dataclass
@@ -237,7 +235,7 @@ class Daytona:
             config (Optional[DaytonaConfig]): Object containing api_key, server_url, and target.
 
         Raises:
-            DaytonaException: If API key or Server URL is not provided either through config or environment variables
+            DaytonaError: If API key or Server URL is not provided either through config or environment variables
 
         Example:
             ```python
@@ -269,10 +267,10 @@ class Daytona:
             self.target = config.target
 
         if not self.api_key:
-            raise DaytonaException("API key is required")
+            raise DaytonaError("API key is required")
 
         if not self.server_url:
-            raise DaytonaException("Server URL is required")
+            raise DaytonaError("Server URL is required")
 
         # Create API configuration without api_key
         configuration = Configuration(host=self.server_url)
@@ -283,7 +281,7 @@ class Daytona:
         self.workspace_api = WorkspaceApi(api_client)
         self.toolbox_api = ToolboxApi(api_client)
 
-    @intercept_exceptions(message_prefix="Failed to create workspace: ")
+    @intercept_errors(message_prefix="Failed to create workspace: ")
     def create(self, params: Optional[CreateWorkspaceParams] = None, timeout: Optional[float] = 60) -> Workspace:
         """Creates Sandboxes with default or custom configurations. You can specify various parameters,
         including language, image, resources, environment variables, and volumes for the Sandbox.
@@ -297,7 +295,7 @@ class Daytona:
             Workspace: The created Sandbox instance.
 
         Raises:
-            DaytonaException: If timeout or auto_stop_interval is negative; If workspace fails to start or times out
+            DaytonaError: If timeout or auto_stop_interval is negative; If workspace fails to start or times out
 
         Example:
             Create a default Python Sandbox:
@@ -349,15 +347,15 @@ class Daytona:
             Workspace: The created Sandbox instance.
 
         Raises:
-            DaytonaException: If timeout or auto_stop_interval is negative; If workspace fails to start or times out
+            DaytonaError: If timeout or auto_stop_interval is negative; If workspace fails to start or times out
         """
         code_toolbox = self._get_code_toolbox(params)
 
         if timeout < 0:
-            raise DaytonaException("Timeout must be a non-negative number")
+            raise DaytonaError("Timeout must be a non-negative number")
 
         if params.auto_stop_interval is not None and params.auto_stop_interval < 0:
-            raise DaytonaException(
+            raise DaytonaError(
                 "auto_stop_interval must be a non-negative integer")
 
         # Create workspace using dictionary
@@ -411,14 +409,14 @@ class Daytona:
             The appropriate code toolbox instance for the specified language.
 
         Raises:
-            DaytonaException: If an unsupported language is specified.
+            DaytonaError: If an unsupported language is specified.
         """
         if not params:
             return WorkspacePythonCodeToolbox()
 
         enum_language = to_enum(CodeLanguage, params.language)
         if enum_language is None:
-            raise DaytonaException(f"Unsupported language: {params.language}")
+            raise DaytonaError(f"Unsupported language: {params.language}")
         else:
             params.language = enum_language
 
@@ -428,18 +426,18 @@ class Daytona:
             case CodeLanguage.PYTHON:
                 return WorkspacePythonCodeToolbox()
             case _:
-                raise DaytonaException(f"Unsupported language: {params.language}")
-    
-    @intercept_exceptions(message_prefix="Failed to remove workspace: ")
+                raise DaytonaError(f"Unsupported language: {params.language}")
+
+    @intercept_errors(message_prefix="Failed to remove workspace: ")
     def remove(self, workspace: Workspace, timeout: Optional[float] = 60) -> None:
         """Removes a Sandbox.
 
         Args:
             workspace (Workspace): The Sandbox instance to remove.
             timeout (Optional[float]): Timeout (in seconds) for workspace removal. 0 means no timeout. Default is 60 seconds.
-        
+
         Raises:
-            DaytonaException: If workspace fails to remove or times out
+            DaytonaError: If workspace fails to remove or times out
 
         Example:
             ```python
@@ -450,7 +448,7 @@ class Daytona:
         """
         return self.workspace_api.delete_workspace(workspace_id=workspace.id, force=True, _request_timeout=timeout)
 
-    @intercept_exceptions(message_prefix="Failed to get workspace: ")
+    @intercept_errors(message_prefix="Failed to get workspace: ")
     def get_current_workspace(self, workspace_id: str) -> Workspace:
         """Get a Sandbox by its ID.
 
@@ -461,7 +459,7 @@ class Daytona:
             Workspace: The Sandbox instance.
 
         Raises:
-            DaytonaException: If workspace_id is not provided.
+            DaytonaError: If workspace_id is not provided.
 
         Example:
             ```python
@@ -470,7 +468,7 @@ class Daytona:
             ```
         """
         if not workspace_id:
-            raise DaytonaException("workspace_id is required")
+            raise DaytonaError("workspace_id is required")
 
         # Get the workspace instance
         workspace_instance = self.workspace_api.get_workspace(
@@ -488,7 +486,7 @@ class Daytona:
             code_toolbox
         )
 
-    @intercept_exceptions(message_prefix="Failed to list workspaces: ")
+    @intercept_errors(message_prefix="Failed to list workspaces: ")
     def list(self) -> List[Workspace]:
         """Lists all Sandboxes.
 
@@ -534,14 +532,14 @@ class Daytona:
             CodeLanguage: The validated language, defaults to "python" if None
 
         Raises:
-            DaytonaException: If the language is not supported.
+            DaytonaError: If the language is not supported.
         """
         if not language:
             return CodeLanguage.PYTHON
 
         enum_language = to_enum(CodeLanguage, language)
         if enum_language is None:
-            raise DaytonaException(f"Invalid code-toolbox-language: {language}")
+            raise DaytonaError(f"Invalid code-toolbox-language: {language}")
         else:
             return enum_language
 
@@ -562,7 +560,7 @@ class Daytona:
             timeout (Optional[float]): Optional timeout in seconds to wait for the Sandbox to start. 0 means no timeout. Default is 60 seconds.
 
         Raises:
-            DaytonaException: If timeout is negative; If Sandbox fails to start or times out
+            DaytonaError: If timeout is negative; If Sandbox fails to start or times out
         """
         workspace.start(timeout)
 
@@ -570,14 +568,13 @@ class Daytona:
         """Stops a Sandbox and waits for it to be stopped.
 
         Args:
-            workspace: The workspace to stop
-            timeout: Optional timeout (in seconds) for workspace stop. 0 means no timeout. Default is 60 seconds.
+            workspace (Workspace): The workspace to stop
+            timeout (Optional[float]): Optional timeout (in seconds) for workspace stop. 0 means no timeout. Default is 60 seconds.
 
         Raises:
-            DaytonaException: If timeout is negative; If Sandbox fails to stop or times out
+            DaytonaError: If timeout is negative; If Sandbox fails to stop or times out
         """
         workspace.stop(timeout)
-
 
 
 # Export these at module level
