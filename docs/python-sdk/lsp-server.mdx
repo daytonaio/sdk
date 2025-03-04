@@ -46,7 +46,7 @@ lsp.stop()
 class LspServer()
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/b89000d9591190e660eb82338365eda00baab694/packages/python/src/daytona_sdk/lsp_server.py#L86)
+[[view_source]](https://github.com/daytonaio/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/python/src/daytona_sdk/lsp_server.py#L86)
 
 Provides Language Server Protocol functionality for code intelligence.
 
@@ -67,7 +67,7 @@ def __init__(language_id: LspLanguageId, path_to_project: str,
              toolbox_api: ToolboxApi, instance: WorkspaceInstance)
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/b89000d9591190e660eb82338365eda00baab694/packages/python/src/daytona_sdk/lsp_server.py#L98)
+[[view_source]](https://github.com/daytonaio/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/python/src/daytona_sdk/lsp_server.py#L98)
 
 Initializes a new LSP server instance.
 
@@ -86,7 +86,7 @@ Initializes a new LSP server instance.
 def start() -> None
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/b89000d9591190e660eb82338365eda00baab694/packages/python/src/daytona_sdk/lsp_server.py#L119)
+[[view_source]](https://github.com/daytonaio/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/python/src/daytona_sdk/lsp_server.py#L119)
 
 Starts the language server.
 
@@ -109,7 +109,7 @@ lsp.start()  # Initialize the server
 def stop() -> None
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/b89000d9591190e660eb82338365eda00baab694/packages/python/src/daytona_sdk/lsp_server.py#L141)
+[[view_source]](https://github.com/daytonaio/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/python/src/daytona_sdk/lsp_server.py#L141)
 
 Stops the language server.
 
@@ -131,7 +131,7 @@ lsp.stop()  # Clean up resources
 def did_open(path: str) -> None
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/b89000d9591190e660eb82338365eda00baab694/packages/python/src/daytona_sdk/lsp_server.py#L162)
+[[view_source]](https://github.com/daytonaio/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/python/src/daytona_sdk/lsp_server.py#L162)
 
 Notifies the language server that a file has been opened.
 
@@ -160,7 +160,7 @@ lsp.did_open("/workspace/project/src/index.ts")
 def did_close(path: str) -> None
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/b89000d9591190e660eb82338365eda00baab694/packages/python/src/daytona_sdk/lsp_server.py#L189)
+[[view_source]](https://github.com/daytonaio/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/python/src/daytona_sdk/lsp_server.py#L189)
 
 Notify the language server that a file has been closed.
 
@@ -187,7 +187,7 @@ lsp.did_close("/workspace/project/src/index.ts")
 def document_symbols(path: str) -> List[LspSymbol]
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/b89000d9591190e660eb82338365eda00baab694/packages/python/src/daytona_sdk/lsp_server.py#L213)
+[[view_source]](https://github.com/daytonaio/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/python/src/daytona_sdk/lsp_server.py#L213)
 
 Gets symbol information from a document.
 
@@ -224,7 +224,7 @@ for symbol in symbols:
 def workspace_symbols(query: str) -> List[LspSymbol]
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/b89000d9591190e660eb82338365eda00baab694/packages/python/src/daytona_sdk/lsp_server.py#L244)
+[[view_source]](https://github.com/daytonaio/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/python/src/daytona_sdk/lsp_server.py#L244)
 
 Searches for symbols across the entire Sandbox.
 
@@ -263,7 +263,7 @@ for symbol in symbols:
 def completions(path: str, position: Position) -> CompletionList
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/b89000d9591190e660eb82338365eda00baab694/packages/python/src/daytona_sdk/lsp_server.py#L277)
+[[view_source]](https://github.com/daytonaio/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/python/src/daytona_sdk/lsp_server.py#L277)
 
 Gets completion suggestions at a position in a file.
 
@@ -343,7 +343,7 @@ lsp.stop()
 class Position()
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/b89000d9591190e660eb82338365eda00baab694/packages/python/src/daytona_sdk/lsp_server.py#L64)
+[[view_source]](https://github.com/daytonaio/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/python/src/daytona_sdk/lsp_server.py#L64)
 
 Represents a position in a text document.
 
@@ -362,7 +362,7 @@ specified by line number and character offset.
 def __init__(line: int, character: int)
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/b89000d9591190e660eb82338365eda00baab694/packages/python/src/daytona_sdk/lsp_server.py#L75)
+[[view_source]](https://github.com/daytonaio/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/python/src/daytona_sdk/lsp_server.py#L75)
 
 Initialize a new Position instance.
 

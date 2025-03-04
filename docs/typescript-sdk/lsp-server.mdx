@@ -42,7 +42,7 @@ await lsp.stop();
 
 ## LspLanguageId
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/b89000d9591190e660eb82338365eda00baab694/packages/typescript/src/LspServer.ts#L51)
+[[view_source]](https://github.com/MDzaja/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/typescript/src/LspServer.ts#L51)
 
 Supported language server types.
 
@@ -58,7 +58,7 @@ Supported language server types.
 
 ## LspServer
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/b89000d9591190e660eb82338365eda00baab694/packages/typescript/src/LspServer.ts#L93)
+[[view_source]](https://github.com/MDzaja/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/typescript/src/LspServer.ts#L93)
 
 Provides Language Server Protocol functionality for code intelligence.
 
@@ -79,7 +79,7 @@ new LspServer(
    instance: WorkspaceInstance): LspServer
 ```
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/b89000d9591190e660eb82338365eda00baab694/packages/typescript/src/LspServer.ts#L94)
+[[view_source]](https://github.com/MDzaja/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/typescript/src/LspServer.ts#L94)
 
 ##### Parameters
 
@@ -102,7 +102,7 @@ new LspServer(
 completions(path: string, position: Position): Promise<CompletionList>
 ```
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/b89000d9591190e660eb82338365eda00baab694/packages/typescript/src/LspServer.ts#L284)
+[[view_source]](https://github.com/MDzaja/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/typescript/src/LspServer.ts#L284)
 
 Gets completion suggestions at a position in a file.
 
@@ -149,7 +149,7 @@ completions.items.forEach(item => {
 didClose(path: string): Promise<void>
 ```
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/b89000d9591190e660eb82338365eda00baab694/packages/typescript/src/LspServer.ts#L188)
+[[view_source]](https://github.com/MDzaja/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/typescript/src/LspServer.ts#L188)
 
 Notifies the language server that a file has been closed.
 
@@ -181,7 +181,7 @@ await lsp.didClose('/workspace/project/src/index.ts');
 didOpen(path: string): Promise<void>
 ```
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/b89000d9591190e660eb82338365eda00baab694/packages/typescript/src/LspServer.ts#L164)
+[[view_source]](https://github.com/MDzaja/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/typescript/src/LspServer.ts#L164)
 
 Notifies the language server that a file has been opened.
 
@@ -215,7 +215,7 @@ await lsp.didOpen('/workspace/project/src/index.ts');
 documentSymbols(path: string): Promise<LspSymbol[]>
 ```
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/b89000d9591190e660eb82338365eda00baab694/packages/typescript/src/LspServer.ts#L218)
+[[view_source]](https://github.com/MDzaja/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/typescript/src/LspServer.ts#L218)
 
 Get symbol information from a document.
 
@@ -255,7 +255,7 @@ symbols.forEach(symbol => {
 start(): Promise<void>
 ```
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/b89000d9591190e660eb82338365eda00baab694/packages/typescript/src/LspServer.ts#L118)
+[[view_source]](https://github.com/MDzaja/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/typescript/src/LspServer.ts#L118)
 
 Starts the language server.
 
@@ -282,7 +282,7 @@ await lsp.start();  // Initialize the server
 stop(): Promise<void>
 ```
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/b89000d9591190e660eb82338365eda00baab694/packages/typescript/src/LspServer.ts#L139)
+[[view_source]](https://github.com/MDzaja/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/typescript/src/LspServer.ts#L139)
 
 Stops the language server.
 
@@ -308,7 +308,7 @@ await lsp.stop();  // Clean up resources
 workspaceSymbols(query: string): Promise<LspSymbol[]>
 ```
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/b89000d9591190e660eb82338365eda00baab694/packages/typescript/src/LspServer.ts#L248)
+[[view_source]](https://github.com/MDzaja/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/typescript/src/LspServer.ts#L248)
 
 Searches for symbols across the entire Sandbox.
 
@@ -345,7 +345,7 @@ symbols.forEach(symbol => {
 
 ## Position
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/b89000d9591190e660eb82338365eda00baab694/packages/typescript/src/LspServer.ts#L73)
+[[view_source]](https://github.com/MDzaja/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/typescript/src/LspServer.ts#L73)
 
 Represents a position in a text document.
 

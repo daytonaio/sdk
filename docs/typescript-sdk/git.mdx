@@ -45,7 +45,7 @@ await workspace.git.push(
 
 ## Git
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/b89000d9591190e660eb82338365eda00baab694/packages/typescript/src/Git.ts#L51)
+[[view_source]](https://github.com/MDzaja/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/typescript/src/Git.ts#L51)
 
 ### Constructors
 
@@ -58,7 +58,7 @@ new Git(
    instance: WorkspaceInstance): Git
 ```
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/b89000d9591190e660eb82338365eda00baab694/packages/typescript/src/Git.ts#L52)
+[[view_source]](https://github.com/MDzaja/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/typescript/src/Git.ts#L52)
 
 ##### Parameters
 
@@ -80,7 +80,7 @@ new Git(
 add(path: string, files: string[]): Promise<void>
 ```
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/b89000d9591190e660eb82338365eda00baab694/packages/typescript/src/Git.ts#L76)
+[[view_source]](https://github.com/MDzaja/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/typescript/src/Git.ts#L76)
 
 Stages files for commit.
 
@@ -118,7 +118,7 @@ await git.add('/workspace/repo', ['.']);
 branches(path: string): Promise<ListBranchResponse>
 ```
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/b89000d9591190e660eb82338365eda00baab694/packages/typescript/src/Git.ts#L95)
+[[view_source]](https://github.com/MDzaja/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/typescript/src/Git.ts#L95)
 
 List branches in the repository.
 
@@ -157,7 +157,7 @@ clone(
 password?: string): Promise<void>
 ```
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/b89000d9591190e660eb82338365eda00baab694/packages/typescript/src/Git.ts#L140)
+[[view_source]](https://github.com/MDzaja/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/typescript/src/Git.ts#L140)
 
 Clones a Git repository.
 
@@ -222,7 +222,7 @@ commit(
 email: string): Promise<void>
 ```
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/b89000d9591190e660eb82338365eda00baab694/packages/typescript/src/Git.ts#L181)
+[[view_source]](https://github.com/MDzaja/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/typescript/src/Git.ts#L181)
 
 Commits staged changes.
 
@@ -266,7 +266,7 @@ pull(
 password?: string): Promise<void>
 ```
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/b89000d9591190e660eb82338365eda00baab694/packages/typescript/src/Git.ts#L253)
+[[view_source]](https://github.com/MDzaja/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/typescript/src/Git.ts#L253)
 
 Pulls changes from the remote repository.
 
@@ -312,7 +312,7 @@ push(
 password?: string): Promise<void>
 ```
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/b89000d9591190e660eb82338365eda00baab694/packages/typescript/src/Git.ts#L218)
+[[view_source]](https://github.com/MDzaja/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/typescript/src/Git.ts#L218)
 
 Push local changes to the remote repository.
 
@@ -355,7 +355,7 @@ await git.push(
 status(path: string): Promise<GitStatus>
 ```
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/b89000d9591190e660eb82338365eda00baab694/packages/typescript/src/Git.ts#L285)
+[[view_source]](https://github.com/MDzaja/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/typescript/src/Git.ts#L285)
 
 Gets the current status of the Git repository.
 

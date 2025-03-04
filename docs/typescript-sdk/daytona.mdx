@@ -52,7 +52,7 @@ await workspace.process.executeCommand('npm test');
 
 ## CodeLanguage
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/b89000d9591190e660eb82338365eda00baab694/packages/typescript/src/Daytona.ts#L91)
+[[view_source]](https://github.com/MDzaja/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/typescript/src/Daytona.ts#L91)
 
 Supported programming languages for code execution
 
@@ -68,7 +68,7 @@ Supported programming languages for code execution
 
 ## Daytona
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/b89000d9591190e660eb82338365eda00baab694/packages/typescript/src/Daytona.ts#L207)
+[[view_source]](https://github.com/MDzaja/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/typescript/src/Daytona.ts#L207)
 
 Main class for interacting with Daytona Server API.
 
@@ -104,7 +104,7 @@ const daytona = new Daytona(config);
 new Daytona(config?: DaytonaConfig): Daytona
 ```
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/b89000d9591190e660eb82338365eda00baab694/packages/typescript/src/Daytona.ts#L220)
+[[view_source]](https://github.com/MDzaja/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/typescript/src/Daytona.ts#L220)
 
 Creates a new Daytona client instance.
 
@@ -130,7 +130,7 @@ Creates a new Daytona client instance.
 create(params?: CreateWorkspaceParams, timeout?: number): Promise<Workspace>
 ```
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/b89000d9591190e660eb82338365eda00baab694/packages/typescript/src/Daytona.ts#L300)
+[[view_source]](https://github.com/MDzaja/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/typescript/src/Daytona.ts#L300)
 
 Creates Sandboxes with default or custom configurations. You can specify various parameters,
 including language, image, resources, environment variables, and volumes for the Sandbox.
@@ -181,7 +181,7 @@ const workspace = await daytona.create(params, 40);
 get(workspaceId: string): Promise<Workspace>
 ```
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/b89000d9591190e660eb82338365eda00baab694/packages/typescript/src/Daytona.ts#L383)
+[[view_source]](https://github.com/MDzaja/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/typescript/src/Daytona.ts#L383)
 
 Gets a Sandbox by its ID.
 
@@ -212,7 +212,7 @@ console.log(`Workspace state: ${workspace.instance.state}`);
 getCurrentWorkspace(workspaceId: string): Promise<Workspace>
 ```
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/b89000d9591190e660eb82338365eda00baab694/packages/typescript/src/Daytona.ts#L477)
+[[view_source]](https://github.com/MDzaja/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/typescript/src/Daytona.ts#L477)
 
 Gets the Sandbox by ID.
 
@@ -243,7 +243,7 @@ console.log(`Current workspace state: ${workspace.instance.state}`);
 list(): Promise<Workspace[]>
 ```
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/b89000d9591190e660eb82338365eda00baab694/packages/typescript/src/Daytona.ts#L405)
+[[view_source]](https://github.com/MDzaja/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/typescript/src/Daytona.ts#L405)
 
 Lists all Sandboxes.
 
@@ -270,7 +270,7 @@ for (const workspace of workspaces) {
 remove(workspace: Workspace, timeout: number): Promise<void>
 ```
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/b89000d9591190e660eb82338365eda00baab694/packages/typescript/src/Daytona.ts#L463)
+[[view_source]](https://github.com/MDzaja/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/typescript/src/Daytona.ts#L463)
 
 Removes a Sandbox.
 
@@ -300,7 +300,7 @@ await daytona.remove(workspace);
 start(workspace: Workspace, timeout?: number): Promise<void>
 ```
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/b89000d9591190e660eb82338365eda00baab694/packages/typescript/src/Daytona.ts#L434)
+[[view_source]](https://github.com/MDzaja/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/typescript/src/Daytona.ts#L434)
 
 Starts a Sandbox and waits for it to be ready.
 
@@ -331,7 +331,7 @@ await daytona.start(workspace, 60);
 stop(workspace: Workspace): Promise<void>
 ```
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/b89000d9591190e660eb82338365eda00baab694/packages/typescript/src/Daytona.ts#L448)
+[[view_source]](https://github.com/MDzaja/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/typescript/src/Daytona.ts#L448)
 
 Stops a Sandbox.
 
@@ -356,7 +356,7 @@ await daytona.stop(workspace);
 
 ## CreateWorkspaceParams
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/b89000d9591190e660eb82338365eda00baab694/packages/typescript/src/Daytona.ts#L153)
+[[view_source]](https://github.com/MDzaja/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/typescript/src/Daytona.ts#L153)
 
 Parameters for creating a new Sandbox.
 
@@ -396,7 +396,7 @@ const workspace = await daytona.create(params, 50);
 
 ## DaytonaConfig
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/b89000d9591190e660eb82338365eda00baab694/packages/typescript/src/Daytona.ts#L79)
+[[view_source]](https://github.com/MDzaja/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/typescript/src/Daytona.ts#L79)
 
 Configuration options for initializing the Daytona client.
 
@@ -406,7 +406,7 @@ Configuration options for initializing the Daytona client.
 const config: DaytonaConfig = {
     apiKey: "your-api-key",
     serverUrl: "https://your-server.com",
-    target: "local"
+    target: "us"
 };
 const daytona = new Daytona(config);
 ```
@@ -423,7 +423,7 @@ const daytona = new Daytona(config);
 
 ## WorkspaceResources
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/b89000d9591190e660eb82338365eda00baab694/packages/typescript/src/Daytona.ts#L113)
+[[view_source]](https://github.com/MDzaja/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/typescript/src/Daytona.ts#L113)
 
 Resource allocation for a Sandbox.
 
