@@ -356,7 +356,7 @@ export class Workspace {
       }
 
       if (state === 'error') {
-        throw new DaytonaError(`Workspace failed to start with status: ${state}`);
+        throw new DaytonaError(`Workspace failed to start with status: ${state}, error reason: ${response.data.errorReason}`);
       }
 
       await new Promise(resolve => setTimeout(resolve, checkInterval));
@@ -393,7 +393,7 @@ export class Workspace {
       }
 
       if (state === 'error') {
-        throw new DaytonaError(`Workspace failed to stop with status: ${state}`);
+        throw new DaytonaError(`Workspace failed to stop with status: ${state}, error reason: ${response.data.errorReason}`);
       }
 
       await new Promise(resolve => setTimeout(resolve, checkInterval));
