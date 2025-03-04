@@ -229,7 +229,7 @@ class Daytona:
         If no config is provided, reads from environment variables:
         - `DAYTONA_API_KEY`: Required API key for authentication
         - `DAYTONA_SERVER_URL`: Required server URL
-        - `DAYTONA_TARGET`: Optional target environment (defaults to "local")
+        - `DAYTONA_TARGET`: Optional target environment (defaults to WorkspaceTargetRegion.US)
 
         Args:
             config (Optional[DaytonaConfig]): Object containing api_key, server_url, and target.
@@ -260,7 +260,7 @@ class Daytona:
 
             self.api_key = env.str("DAYTONA_API_KEY")
             self.server_url = env.str("DAYTONA_SERVER_URL")
-            self.target = env.str("DAYTONA_TARGET", "local")
+            self.target = env.str("DAYTONA_TARGET", WorkspaceTargetRegion.US)
         else:
             self.api_key = config.api_key
             self.server_url = config.server_url

@@ -72,7 +72,7 @@ import { DaytonaError } from './errors/DaytonaError'
  * const config: DaytonaConfig = {
  *     apiKey: "your-api-key",
  *     serverUrl: "https://your-server.com",
- *     target: "local"
+ *     target: "us"
  * };
  * const daytona = new Daytona(config);
  */
@@ -227,7 +227,7 @@ export class Daytona {
       throw new DaytonaError('Server URL is required')
     }
     const envTarget = process.env.DAYTONA_TARGET as WorkspaceTargetRegion
-    const target = config?.target || envTarget
+    const target = config?.target || envTarget || WorkspaceTargetRegion.US
 
     this.apiKey = apiKey
     this.serverUrl = serverUrl
