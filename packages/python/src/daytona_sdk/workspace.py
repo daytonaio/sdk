@@ -330,7 +330,7 @@ class Workspace:
             print("Workspace started successfully")
             ```
         """
-        self.workspace_api.start_workspace(self.id, _request_timeout=timeout)
+        self.workspace_api.start_workspace(self.id, _request_timeout=timeout or None)
         self.wait_for_workspace_start()
 
     @intercept_errors(message_prefix="Failed to stop workspace: ")
@@ -353,7 +353,7 @@ class Workspace:
             print("Workspace stopped successfully")
             ```
         """
-        self.workspace_api.stop_workspace(self.id, _request_timeout=timeout)
+        self.workspace_api.stop_workspace(self.id, _request_timeout=timeout or None)
         self.wait_for_workspace_stop()
 
     @intercept_errors(message_prefix="Failure during waiting for workspace to start: ")

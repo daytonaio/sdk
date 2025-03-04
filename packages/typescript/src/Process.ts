@@ -224,12 +224,12 @@ export class Process {
    * console.log(result.output);  // Prints: /workspace
    */
   public async executeSessionCommand(sessionId: string, req: SessionExecuteRequest, timeout?: number): Promise<SessionExecuteResponse> {
-    let options: RawAxiosRequestConfig = {}
-    if (timeout) {
-      options = { timeout: timeout * 1000 }
-    }
-
-    const response = await this.toolboxApi.executeSessionCommand(this.instance.id, sessionId, req, options)
+    const response = await this.toolboxApi.executeSessionCommand(
+      this.instance.id,
+      sessionId,
+      req,
+      timeout ? { timeout: timeout * 1000 } : {}
+    )
     return response.data
   }
 

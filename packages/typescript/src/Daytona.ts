@@ -357,7 +357,7 @@ export class Daytona {
 
       if (!params.async) {
         const timeElapsed = Date.now() - startTime;
-        await workspace.waitUntilStarted(effectiveTimeout - (timeElapsed / 1000));
+        await workspace.waitUntilStarted(effectiveTimeout ? effectiveTimeout - (timeElapsed / 1000) : 0);
       }
 
       return workspace

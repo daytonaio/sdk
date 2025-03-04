@@ -268,7 +268,7 @@ class Process:
             workspace_id=self.instance.id,
             session_id=session_id,
             session_execute_request=req,
-            _request_timeout=timeout
+            _request_timeout=timeout or None
         )
 
     @intercept_errors(message_prefix="Failed to get session command logs: ")

@@ -378,7 +378,7 @@ class Daytona:
             workspace_data.gpu = params.resources.gpu
 
         response = self.workspace_api.create_workspace(
-            create_workspace=workspace_data, _request_timeout=timeout)
+            create_workspace=workspace_data, _request_timeout=timeout or None)
         workspace_info = Workspace._to_workspace_info(response)
         response.info = workspace_info
 
@@ -446,7 +446,7 @@ class Daytona:
             daytona.remove(workspace)  # Clean up when done
             ```
         """
-        return self.workspace_api.delete_workspace(workspace_id=workspace.id, force=True, _request_timeout=timeout)
+        return self.workspace_api.delete_workspace(workspace_id=workspace.id, force=True, _request_timeout=timeout or None)
 
     @intercept_errors(message_prefix="Failed to get workspace: ")
     def get_current_workspace(self, workspace_id: str) -> Workspace:
