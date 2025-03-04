@@ -41,7 +41,7 @@
 
 import { ToolboxApi, WorkspaceApi } from '@daytonaio/api-client'
 import { 
-  WorkspaceStateEnum as WorkspaceState,
+  WorkspaceState,
   Workspace as ApiWorkspace,
   WorkspaceInfo as ApiWorkspaceInfo,
   CreateWorkspaceTargetEnum as WorkspaceTargetRegion,

@@ -22,4 +22,4 @@ export type {
   ExecuteResponse,
 } from '@daytonaio/api-client'
 
-export { WorkspaceStateEnum as WorkspaceState, CreateWorkspaceTargetEnum as WorkspaceTargetRegion } from '@daytonaio/api-client'
+export { WorkspaceState, CreateWorkspaceTargetEnum as WorkspaceTargetRegion } from '@daytonaio/api-client'
