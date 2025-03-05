@@ -4,7 +4,7 @@ title: Sandbox
 
 The Daytona SDK core Sandbox functionality.
 
-Provides the main Workspace class representing a Daytona Sandbox that coordinates file system,
+Provides the main Sandbox class representing a Daytona Sandbox that coordinates file system,
 Git, process execution, and LSP functionality. It serves as the central point
 for interacting with Daytona Sandboxes.
 
@@ -13,58 +13,58 @@ The Sandbox must be in a 'started' state before performing operations.
 ### Example
 
 ```ts
-// Create and initialize workspace
+// Create and initialize sandbox
 const daytona = new Daytona();
-const workspace = await daytona.create();
+const sandbox = await daytona.create();
 
 // File operations
-await workspace.fs.uploadFile(
+await sandbox.fs.uploadFile(
   '/app/config.json',
   new File(['{"setting": "value"}'], 'config.json')
 );
-const contentBlob = await workspace.fs.downloadFile('/app/config.json');
+const contentBlob = await sandbox.fs.downloadFile('/app/config.json');
 
 // Git operations
-await workspace.git.clone('https://github.com/user/repo.git');
+await sandbox.git.clone('https://github.com/user/repo.git');
 
 // Process execution
-const response = await workspace.process.executeCommand('ls -la');
+const response = await sandbox.process.executeCommand('ls -la');
 console.log(response.result);
 
 // LSP functionality
-const lsp = workspace.createLspServer('typescript', '/workspace/project');
-await lsp.didOpen('/workspace/project/src/index.ts');
-const completions = await lsp.completions('/workspace/project/src/index.ts', {
+const lsp = sandbox.createLspServer('typescript', '/sandbox/project');
+await lsp.didOpen('/sandbox/project/src/index.ts');
+const completions = await lsp.completions('/sandbox/project/src/index.ts', {
   line: 10,
   character: 15
 });
 console.log(completions);
 ```
 
-## Workspace
+## Sandbox
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/typescript/src/Workspace.ts#L184)
+[[view_source]](https://github.com/MDzaja/sdk/blob/30e0dfde8952b2e6369d58daec6da9433471b811/packages/typescript/src/Sandbox.ts#L185)
 
 Represents a Daytona Sandbox.
 
 A Sandbox provides file system operations, Git operations, process execution,
 and LSP functionality. It serves as the main interface for interacting with
-a Daytona workspace.
+a Daytona sandbox.
 
 ### Constructors
 
-#### new Workspace()
+#### new Sandbox()
 
 ```ts
-new Workspace(
+new Sandbox(
    id: string, 
-   instance: WorkspaceInstance, 
-   workspaceApi: WorkspaceApi, 
+   instance: SandboxInstance, 
+   sandboxApi: WorkspaceApi, 
    toolboxApi: ToolboxApi, 
-   codeToolbox: WorkspaceCodeToolbox): Workspace
+   codeToolbox: SandboxCodeToolbox): Sandbox
 ```
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/typescript/src/Workspace.ts#L201)
+[[view_source]](https://github.com/MDzaja/sdk/blob/30e0dfde8952b2e6369d58daec6da9433471b811/packages/typescript/src/Sandbox.ts#L202)
 
 Creates a new Sandbox instance
 
@@ -73,14 +73,14 @@ Creates a new Sandbox instance
 | Parameter | Type | Description |
 | ------ | ------ | ------ |
 | `id` | `string` | Unique identifier for the Sandbox |
-| `instance` | `WorkspaceInstance` | The underlying Sandbox instance |
-| `workspaceApi` | `WorkspaceApi` | API client for Sandbox operations |
+| `instance` | `SandboxInstance` | The underlying Sandbox instance |
+| `sandboxApi` | `WorkspaceApi` | API client for Sandbox operations |
 | `toolboxApi` | `ToolboxApi` | API client for toolbox operations |
-| `codeToolbox` | `WorkspaceCodeToolbox` | Language-specific toolbox implementation |
+| `codeToolbox` | `SandboxCodeToolbox` | Language-specific toolbox implementation |
 
 ##### Returns
 
-`Workspace`
+`Sandbox`
 
 ### Properties
 
@@ -89,34 +89,34 @@ Creates a new Sandbox instance
 | `fs` | `readonly` | `FileSystem` | File system operations interface |
 | `git` | `readonly` | `Git` | Git operations interface |
 | `id` | `readonly` | `string` | Unique identifier for the Sandbox |
-| `instance` | `readonly` | `WorkspaceInstance` | The underlying Sandbox instance |
+| `instance` | `readonly` | `SandboxInstance` | The underlying Sandbox instance |
 | `process` | `readonly` | `Process` | Process execution interface |
+| `sandboxApi` | `readonly` | `WorkspaceApi` | API client for Sandbox operations |
 | `toolboxApi` | `readonly` | `ToolboxApi` | API client for toolbox operations |
-| `workspaceApi` | `readonly` | `WorkspaceApi` | API client for Sandbox operations |
 
 ### Methods
 
-#### toWorkspaceInfo()
+#### toSandboxInfo()
 
 ```ts
-static toWorkspaceInfo(instance: Workspace): WorkspaceInfo
+static toSandboxInfo(instance: Workspace): SandboxInfo
 ```
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/typescript/src/Workspace.ts#L429)
+[[view_source]](https://github.com/MDzaja/sdk/blob/30e0dfde8952b2e6369d58daec6da9433471b811/packages/typescript/src/Sandbox.ts#L430)
 
-Converts an API workspace instance to a WorkspaceInfo object.
+Converts an API sandbox instance to a SandboxInfo object.
 
 ##### Parameters
 
 | Parameter | Type | Description |
 | ------ | ------ | ------ |
-| `instance` | `Workspace` | The API workspace instance to convert |
+| `instance` | `Workspace` | The API sandbox instance to convert |
 
 ##### Returns
 
-`WorkspaceInfo`
+`SandboxInfo`
 
-The converted WorkspaceInfo object
+The converted SandboxInfo object
 
 ***
 
@@ -126,12 +126,12 @@ The converted WorkspaceInfo object
 archive(): Promise<void>
 ```
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/typescript/src/Workspace.ts#L516)
+[[view_source]](https://github.com/MDzaja/sdk/blob/30e0dfde8952b2e6369d58daec6da9433471b811/packages/typescript/src/Sandbox.ts#L517)
 
-Archives the workspace, making it inactive and preserving its state. When sandboxes are archived, the entire filesystem
+Archives the sandbox, making it inactive and preserving its state. When sandboxes are archived, the entire filesystem
 state is moved to cost-effective object storage, making it possible to keep sandboxes available for an extended period.
 The tradeoff between archived and stopped states is that starting an archived sandbox takes more time, depending on its size.
-Workspace must be stopped before archiving.
+Sandbox must be stopped before archiving.
 
 ##### Returns
 
@@ -145,7 +145,7 @@ Workspace must be stopped before archiving.
 createLspServer(languageId: string, pathToProject: string): LspServer
 ```
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/typescript/src/Workspace.ts#L242)
+[[view_source]](https://github.com/MDzaja/sdk/blob/30e0dfde8952b2e6369d58daec6da9433471b811/packages/typescript/src/Sandbox.ts#L243)
 
 Creates a new Language Server Protocol (LSP) server instance.
 
@@ -168,7 +168,7 @@ A new LSP server instance configured for the specified language
 ##### Example
 
 ```ts
-const lsp = workspace.createLspServer('typescript', '/workspace/project');
+const lsp = sandbox.createLspServer('typescript', '/sandbox/project');
 ```
 
 ***
@@ -179,7 +179,7 @@ const lsp = workspace.createLspServer('typescript', '/workspace/project');
 delete(): Promise<void>
 ```
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/typescript/src/Workspace.ts#L327)
+[[view_source]](https://github.com/MDzaja/sdk/blob/30e0dfde8952b2e6369d58daec6da9433471b811/packages/typescript/src/Sandbox.ts#L328)
 
 Deletes the Sandbox.
 
@@ -195,9 +195,9 @@ Deletes the Sandbox.
 getPreviewLink(port: number): string
 ```
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/typescript/src/Workspace.ts#L501)
+[[view_source]](https://github.com/MDzaja/sdk/blob/30e0dfde8952b2e6369d58daec6da9433471b811/packages/typescript/src/Sandbox.ts#L502)
 
-Gets the preview link for the workspace at a specific port. If the port is not open, it will open it and return the link.
+Gets the preview link for the sandbox at a specific port. If the port is not open, it will open it and return the link.
 
 ##### Parameters
 
@@ -209,7 +209,7 @@ Gets the preview link for the workspace at a specific port. If the port is not o
 
 `string`
 
-The preview link for the workspace at the specified port
+The preview link for the sandbox at the specified port
 
 ##### Throws
 
@@ -223,21 +223,21 @@ If the node domain is not found in the provider metadata
 getWorkspaceRootDir(): Promise<undefined | string>
 ```
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/typescript/src/Workspace.ts#L222)
+[[view_source]](https://github.com/MDzaja/sdk/blob/30e0dfde8952b2e6369d58daec6da9433471b811/packages/typescript/src/Sandbox.ts#L223)
 
-Gets the root directory path of the Sandbox.
+Gets the root directory path for the logged in user inside the Sandbox. Default user is `daytona`.
 
 ##### Returns
 
 `Promise<undefined | string>`
 
-The absolute path to the Sandbox root directory
+The absolute path to the Sandbox root directory for the logged in user
 
 ##### Example
 
 ```ts
-const rootDir = await workspace.getWorkspaceRootDir();
-console.log(`Workspace root: ${rootDir}`);
+const rootDir = await sandbox.getWorkspaceRootDir();
+console.log(`Sandbox root: ${rootDir}`);
 ```
 
 ***
@@ -245,16 +245,16 @@ console.log(`Workspace root: ${rootDir}`);
 #### info()
 
 ```ts
-info(): Promise<WorkspaceInfo>
+info(): Promise<SandboxInfo>
 ```
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/typescript/src/Workspace.ts#L417)
+[[view_source]](https://github.com/MDzaja/sdk/blob/30e0dfde8952b2e6369d58daec6da9433471b811/packages/typescript/src/Sandbox.ts#L418)
 
 Gets structured information about the Sandbox.
 
 ##### Returns
 
-`Promise<WorkspaceInfo>`
+`Promise<SandboxInfo>`
 
 Detailed information about the Sandbox including its
                                   configuration, resources, and current state
@@ -262,8 +262,8 @@ Detailed information about the Sandbox including its
 ##### Example
 
 ```ts
-const info = await workspace.info();
-console.log(`Workspace ${info.name}:`);
+const info = await sandbox.info();
+console.log(`Sandbox ${info.name}:`);
 console.log(`State: ${info.state}`);
 console.log(`Resources: ${info.resources.cpu} CPU, ${info.resources.memory} RAM`);
 ```
@@ -276,7 +276,7 @@ console.log(`Resources: ${info.resources.cpu} CPU, ${info.resources.memory} RAM`
 setAutostopInterval(interval: number): Promise<void>
 ```
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/typescript/src/Workspace.ts#L486)
+[[view_source]](https://github.com/MDzaja/sdk/blob/30e0dfde8952b2e6369d58daec6da9433471b811/packages/typescript/src/Sandbox.ts#L487)
 
 Set the auto-stop interval for the Sandbox.
 
@@ -302,9 +302,9 @@ Interactions using Sandbox Previews are not included.
 
 ```ts
 // Auto-stop after 1 hour
-await workspace.setAutostopInterval(60);
+await sandbox.setAutostopInterval(60);
 // Or disable auto-stop
-await workspace.setAutostopInterval(0);
+await sandbox.setAutostopInterval(0);
 ```
 
 ***
@@ -315,7 +315,7 @@ await workspace.setAutostopInterval(0);
 setLabels(labels: Record<string, string>): Promise<void>
 ```
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/typescript/src/Workspace.ts#L270)
+[[view_source]](https://github.com/MDzaja/sdk/blob/30e0dfde8952b2e6369d58daec6da9433471b811/packages/typescript/src/Sandbox.ts#L271)
 
 Sets labels for the Sandbox.
 
@@ -334,8 +334,8 @@ Labels are key-value pairs that can be used to organize and identify Sandboxes.
 ##### Example
 
 ```ts
-// Set workspace labels
-await workspace.setLabels({
+// Set sandbox labels
+await sandbox.setLabels({
   project: 'my-project',
   environment: 'development',
   team: 'backend'
@@ -350,7 +350,7 @@ await workspace.setLabels({
 start(timeout?: number): Promise<void>
 ```
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/typescript/src/Workspace.ts#L289)
+[[view_source]](https://github.com/MDzaja/sdk/blob/30e0dfde8952b2e6369d58daec6da9433471b811/packages/typescript/src/Sandbox.ts#L290)
 
 Start the Sandbox.
 
@@ -373,9 +373,9 @@ This method starts the Sandbox and waits for it to be ready.
 ##### Example
 
 ```ts
-const workspace = await daytona.getCurrentWorkspace('my-workspace');
-await workspace.start(40);  // Wait up to 40 seconds
-console.log('Workspace started successfully');
+const sandbox = await daytona.getCurrentSandbox('my-sandbox');
+await sandbox.start(40);  // Wait up to 40 seconds
+console.log('Sandbox started successfully');
 ```
 
 ***
@@ -386,7 +386,7 @@ console.log('Workspace started successfully');
 stop(timeout?: number): Promise<void>
 ```
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/typescript/src/Workspace.ts#L313)
+[[view_source]](https://github.com/MDzaja/sdk/blob/30e0dfde8952b2e6369d58daec6da9433471b811/packages/typescript/src/Sandbox.ts#L314)
 
 Stops the Sandbox.
 
@@ -405,9 +405,9 @@ This method stops the Sandbox and waits for it to be fully stopped.
 ##### Example
 
 ```ts
-const workspace = await daytona.getCurrentWorkspace('my-workspace');
-await workspace.stop();
-console.log('Workspace stopped successfully');
+const sandbox = await daytona.getCurrentSandbox('my-sandbox');
+await sandbox.stop();
+console.log('Sandbox stopped successfully');
 ```
 
 ***
@@ -418,7 +418,7 @@ console.log('Workspace stopped successfully');
 waitUntilStarted(timeout?: number): Promise<void>
 ```
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/typescript/src/Workspace.ts#L342)
+[[view_source]](https://github.com/MDzaja/sdk/blob/30e0dfde8952b2e6369d58daec6da9433471b811/packages/typescript/src/Sandbox.ts#L343)
 
 Waits for the Sandbox to reach the 'started' state.
 
@@ -437,7 +437,7 @@ or encounters an error.
 
 ##### Throws
 
-- `DaytonaError` - If the workspace ends up in an error state or fails to start within the timeout period.
+- `DaytonaError` - If the sandbox ends up in an error state or fails to start within the timeout period.
 
 ***
 
@@ -447,7 +447,7 @@ or encounters an error.
 waitUntilStopped(timeout?: number): Promise<void>
 ```
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/typescript/src/Workspace.ts#L379)
+[[view_source]](https://github.com/MDzaja/sdk/blob/30e0dfde8952b2e6369d58daec6da9433471b811/packages/typescript/src/Sandbox.ts#L380)
 
 Wait for Sandbox to reach 'stopped' state.
 
@@ -466,16 +466,16 @@ or encounters an error.
 
 ##### Throws
 
-- `DaytonaError` - If the workspace fails to stop within the timeout period.
+- `DaytonaError` - If the sandbox fails to stop within the timeout period.
 
 ***
 
-## WorkspaceCodeToolbox
+## SandboxCodeToolbox
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/typescript/src/Workspace.ts#L163)
+[[view_source]](https://github.com/MDzaja/sdk/blob/30e0dfde8952b2e6369d58daec6da9433471b811/packages/typescript/src/Sandbox.ts#L164)
 
 Interface defining methods that a code toolbox must implement
- WorkspaceCodeToolbox
+ SandboxCodeToolbox
 
 ### Methods
 
@@ -485,7 +485,7 @@ Interface defining methods that a code toolbox must implement
 getRunCommand(code: string, params?: CodeRunParams): string
 ```
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/typescript/src/Workspace.ts#L165)
+[[view_source]](https://github.com/MDzaja/sdk/blob/30e0dfde8952b2e6369d58daec6da9433471b811/packages/typescript/src/Sandbox.ts#L166)
 
 Generates a command to run the provided code
 
@@ -502,23 +502,23 @@ Generates a command to run the provided code
 
 ***
 
-## WorkspaceInfo
+## SandboxInfo
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/typescript/src/Workspace.ts#L115)
+[[view_source]](https://github.com/MDzaja/sdk/blob/30e0dfde8952b2e6369d58daec6da9433471b811/packages/typescript/src/Sandbox.ts#L116)
 
 Structured information about a Sandbox
 
 This interface provides detailed information about a Sandbox's configuration,
 resources, and current state.
 
- WorkspaceInfo
+ SandboxInfo
 
 ### Example
 
 ```ts
-const workspace = await daytona.create();
-const info = await workspace.info();
-console.log(`Workspace ${info.name} is ${info.state}`);
+const sandbox = await daytona.create();
+const info = await sandbox.info();
+console.log(`Sandbox ${info.name} is ${info.state}`);
 console.log(`Resources: ${info.resources.cpu} CPU, ${info.resources.memory} RAM`);
 ```
 
@@ -531,19 +531,19 @@ console.log(`Resources: ${info.resources.cpu} CPU, ${info.resources.memory} RAM`
 | Property | Type | Description | Overrides |
 | ------ | ------ | ------ | ------ |
 | `autoStopInterval` | `number` | Auto-stop interval in minutes | - |
-| `class` | `CreateWorkspaceClassEnum` | Class | - |
+| `class` | `CreateNodeClassEnum` | Class | - |
 | `env` | `Record<string, string>` | Environment variables set in the Sandbox | - |
 | `errorReason` | `null \| string` | Error message if Sandbox is in error state | - |
 | `id` | `string` | Unique identifier for the Sandbox | - |
 | `image` | `string` | Docker image used for the Sandbox | - |
 | `labels` | `Record<string, string>` | Custom labels attached to the Sandbox | - |
 | `lastSnapshot` | `null \| string` | Last snapshot | - |
-| `name` | `string` | Display name of the Sandbox | `ApiWorkspaceInfo.name` |
+| `name` | `string` | Display name of the Sandbox | `ApiSandboxInfo.name` |
 | `nodeDomain` | `string` | Node domain | - |
-| `~~providerMetadata?~~` | `string` | `**Deprecated** Use state, nodeDomain, region, class, updatedAt, lastSnapshot, resources, autoStopInterval instead.` | `ApiWorkspaceInfo.providerMetadata` |
+| `~~providerMetadata?~~` | `string` | `**Deprecated** Use state, nodeDomain, region, class, updatedAt, lastSnapshot, resources, autoStopInterval instead.` | `ApiSandboxInfo.providerMetadata` |
 | `public` | `boolean` | Whether the Sandbox is publicly accessible | - |
-| `region` | `CreateWorkspaceTargetEnum` | Region | - |
-| `resources` | `WorkspaceResources` | Resource allocations for the Sandbox | - |
+| `region` | `CreateNodeRegionEnum` | Region | - |
+| `resources` | `SandboxResources` | Resource allocations for the Sandbox | - |
 | `snapshotState` | `null \| string` | Current state of Sandbox snapshot | - |
 | `snapshotStateCreatedAt` | `null \| Date` | When the snapshot state was created | - |
 | `state` | `WorkspaceState` | Current state of the Sandbox (e.g., "started", "stopped") | - |
@@ -553,34 +553,34 @@ console.log(`Resources: ${info.resources.cpu} CPU, ${info.resources.memory} RAM`
 
 ***
 
-## WorkspaceInstance
+## SandboxInstance
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/typescript/src/Workspace.ts#L56)
+[[view_source]](https://github.com/MDzaja/sdk/blob/30e0dfde8952b2e6369d58daec6da9433471b811/packages/typescript/src/Sandbox.ts#L57)
 
 ### Extends
 
-- `Omit`\<`ApiWorkspace`, `"info"`\>
+- `Omit`\<`ApiSandbox`, `"info"`\>
 
 ### Properties
 
 | Property | Type |
 | ------ | ------ |
-| `info?` | `WorkspaceInfo` |
+| `info?` | `SandboxInfo` |
 
 ***
 
-## WorkspaceResources
+## SandboxResources
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/typescript/src/Workspace.ts#L77)
+[[view_source]](https://github.com/MDzaja/sdk/blob/30e0dfde8952b2e6369d58daec6da9433471b811/packages/typescript/src/Sandbox.ts#L78)
 
 Resources allocated to a Sandbox
 
- WorkspaceResources
+ SandboxResources
 
 ### Example
 
 ```ts
-const resources: WorkspaceResources = {
+const resources: SandboxResources = {
   cpu: "2",
   gpu: "1",
   memory: "4Gi",

@@ -11,33 +11,33 @@ the `git` module.
 
 ```ts
 // Basic Git workflow
-// Create and initialize workspace
-const workspace = await daytona.create();
+// Create and initialize sandbox
+const sandbox = await daytona.create();
 
 // Clone a repository
-await workspace.git.clone(
+await sandbox.git.clone(
   'https://github.com/user/repo.git',
-  '/workspace/repo'
+  '/sandbox/repo'
 );
 
 // Make some changes
-await workspace.fs.uploadFile(
-  '/workspace/repo/test.txt',
+await sandbox.fs.uploadFile(
+  '/sandbox/repo/test.txt',
   new File([Buffer.from('Hello, World!')], 'test.txt')
 );
 
 // Stage and commit changes
-await workspace.git.add('/workspace/repo', ['test.txt']);
-await workspace.git.commit(
-  '/workspace/repo',
+await sandbox.git.add('/sandbox/repo', ['test.txt']);
+await sandbox.git.commit(
+  '/sandbox/repo',
   'Add test file',
   'John Doe',
   'john@example.com'
 );
 
 // Push changes (with authentication)
-await workspace.git.push(
-  '/workspace/repo',
+await sandbox.git.push(
+  '/sandbox/repo',
   'user',
   'token'
 );
@@ -45,7 +45,7 @@ await workspace.git.push(
 
 ## Git
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/typescript/src/Git.ts#L51)
+[[view_source]](https://github.com/MDzaja/sdk/blob/30e0dfde8952b2e6369d58daec6da9433471b811/packages/typescript/src/Git.ts#L51)
 
 ### Constructors
 
@@ -53,20 +53,20 @@ await workspace.git.push(
 
 ```ts
 new Git(
-   workspace: Workspace, 
+   sandbox: Sandbox, 
    toolboxApi: ToolboxApi, 
-   instance: WorkspaceInstance): Git
+   instance: SandboxInstance): Git
 ```
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/typescript/src/Git.ts#L52)
+[[view_source]](https://github.com/MDzaja/sdk/blob/30e0dfde8952b2e6369d58daec6da9433471b811/packages/typescript/src/Git.ts#L52)
 
 ##### Parameters
 
 | Parameter | Type |
 | ------ | ------ |
-| `workspace` | `Workspace` |
+| `sandbox` | `Sandbox` |
 | `toolboxApi` | `ToolboxApi` |
-| `instance` | `WorkspaceInstance` |
+| `instance` | `SandboxInstance` |
 
 ##### Returns
 
@@ -80,7 +80,7 @@ new Git(
 add(path: string, files: string[]): Promise<void>
 ```
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/typescript/src/Git.ts#L76)
+[[view_source]](https://github.com/MDzaja/sdk/blob/30e0dfde8952b2e6369d58daec6da9433471b811/packages/typescript/src/Git.ts#L76)
 
 Stages files for commit.
 
@@ -102,12 +102,12 @@ running 'git add' on the command line.
 
 ```ts
 // Stage a single file
-await git.add('/workspace/repo', ['file.txt']);
+await git.add('/sandbox/repo', ['file.txt']);
 ```
 
 ```ts
 // Stage whole repository
-await git.add('/workspace/repo', ['.']);
+await git.add('/sandbox/repo', ['.']);
 ```
 
 ***
@@ -118,7 +118,7 @@ await git.add('/workspace/repo', ['.']);
 branches(path: string): Promise<ListBranchResponse>
 ```
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/typescript/src/Git.ts#L95)
+[[view_source]](https://github.com/MDzaja/sdk/blob/30e0dfde8952b2e6369d58daec6da9433471b811/packages/typescript/src/Git.ts#L95)
 
 List branches in the repository.
 
@@ -139,7 +139,7 @@ List of branches in the repository
 ##### Example
 
 ```ts
-const response = await git.branches('/workspace/repo');
+const response = await git.branches('/sandbox/repo');
 console.log(`Branches: ${response.branches}`);
 ```
 
@@ -157,7 +157,7 @@ clone(
 password?: string): Promise<void>
 ```
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/typescript/src/Git.ts#L140)
+[[view_source]](https://github.com/MDzaja/sdk/blob/30e0dfde8952b2e6369d58daec6da9433471b811/packages/typescript/src/Git.ts#L140)
 
 Clones a Git repository.
 
@@ -186,7 +186,7 @@ repository if credentials are provided.
 // Clone the default branch
 await git.clone(
   'https://github.com/user/repo.git',
-  '/workspace/repo'
+  '/sandbox/repo'
 );
 ```
 
@@ -194,7 +194,7 @@ await git.clone(
 // Clone a specific branch with authentication
 await git.clone(
   'https://github.com/user/private-repo.git',
-  '/workspace/private',
+  '/sandbox/private',
   branch='develop',
   username='user',
   password='token'
@@ -205,7 +205,7 @@ await git.clone(
 // Clone a specific commit
 await git.clone(
   'https://github.com/user/repo.git',
-  '/workspace/repo-old',
+  '/sandbox/repo-old',
   commitId='abc123'
 );
 ```
@@ -222,7 +222,7 @@ commit(
 email: string): Promise<void>
 ```
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/typescript/src/Git.ts#L181)
+[[view_source]](https://github.com/MDzaja/sdk/blob/30e0dfde8952b2e6369d58daec6da9433471b811/packages/typescript/src/Git.ts#L181)
 
 Commits staged changes.
 
@@ -246,9 +246,9 @@ changes using the add() method before committing.
 
 ```ts
 // Stage and commit changes
-await git.add('/workspace/repo', ['README.md']);
+await git.add('/sandbox/repo', ['README.md']);
 await git.commit(
-  '/workspace/repo',
+  '/sandbox/repo',
   'Update documentation',
   'John Doe',
   'john@example.com'
@@ -266,7 +266,7 @@ pull(
 password?: string): Promise<void>
 ```
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/typescript/src/Git.ts#L253)
+[[view_source]](https://github.com/MDzaja/sdk/blob/30e0dfde8952b2e6369d58daec6da9433471b811/packages/typescript/src/Git.ts#L253)
 
 Pulls changes from the remote repository.
 
@@ -289,13 +289,13 @@ requires authentication, username and password/token must be provided.
 
 ```ts
 // Pull from a public repository
-await git.pull('/workspace/repo');
+await git.pull('/sandbox/repo');
 ```
 
 ```ts
 // Pull from a private repository
 await git.pull(
-  '/workspace/repo',
+  '/sandbox/repo',
   'user',
   'token'
 );
@@ -312,7 +312,7 @@ push(
 password?: string): Promise<void>
 ```
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/typescript/src/Git.ts#L218)
+[[view_source]](https://github.com/MDzaja/sdk/blob/30e0dfde8952b2e6369d58daec6da9433471b811/packages/typescript/src/Git.ts#L218)
 
 Push local changes to the remote repository.
 
@@ -335,13 +335,13 @@ requires authentication, username and password/token must be provided.
 
 ```ts
 // Push to a public repository
-await git.push('/workspace/repo');
+await git.push('/sandbox/repo');
 ```
 
 ```ts
 // Push to a private repository
 await git.push(
-  '/workspace/repo',
+  '/sandbox/repo',
   'user',
   'token'
 );
@@ -355,7 +355,7 @@ await git.push(
 status(path: string): Promise<GitStatus>
 ```
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/typescript/src/Git.ts#L285)
+[[view_source]](https://github.com/MDzaja/sdk/blob/30e0dfde8952b2e6369d58daec6da9433471b811/packages/typescript/src/Git.ts#L285)
 
 Gets the current status of the Git repository.
 
@@ -382,7 +382,7 @@ Current repository status including:
 ##### Example
 
 ```ts
-const status = await workspace.git.status('/workspace/repo');
+const status = await sandbox.git.status('/sandbox/repo');
 console.log(`Current branch: ${status.currentBranch}`);
 console.log(`Commits ahead: ${status.ahead}`);
 console.log(`Commits behind: ${status.behind}`);
