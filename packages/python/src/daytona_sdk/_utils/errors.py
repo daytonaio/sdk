@@ -1,20 +1,24 @@
 import json
 import functools
-from typing import Callable, Optional
+from typing import Callable, Optional, TypeVar, Any, ParamSpec
 from daytona_api_client.exceptions import OpenApiException
 from daytona_sdk.common.errors import DaytonaError
 
 
-def intercept_errors(message_prefix: Optional[str] = ""):
+P = ParamSpec('P')
+T = TypeVar('T')
+
+
+def intercept_errors(message_prefix: str = "") -> Callable[[Callable[P, T]], Callable[P, T]]:
     """Decorator to intercept errors, process them, and optionally add a message prefix.
     If the error is an OpenApiException, it will be processed to extract the most meaningful error message.
 
     Args:
-        message_prefix (Optional[str]): Custom message prefix for the error.
+        message_prefix (str): Custom message prefix for the error.
     """
-    def decorator(func: Callable):
+    def decorator(func: Callable[P, T]) -> Callable[P, T]:
         @functools.wraps(func)
-        def wrapper(*args, **kwargs):
+        def wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
             try:
                 return func(*args, **kwargs)
             except OpenApiException as e:

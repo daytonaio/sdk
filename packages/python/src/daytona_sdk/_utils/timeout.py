@@ -1,19 +1,23 @@
 import functools
 import concurrent.futures
-from typing import Callable, Optional, Any
+from typing import Callable, Optional, Any, TypeVar, ParamSpec
 from daytona_sdk._utils.errors import DaytonaError
 
 
-def with_timeout(error_message: Optional[Callable[[Any, float], str]] = None):
+P = ParamSpec('P')
+T = TypeVar('T')
+
+
+def with_timeout(error_message: Optional[Callable[[Any, float], str]] = None) -> Callable[[Callable[P, T]], Callable[P, T]]:
     """Decorator to add a timeout mechanism with an optional custom error message.
 
     Args:
         error_message (Optional[Callable[[Any, float], str]]): A callable that accepts `self` and `timeout`,
                                                                and returns a string error message.
     """
-    def decorator(func):
+    def decorator(func: Callable[P, T]) -> Callable[P, T]:
         @functools.wraps(func)
-        def wrapper(*args, **kwargs):
+        def wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
             # Get function argument names
             arg_names = func.__code__.co_varnames[:func.__code__.co_argcount]
             arg_dict = dict(zip(arg_names, args))
