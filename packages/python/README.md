@@ -15,7 +15,7 @@ pip install daytona-sdk
 Here's a simple example of using the SDK:
 
 ```python
-from daytona_sdk import Daytona, DaytonaConfig
+from daytona_sdk import Daytona
 
 # Initialize using environment variables
 daytona = Daytona()
