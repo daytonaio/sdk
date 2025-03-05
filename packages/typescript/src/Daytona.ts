@@ -297,7 +297,7 @@ export class Daytona {
    * };
    * const workspace = await daytona.create(params, 40);
    */
-  public async create(params: CreateWorkspaceParams, timeout: number = 60): Promise<Workspace> {
+  public async create(params?: CreateWorkspaceParams, timeout: number = 60): Promise<Workspace> {
     const startTime = Date.now();
 
     if (params == null) {
