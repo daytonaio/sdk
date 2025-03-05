@@ -12,7 +12,6 @@ export function load(app) {
     LspServer: "Language Server Protocol",
     Git: "Git Operations",
     Process: "Process and Code Execution",
-    Workspace: "Sandbox",
     // Add other model.name to title mappings here as needed
   };
 

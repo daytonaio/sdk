@@ -6,14 +6,14 @@ and best practices.
 Example:
     Basic command execution:
     ```python
-    workspace = daytona.create()
+    sandbox = daytona.create()
     
     # Execute a shell command
-    response = workspace.process.exec("ls -la")
+    response = sandbox.process.exec("ls -la")
     print(response.result)
     
     # Run Python code
-    response = workspace.process.code_run("print('Hello, World!')")
+    response = sandbox.process.code_run("print('Hello, World!')")
     print(response.result)
     ```
 
@@ -21,18 +21,18 @@ Example:
     ```python
     # Create a new session
     session_id = "my-session"
-    workspace.process.create_session(session_id)
+    sandbox.process.create_session(session_id)
     
     # Execute commands in the session
-    req = SessionExecuteRequest(command="cd /workspace", var_async=False)
-    workspace.process.execute_session_command(session_id, req)
+    req = SessionExecuteRequest(command="cd /sandbox", var_async=False)
+    sandbox.process.execute_session_command(session_id, req)
     
     req = SessionExecuteRequest(command="pwd", var_async=False)
-    response = workspace.process.execute_session_command(session_id, req)
-    print(response.result)  # Should print "/workspace"
+    response = sandbox.process.execute_session_command(session_id, req)
+    print(response.result)  # Should print "/sandbox"
     
     # Clean up
-    workspace.process.delete_session(session_id)
+    sandbox.process.delete_session(session_id)
     ```
 """
 
@@ -49,8 +49,8 @@ from daytona_api_client import (
 )
 
 from daytona_sdk._utils.errors import intercept_errors
-from .code_toolbox.workspace_python_code_toolbox import WorkspacePythonCodeToolbox
-from .protocols import WorkspaceInstance
+from .code_toolbox.sandbox_python_code_toolbox import SandboxPythonCodeToolbox
+from .protocols import SandboxInstance
 from .common.code_run_params import CodeRunParams
 
 
@@ -61,23 +61,23 @@ class Process:
     the Sandbox environment.
 
     Attributes:
-        code_toolbox (WorkspacePythonCodeToolbox): Language-specific code execution toolbox.
+        code_toolbox (SandboxPythonCodeToolbox): Language-specific code execution toolbox.
         toolbox_api (ToolboxApi): API client for Sandbox operations.
-        instance (WorkspaceInstance): The Sandbox instance this process belongs to.
+        instance (SandboxInstance): The Sandbox instance this process belongs to.
     """
 
     def __init__(
         self,
-        code_toolbox: WorkspacePythonCodeToolbox,
+        code_toolbox: SandboxPythonCodeToolbox,
         toolbox_api: ToolboxApi,
-        instance: WorkspaceInstance,
+        instance: SandboxInstance,
     ):
         """Initialize a new Process instance.
 
         Args:
-            code_toolbox (WorkspacePythonCodeToolbox): Language-specific code execution toolbox.
+            code_toolbox (SandboxPythonCodeToolbox): Language-specific code execution toolbox.
             toolbox_api (ToolboxApi): API client for Sandbox operations.
-            instance (WorkspaceInstance): The Sandbox instance this process belongs to.
+            instance (SandboxInstance): The Sandbox instance this process belongs to.
         """
         self.code_toolbox = code_toolbox
         self.toolbox_api = toolbox_api
@@ -102,14 +102,14 @@ class Process:
         Example:
             ```python
             # Simple command
-            response = workspace.process.exec("echo 'Hello'")
+            response = sandbox.process.exec("echo 'Hello'")
             print(response.result)  # Prints: Hello
 
             # Command with working directory
-            result = workspace.process.exec("ls", cwd="/workspace/src")
+            result = sandbox.process.exec("ls", cwd="/sandbox/src")
 
             # Command with timeout
-            result = workspace.process.exec("sleep 10", timeout=5)
+            result = sandbox.process.exec("sleep 10", timeout=5)
             ```
         """
         execute_request = ExecuteRequest(
@@ -119,7 +119,7 @@ class Process:
         )
 
         return self.toolbox_api.execute_command(
-            workspace_id=self.instance.id,
+            self.instance.id,
             execute_request=execute_request
         )
 
@@ -140,7 +140,7 @@ class Process:
         Example:
             ```python
             # Run Python code
-            response = workspace.process.code_run('''
+            response = sandbox.process.code_run('''
                 x = 10
                 y = 20
                 print(f"Sum: {x + y}")
@@ -166,15 +166,15 @@ class Process:
             ```python
             # Create a new session
             session_id = "my-session"
-            workspace.process.create_session(session_id)
-            session = workspace.process.get_session(session_id)
+            sandbox.process.create_session(session_id)
+            session = sandbox.process.get_session(session_id)
             # Do work...
-            workspace.process.delete_session(session_id)
+            sandbox.process.delete_session(session_id)
             ```
         """
         request = CreateSessionRequest(sessionId=session_id)
         self.toolbox_api.create_session(
-            workspace_id=self.instance.id,
+            self.instance.id,
             create_session_request=request
         )
 
@@ -192,13 +192,13 @@ class Process:
 
         Example:
             ```python
-            session = workspace.process.get_session("my-session")
+            session = sandbox.process.get_session("my-session")
             for cmd in session.commands:
                 print(f"Command: {cmd.command}")
             ```
         """
         return self.toolbox_api.get_session(
-            workspace_id=self.instance.id,
+            self.instance.id,
             session_id=session_id
         )
 
@@ -218,13 +218,13 @@ class Process:
 
         Example:
             ```python
-            cmd = workspace.process.get_session_command("my-session", "cmd-123")
+            cmd = sandbox.process.get_session_command("my-session", "cmd-123")
             if cmd.exit_code == 0:
                 print(f"Command {cmd.command} completed successfully")
             ```
         """
         return self.toolbox_api.get_session_command(
-            workspace_id=self.instance.id,
+            self.instance.id,
             session_id=session_id,
             command_id=command_id
         )
@@ -251,21 +251,21 @@ class Process:
             session_id = "my-session"
 
             # Change directory
-            req = SessionExecuteRequest(command="cd /workspace")
-            workspace.process.execute_session_command(session_id, req)
+            req = SessionExecuteRequest(command="cd /sandbox")
+            sandbox.process.execute_session_command(session_id, req)
 
             # Create a file
             req = SessionExecuteRequest(command="echo 'Hello' > test.txt")
-            workspace.process.execute_session_command(session_id, req)
+            sandbox.process.execute_session_command(session_id, req)
 
             # Read the file
             req = SessionExecuteRequest(command="cat test.txt")
-            result = workspace.process.execute_session_command(session_id, req)
+            result = sandbox.process.execute_session_command(session_id, req)
             print(result.output)  # Prints: Hello
             ```
         """
         return self.toolbox_api.execute_session_command(
-            workspace_id=self.instance.id,
+            self.instance.id,
             session_id=session_id,
             session_execute_request=req,
             _request_timeout=timeout or None
@@ -293,12 +293,12 @@ class Process:
                 command="sleep 5; echo 'Done'",
                 var_async=True
             )
-            response = workspace.process.execute_session_command("my-session", req)
+            response = sandbox.process.execute_session_command("my-session", req)
 
             # Wait a bit, then get the logs
             import time
             time.sleep(6)
-            logs = workspace.process.get_session_command_logs(
+            logs = sandbox.process.get_session_command_logs(
                 "my-session",
                 response.command_id
             )
@@ -306,7 +306,7 @@ class Process:
             ```
         """
         return self.toolbox_api.get_session_command_logs(
-            workspace_id=self.instance.id,
+            self.instance.id,
             session_id=session_id,
             command_id=command_id
         )
@@ -320,14 +320,14 @@ class Process:
 
         Example:
             ```python
-            sessions = workspace.process.list_sessions()
+            sessions = sandbox.process.list_sessions()
             for session in sessions:
                 print(f"Session {session.session_id}:")
                 print(f"  Commands: {len(session.commands)}")
             ```
         """
         return self.toolbox_api.list_sessions(
-            workspace_id=self.instance.id
+            self.instance.id
         )
 
     @intercept_errors(message_prefix="Failed to delete session: ")
@@ -343,14 +343,14 @@ class Process:
         Example:
             ```python
             # Create and use a session
-            workspace.process.create_session("temp-session")
+            sandbox.process.create_session("temp-session")
             # ... use the session ...
 
             # Clean up when done
-            workspace.process.delete_session("temp-session")
+            sandbox.process.delete_session("temp-session")
             ```
         """
         self.toolbox_api.delete_session(
-            workspace_id=self.instance.id,
+            self.instance.id,
             session_id=session_id
         )

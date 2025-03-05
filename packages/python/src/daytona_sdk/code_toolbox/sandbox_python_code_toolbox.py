@@ -3,7 +3,7 @@ from typing import Optional
 from ..common.code_run_params import CodeRunParams
 
 
-class WorkspaceTsCodeToolbox:
+class SandboxPythonCodeToolbox:
     def get_run_command(self, code: str, params: Optional[CodeRunParams] = None) -> str:
         # Encode the provided code in base64
         base64_code = base64.b64encode(code.encode()).decode()
@@ -18,5 +18,5 @@ class WorkspaceTsCodeToolbox:
         if params and params.argv:
             argv = ' '.join(params.argv)
 
-        # Combine everything into the final command for TypeScript
-        return f""" sh -c 'echo {base64_code} | base64 --decode | {env_vars} npx ts-node -O "{{\\\"module\\\":\\\"CommonJS\\\"}}" -e "$(cat)" x {argv} 2>&1 | grep -vE "npm notice|npm warn exec"' """
+        # Combine everything into the final command
+        return f""" sh -c '{env_vars} python3 -c "exec(__import__(\\\"base64\\\").b64decode(\\\"{base64_code}\\\").decode())" {argv}' """

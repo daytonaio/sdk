@@ -1,62 +1,68 @@
 """
 The Daytona SDK core Sandbox functionality.
 
-Provides the main Workspace class representing a Daytona Sandbox that coordinates file system,
+Provides the main Sandbox class representing a Daytona Sandbox that coordinates file system,
 Git, process execution, and LSP functionality. It serves as the central point
-for interacting with Daytona Sandboxes.
+for interacting with Daytona sandboxes.
 
-Example:
-    Basic Sandbox operations:
+Examples:
+    Basic usage:
     ```python
-    from daytona_sdk import Daytona
+    # Create and initialize sandbox
     daytona = Daytona()
-    workspace = daytona.create()
+    sandbox = daytona.create()
     
     # File operations
-    workspace.fs.upload_file("/workspace/test.txt", b"Hello, World!")
-    content = workspace.fs.download_file("/workspace/test.txt")
+    sandbox.fs.upload_file(
+        '/app/config.json',
+        b'{"setting": "value"}'
+    )
+    content = sandbox.fs.download_file('/app/config.json')
     
     # Git operations
-    workspace.git.clone("https://github.com/user/repo.git")
+    sandbox.git.clone('https://github.com/user/repo.git')
     
     # Process execution
-    response = workspace.process.exec("ls -la")
+    response = sandbox.process.execute_command('ls -la')
     print(response.result)
     
     # LSP functionality
-    lsp = workspace.create_lsp_server("python", "/workspace/project")
-    lsp.did_open("/workspace/project/src/index.ts")
-    completions = lsp.completions("/workspace/project/src/index.ts", Position(line=10, character=15))
+    lsp = sandbox.create_lsp_server('python', '/sandbox/project')
+    lsp.did_open('/sandbox/project/src/main.py')
+    completions = lsp.completions('/sandbox/project/src/main.py', {
+        'line': 10,
+        'character': 15
+    })
     print(completions)
     ```
-
-Note:
-    The Sandbox must be in a 'started' state before performing operations.
 """
 
-import json
-import time
-from typing import Dict, Optional
-from daytona_sdk._utils.errors import intercept_errors
-from .filesystem import FileSystem
-from .git import Git
-from .process import Process
-from .lsp_server import LspServer, LspLanguageId
-from daytona_api_client import Workspace as ApiWorkspace, ToolboxApi, WorkspaceApi, WorkspaceInfo as ApiWorkspaceInfo
-from .protocols import WorkspaceCodeToolbox
+from typing import Optional, Dict, Annotated
 from dataclasses import dataclass
 from datetime import datetime
-from daytona_sdk._utils.errors import DaytonaError
 from enum import Enum
+from daytona_api_client import (
+    ToolboxApi,
+    WorkspaceApi as SandboxApi,
+    Workspace as ApiSandbox,
+    WorkspaceInfo as ApiSandboxInfo
+)
+from .filesystem import FileSystem
+from .git import Git
+from .process import Process, CodeRunParams
+from .lsp_server import LspServer, LspLanguageId
+import json
+import time
 from pydantic import Field
-from typing_extensions import Annotated
-from ._utils.enum import to_enum
+from ._utils.errors import intercept_errors
 from ._utils.timeout import with_timeout
-
+from ._utils.enum import to_enum
+from .protocols import SandboxCodeToolbox
+from .common.errors import DaytonaError
 
 @dataclass
-class WorkspaceTargetRegion(Enum):
-    """Target regions for workspaces"""
+class SandboxTargetRegion(Enum):
+    """Target regions for Sandboxes"""
     EU = "eu"
     US = "us"
     ASIA = "asia"
@@ -71,18 +77,18 @@ class WorkspaceTargetRegion(Enum):
 
 
 @dataclass
-class WorkspaceResources:
+class SandboxResources:
     """Resources allocated to a Sandbox.
 
     Attributes:
-        cpu (str): Number of CPU cores allocated (e.g., "1", "2").
-        gpu (Optional[str]): Number of GPUs allocated (e.g., "1") or None if no GPU.
+        cpu (str): Nu, "1", "2").
+        gpu (Optional[str]): Number of GPUs allocated mber of CPU cores allocated (e.g.(e.g., "1") or None if no GPU.
         memory (str): Amount of memory allocated with unit (e.g., "2Gi", "4Gi").
         disk (str): Amount of disk space allocated with unit (e.g., "10Gi", "20Gi").
 
     Example:
         ```python
-        resources = WorkspaceResources(
+        resources = SandboxResources(
             cpu="2",
             gpu="1",
             memory="4Gi",
@@ -91,13 +97,13 @@ class WorkspaceResources:
         ```
     """
     cpu: str
-    gpu: Optional[str]
     memory: str
     disk: str
+    gpu: Optional[str] = None
 
 
 @dataclass
-class WorkspaceState(Enum):
+class SandboxState(Enum):
     """States of a Sandbox."""
     CREATING = "creating"
     RESTORING = "restoring"
@@ -121,7 +127,7 @@ class WorkspaceState(Enum):
         return super().__eq__(other)
 
 
-class WorkspaceInfo(ApiWorkspaceInfo):
+class SandboxInfo(ApiSandboxInfo):
     """Structured information about a Sandbox.
 
     This class provides detailed information about a Sandbox's configuration,
@@ -136,7 +142,7 @@ class WorkspaceInfo(ApiWorkspaceInfo):
         labels (Dict[str, str]): Custom labels attached to the Sandbox.
         public (bool): Whether the Sandbox is publicly accessible.
         target (str): Target environment where the Sandbox runs.
-        resources (WorkspaceResources): Resource allocations for the Sandbox.
+        resources (SandboxResources): Resource allocations for the Sandbox.
         state (str): Current state of the Sandbox (e.g., "started", "stopped").
         error_reason (Optional[str]): Error message if Sandbox is in error state.
         snapshot_state (Optional[str]): Current state of Sandbox snapshot.
@@ -144,9 +150,9 @@ class WorkspaceInfo(ApiWorkspaceInfo):
 
     Example:
         ```python
-        workspace = daytona.create()
-        info = workspace.info()
-        print(f"Workspace {info.name} is {info.state}")
+        sandbox = daytona.create()
+        info = sandbox.info()
+        print(f"Sandbox {info.name} is {info.state}")
         print(f"Resources: {info.resources.cpu} CPU, {info.resources.memory} RAM")
         ```
     """
@@ -157,9 +163,9 @@ class WorkspaceInfo(ApiWorkspaceInfo):
     env: Dict[str, str]
     labels: Dict[str, str]
     public: bool
-    target: WorkspaceTargetRegion
-    resources: WorkspaceResources
-    state: WorkspaceState
+    target: SandboxTargetRegion
+    resources: SandboxResources
+    state: SandboxState
     error_reason: Optional[str]
     snapshot_state: Optional[str]
     snapshot_state_created_at: Optional[datetime]
@@ -173,12 +179,12 @@ class WorkspaceInfo(ApiWorkspaceInfo):
         deprecated='The `provider_metadata` field is deprecated. Use `state`, `node_domain`, `region`, `class_name`, `updated_at`, `last_snapshot`, `resources`, `auto_stop_interval` instead.')]
 
 
-class WorkspaceInstance(ApiWorkspace):
-    """Represents a Daytona workspace instance."""
-    info: Optional[WorkspaceInfo]
+class SandboxInstance(ApiSandbox):
+    """Represents a Daytona Sandbox instance."""
+    info: Optional[SandboxInfo]
 
 
-class Workspace:
+class Sandbox:
     """Represents a Daytona Sandbox.
 
     A Sandbox provides file system operations, Git operations, process execution,
@@ -187,8 +193,8 @@ class Workspace:
 
     Attributes:
         id (str): Unique identifier for the Sandbox.
-        instance (WorkspaceInstance): The underlying Sandbox instance.
-        code_toolbox (WorkspaceCodeToolbox): Language-specific toolbox implementation.
+        instance (SandboxInstance): The underlying Sandbox instance.
+        code_toolbox (SandboxCodeToolbox): Language-specific toolbox implementation.
         fs (FileSystem): File system operations interface.
         git (Git): Git operations interface.
         process (Process): Process execution interface.
@@ -197,67 +203,62 @@ class Workspace:
     def __init__(
         self,
         id: str,
-        instance: WorkspaceInstance,
-        workspace_api: WorkspaceApi,
+        instance: SandboxInstance,
+        sandbox_api: SandboxApi,
         toolbox_api: ToolboxApi,
-        code_toolbox: WorkspaceCodeToolbox,
+        code_toolbox: SandboxCodeToolbox,
     ):
-        """Initialize a new Workspace instance.
+        """Initialize a new Sandbox instance.
 
         Args:
             id (str): Unique identifier for the Sandbox.
-            instance (WorkspaceInstance): The underlying Sandbox instance.
-            workspace_api (WorkspaceApi): API client for Sandbox operations.
+            instance (SandboxInstance): The underlying Sandbox instance.
+            sandbox_api (SandboxApi): API client for Sandbox operations.
             toolbox_api (ToolboxApi): API client for toolbox operations.
-            code_toolbox (WorkspaceCodeToolbox): Language-specific toolbox implementation.
+            code_toolbox (SandboxCodeToolbox): Language-specific toolbox implementation.
         """
         self.id = id
         self.instance = instance
-        self.workspace_api = workspace_api
+        self.sandbox_api = sandbox_api
         self.toolbox_api = toolbox_api
-        self.code_toolbox = code_toolbox
+        self._code_toolbox = code_toolbox
 
-        # Initialize components
-        # File system operations
-        self.fs = FileSystem(instance, self.toolbox_api)
-        self.git = Git(self, self.toolbox_api, instance)  # Git operations
-        self.process = Process(
-            self.code_toolbox, self.toolbox_api, instance)  # Process execution
+        self.fs = FileSystem(instance, toolbox_api)
+        self.git = Git(self, toolbox_api, instance)
+        self.process = Process(code_toolbox, toolbox_api, instance)
 
-    def info(self) -> WorkspaceInfo:
+    def info(self) -> SandboxInfo:
         """Gets structured information about the Sandbox.
 
         Returns:
-            WorkspaceInfo: Detailed information about the Sandbox including its
+            SandboxInfo: Detailed information about the Sandbox including its
                 configuration, resources, and current state.
 
         Example:
             ```python
-            info = workspace.info()
-            print(f"Workspace {info.name}:")
+            info = sandbox.info()
+            print(f"Sandbox {info.name}:")
             print(f"State: {info.state}")
             print(f"Resources: {info.resources.cpu} CPU, {info.resources.memory} RAM")
             ```
         """
-        instance = self.workspace_api.get_workspace(self.id)
-        return Workspace._to_workspace_info(instance)
+        instance = self.sandbox_api.get_workspace(self.id)
+        return Sandbox._to_sandbox_info(instance)
 
-    @intercept_errors(message_prefix="Failed to get workspace root directory: ")
+    @intercept_errors(message_prefix="Failed to get sandbox root directory: ")
     def get_workspace_root_dir(self) -> str:
-        """Gets the root directory path of the Sandbox.
+        """Gets the root directory path for the logged in user inside the Sandbox. Default user is `daytona`.
 
         Returns:
-            str: The absolute path to the Sandbox root directory.
+            str: The absolute path to the Sandbox root directory for the logged in user.
 
         Example:
             ```python
-            root_dir = workspace.get_workspace_root_dir()
-            print(f"Workspace root: {root_dir}")
+            root_dir = sandbox.get_workspace_root_dir()
+            print(f"Sandbox root: {root_dir}")
             ```
         """
-        response = self.toolbox_api.get_project_dir(
-            workspace_id=self.instance.id
-        )
+        response = self.toolbox_api.get_project_dir(self.instance.id)
         return response.dir
 
     def create_lsp_server(
@@ -277,7 +278,7 @@ class Workspace:
 
         Example:
             ```python
-            lsp = workspace.create_lsp_server("python", "/workspace/project")
+            lsp = sandbox.create_lsp_server("python", "/sandbox/project")
             ```
         """
         return LspServer(language_id, path_to_project, self.toolbox_api, self.instance)
@@ -296,7 +297,7 @@ class Workspace:
 
         Example:
             ```python
-            new_labels = workspace.set_labels({
+            new_labels = sandbox.set_labels({
                 "project": "my-project",
                 "environment": "development",
                 "team": "backend"
@@ -308,10 +309,10 @@ class Workspace:
         string_labels = {k: str(v).lower() if isinstance(
             v, bool) else str(v) for k, v in labels.items()}
         labels_payload = {"labels": string_labels}
-        return self.workspace_api.replace_labels(self.id, labels_payload)
+        return self.sandbox_api.replace_labels(self.id, labels_payload)
 
-    @intercept_errors(message_prefix="Failed to start workspace: ")
-    @with_timeout(error_message=lambda self, timeout: f"Workspace {self.id} failed to start within the {timeout} seconds timeout period")
+    @intercept_errors(message_prefix="Failed to start sandbox: ")
+    @with_timeout(error_message=lambda self, timeout: f"Sandbox {self.id} failed to start within the {timeout} seconds timeout period")
     def start(self, timeout: Optional[float] = 60):
         """Starts the Sandbox.
 
@@ -321,20 +322,20 @@ class Workspace:
             timeout (Optional[float]): Maximum time to wait in seconds. 0 means no timeout. Default is 60 seconds.
 
         Raises:
-            DaytonaError: If timeout is negative. If workspace fails to start or times out.
+            DaytonaError: If timeout is negative. If sandbox fails to start or times out.
 
         Example:
             ```python
-            workspace = daytona.get_current_workspace("my-workspace")
-            workspace.start(timeout=40)  # Wait up to 40 seconds
-            print("Workspace started successfully")
+            sandbox = daytona.get_current_sandbox("my-sandbox")
+            sandbox.start(timeout=40)  # Wait up to 40 seconds
+            print("Sandbox started successfully")
             ```
         """
-        self.workspace_api.start_workspace(self.id, _request_timeout=timeout or None)
-        self.wait_for_workspace_start()
+        self.sandbox_api.start_workspace(self.id, _request_timeout=timeout or None)
+        self.wait_for_sandbox_start()
 
-    @intercept_errors(message_prefix="Failed to stop workspace: ")
-    @with_timeout(error_message=lambda self, timeout: f"Workspace {self.id} failed to stop within the {timeout} seconds timeout period")
+    @intercept_errors(message_prefix="Failed to stop sandbox: ")
+    @with_timeout(error_message=lambda self, timeout: f"Sandbox {self.id} failed to stop within the {timeout} seconds timeout period")
     def stop(self, timeout: Optional[float] = 60):
         """Stops the Sandbox.
 
@@ -344,21 +345,21 @@ class Workspace:
             timeout (Optional[float]): Maximum time to wait in seconds. 0 means no timeout. Default is 60 seconds.
 
         Raises:
-            DaytonaError: If timeout is negative; If workspace fails to stop or times out
+            DaytonaError: If timeout is negative; If sandbox fails to stop or times out
 
         Example:
             ```python
-            workspace = daytona.get_current_workspace("my-workspace")
-            workspace.stop()
-            print("Workspace stopped successfully")
+            sandbox = daytona.get_current_sandbox("my-sandbox")
+            sandbox.stop()
+            print("Sandbox stopped successfully")
             ```
         """
-        self.workspace_api.stop_workspace(self.id, _request_timeout=timeout or None)
-        self.wait_for_workspace_stop()
+        self.sandbox_api.stop_workspace(self.id, _request_timeout=timeout or None)
+        self.wait_for_sandbox_stop()
 
-    @intercept_errors(message_prefix="Failure during waiting for workspace to start: ")
-    @with_timeout(error_message=lambda self, timeout: f"Workspace {self.id} failed to become ready within the {timeout} seconds timeout period")
-    def wait_for_workspace_start(self, timeout: Optional[float] = 60) -> None:
+    @intercept_errors(message_prefix="Failure during waiting for sandbox to start: ")
+    @with_timeout(error_message=lambda self, timeout: f"Sandbox {self.id} failed to become ready within the {timeout} seconds timeout period")
+    def wait_for_sandbox_start(self, timeout: Optional[float] = 60) -> None:
         """Waits for the Sandbox to reach the 'started' state.
 
         This method polls the Sandbox status until it reaches the 'started' state
@@ -368,23 +369,23 @@ class Workspace:
             timeout (Optional[float]): Maximum time to wait in seconds. 0 means no timeout. Default is 60 seconds.
 
         Raises:
-            DaytonaError: If timeout is negative; If workspace fails to start or times out
+            DaytonaError: If timeout is negative; If sandbox fails to start or times out
         """
         state = None
         while state != "started":
-            response = self.workspace_api.get_workspace(self.id)
+            response = self.sandbox_api.get_workspace(self.id)
             provider_metadata = json.loads(response.info.provider_metadata)
             state = provider_metadata.get('state', '')
 
             if state == "error":
                 raise DaytonaError(
-                    f"Workspace {self.id} failed to start with state: {state}, error reason: {response.error_reason}")
+                    f"Sandbox {self.id} failed to start with state: {state}, error reason: {response.error_reason}")
 
             time.sleep(0.1)  # Wait 100ms between checks
 
-    @intercept_errors(message_prefix="Failure during waiting for workspace to stop: ")
-    @with_timeout(error_message=lambda self, timeout: f"Workspace {self.id} failed to become stopped within the {timeout} seconds timeout period")
-    def wait_for_workspace_stop(self, timeout: Optional[float] = 60) -> None:
+    @intercept_errors(message_prefix="Failure during waiting for sandbox to stop: ")
+    @with_timeout(error_message=lambda self, timeout: f"Sandbox {self.id} failed to become stopped within the {timeout} seconds timeout period")
+    def wait_for_sandbox_stop(self, timeout: Optional[float] = 60) -> None:
         """Waits for the Sandbox to reach the 'stopped' state.
 
         This method polls the Sandbox status until it reaches the 'stopped' state
@@ -399,14 +400,14 @@ class Workspace:
         state = None
         while state != "stopped":
             try:
-                workspace_check = self.workspace_api.get_workspace(self.id)
+                response = self.sandbox_api.get_workspace(self.id)
                 provider_metadata = json.loads(
-                    workspace_check.info.provider_metadata)
+                    response.info.provider_metadata)
                 state = provider_metadata.get('state')
 
                 if state == "error":
                     raise DaytonaError(
-                        f"Workspace {self.id} failed to stop with status: {state}, error reason: {workspace_check.error_reason}")
+                        f"Sandbox {self.id} failed to stop with status: {state}, error reason: {response.error_reason}")
             except Exception as e:
                 # If there's a validation error, continue waiting
                 if "validation error" not in str(e):
@@ -432,27 +433,27 @@ class Workspace:
         Example:
             ```python
             # Auto-stop after 1 hour
-            workspace.set_autostop_interval(60)
+            sandbox.set_autostop_interval(60)
             # Or disable auto-stop
-            workspace.set_autostop_interval(0)
+            sandbox.set_autostop_interval(0)
             ```
         """
         if not isinstance(interval, int) or interval < 0:
             raise DaytonaError(
                 "Auto-stop interval must be a non-negative integer")
 
-        self.workspace_api.set_autostop_interval(self.id, interval)
+        self.sandbox_api.set_autostop_interval(self.id, interval)
         self.instance.auto_stop_interval = interval
 
     @intercept_errors(message_prefix="Failed to get preview link: ")
     def get_preview_link(self, port: int) -> str:
-        """Gets the preview link for the workspace at a specific port. If the port is not open, it will open it and return the link.
+        """Gets the preview link for the sandbox at a specific port. If the port is not open, it will open it and return the link.
 
         Args:
             port (int): The port to open the preview link on
 
         Returns:
-            The preview link for the workspace at the specified port
+            The preview link for the sandbox at the specified port
         """
         provider_metadata = json.loads(self.instance.info.provider_metadata)
         node_domain = provider_metadata.get('nodeDomain', '')
@@ -462,30 +463,30 @@ class Workspace:
 
         return f"https://{port}-{self.id}.{node_domain}"
 
-    @intercept_errors(message_prefix="Failed to archive workspace: ")
+    @intercept_errors(message_prefix="Failed to archive sandbox: ")
     def archive(self) -> None:
-        """Archives the workspace, making it inactive and preserving its state. When sandboxes are archived, the entire filesystem
+        """Archives the sandbox, making it inactive and preserving its state. When sandboxes are archived, the entire filesystem
         state is moved to cost-effective object storage, making it possible to keep sandboxes available for an extended period.
         The tradeoff between archived and stopped states is that starting an archived sandbox takes more time, depending on its size.
-        Workspace must be stopped before archiving.
+        Sandbox must be stopped before archiving.
         """
-        self.workspace_api.archive_workspace(self.id)
+        self.sandbox_api.archive_workspace(self.id)
 
     @staticmethod
-    def _to_workspace_info(instance: ApiWorkspace) -> WorkspaceInfo:
-        """Converts an API workspace instance to a WorkspaceInfo object.
+    def _to_sandbox_info(instance: ApiSandbox) -> SandboxInfo:
+        """Converts an API sandbox instance to a SandboxInfo object.
 
         Args:
-            instance (ApiWorkspace): The API workspace instance to convert
+            instance (ApiSandbox): The API sandbox instance to convert
 
         Returns:
-            WorkspaceInfo: The converted WorkspaceInfo object
+            SandboxInfo: The converted SandboxInfo object
         """
         provider_metadata = json.loads(instance.info.provider_metadata or '{}')
         resources_data = provider_metadata.get('resources', provider_metadata)
 
         # Extract resources with defaults
-        resources = WorkspaceResources(
+        resources = SandboxResources(
             cpu=str(resources_data.get('cpu', '1')),
             gpu=str(resources_data.get('gpu')
                     ) if resources_data.get('gpu') else None,
@@ -494,10 +495,10 @@ class Workspace:
         )
 
         enum_state = to_enum(
-            WorkspaceState, provider_metadata.get('state', ''))
-        enum_target = to_enum(WorkspaceTargetRegion, instance.target)
+            SandboxState, provider_metadata.get('state', ''))
+        enum_target = to_enum(SandboxTargetRegion, instance.target)
 
-        return WorkspaceInfo(
+        return SandboxInfo(
             id=instance.id,
             name=instance.name,
             image=instance.image,

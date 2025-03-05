@@ -9,31 +9,31 @@
  * 
  * @example
  * // Basic LSP server usage
- * // Create and initialize workspace
- * const workspace = await daytona.create();
+ * // Create and initialize sandbox
+ * const sandbox = await daytona.create();
  * 
  * // Create and start LSP server
- * const lsp = workspace.createLspServer('typescript', '/workspace/project');
+ * const lsp = sandbox.createLspServer('typescript', '/sandbox/project');
  * await lsp.start();
  * 
  * // Open a file for editing
- * await lsp.didOpen('/workspace/project/src/index.ts');
+ * await lsp.didOpen('/sandbox/project/src/index.ts');
  * 
  * // Get completions at a position
  * const completions = await lsp.completions(
- *   '/workspace/project/src/index.ts',
+ *   '/sandbox/project/src/index.ts',
  *   { line: 10, character: 15 }
  * );
  * console.log('Completions:', completions);
  * 
  * // Get document symbols
- * const symbols = await lsp.documentSymbols('/workspace/project/src/index.ts');
+ * const symbols = await lsp.documentSymbols('/sandbox/project/src/index.ts');
  * symbols.forEach(symbol => {
  *   console.log(`${symbol.name}: ${symbol.kind}`);
  * });
  * 
  * // Clean up
- * await lsp.didClose('/workspace/project/src/index.ts');
+ * await lsp.didClose('/sandbox/project/src/index.ts');
  * await lsp.stop();
  * 
  */
@@ -43,7 +43,7 @@ import {
   LspSymbol,
   ToolboxApi,
 } from '@daytonaio/api-client'
-import { WorkspaceInstance } from './Workspace'
+import { SandboxInstance } from './Sandbox'
 
 /**
  * Supported language server types.
@@ -88,14 +88,14 @@ export type Position = {
  * @property {LspLanguageId} languageId - The language server type (e.g., "typescript")
  * @property {string} pathToProject - Absolute path to the project root directory
  * @property {ToolboxApi} toolboxApi - API client for Sandbox operations
- * @property {WorkspaceInstance} instance - The Sandbox instance this server belongs to
+ * @property {SandboxInstance} instance - The Sandbox instance this server belongs to
  */
 export class LspServer {
   constructor(
     private readonly languageId: LspLanguageId,
     private readonly pathToProject: string,
     private readonly toolboxApi: ToolboxApi,
-    private readonly instance: WorkspaceInstance,
+    private readonly instance: SandboxInstance,
   ) {
     if (!Object.values(LspLanguageId).includes(this.languageId)) {
       throw new Error(`Invalid languageId: ${this.languageId}. Supported values are: ${Object.values(LspLanguageId).join(', ')}`);
@@ -111,7 +111,7 @@ export class LspServer {
    * @returns {Promise<void>}
    * 
    * @example
-   * const lsp = workspace.createLspServer('typescript', '/workspace/project');
+   * const lsp = sandbox.createLspServer('typescript', '/sandbox/project');
    * await lsp.start();  // Initialize the server
    * // Now ready for LSP operations
    */
@@ -158,7 +158,7 @@ export class LspServer {
    * 
    * @example
    * // When opening a file for editing
-   * await lsp.didOpen('/workspace/project/src/index.ts');
+   * await lsp.didOpen('/sandbox/project/src/index.ts');
    * // Now can get completions, symbols, etc. for this file
    */
   public async didOpen(path: string): Promise<void> {
@@ -183,7 +183,7 @@ export class LspServer {
    * 
    * @example
    * // When done editing a file
-   * await lsp.didClose('/workspace/project/src/index.ts');
+   * await lsp.didClose('/sandbox/project/src/index.ts');
    */
   public async didClose(path: string): Promise<void> {
     await this.toolboxApi.lspDidClose(
@@ -210,7 +210,7 @@ export class LspServer {
    * 
    * @example
    * // Get all symbols in a file
-   * const symbols = await lsp.documentSymbols('/workspace/project/src/index.ts');
+   * const symbols = await lsp.documentSymbols('/sandbox/project/src/index.ts');
    * symbols.forEach(symbol => {
    *   console.log(`${symbol.kind} ${symbol.name}: ${symbol.location}`);
    * });
@@ -240,12 +240,12 @@ export class LspServer {
    * 
    * @example
    * // Search for all symbols containing "User"
-   * const symbols = await lsp.workspaceSymbols('User');
+   * const symbols = await lsp.sandboxSymbols('User');
    * symbols.forEach(symbol => {
    *   console.log(`${symbol.name} (${symbol.kind}) in ${symbol.location}`);
    * });
    */
-  public async workspaceSymbols(query: string): Promise<LspSymbol[]> {
+  public async sandboxSymbols(query: string): Promise<LspSymbol[]> {
     const response = await this.toolboxApi.lspWorkspaceSymbols(
       this.instance.id,
       this.languageId,
@@ -273,7 +273,7 @@ export class LspServer {
    * 
    * @example
    * // Get completions at a specific position
-   * const completions = await lsp.completions('/workspace/project/src/index.ts', {
+   * const completions = await lsp.completions('/sandbox/project/src/index.ts', {
    *   line: 10,
    *   character: 15
    * });

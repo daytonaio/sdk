@@ -5,27 +5,27 @@ This enables advanced language features like code completion, diagnostics, and m
 Example:
     Basic LSP server usage:
     ```python
-    workspace = daytona.create()
+    sandbox = daytona.create()
     
     # Create and start LSP server
-    lsp = workspace.create_lsp_server("typescript", "/workspace/project")
+    lsp = sandbox.create_lsp_server("typescript", "/sandbox/project")
     lsp.start()
     
     # Open a file for editing
-    lsp.did_open("/workspace/project/src/index.ts")
+    lsp.did_open("/sandbox/project/src/index.ts")
     
     # Get completions at a position
     pos = Position(line=10, character=15)
-    completions = lsp.completions("/workspace/project/src/index.ts", pos)
+    completions = lsp.completions("/sandbox/project/src/index.ts", pos)
     print(f"Completions: {completions}")
     
     # Get document symbols
-    symbols = lsp.document_symbols("/workspace/project/src/index.ts")
+    symbols = lsp.document_symbols("/sandbox/project/src/index.ts")
     for symbol in symbols:
         print(f"{symbol.name}: {symbol.kind}")
     
     # Clean up
-    lsp.did_close("/workspace/project/src/index.ts")
+    lsp.did_close("/sandbox/project/src/index.ts")
     lsp.stop()
     ```
 
@@ -44,7 +44,7 @@ from daytona_api_client import (
     LspCompletionParams
 )
 from daytona_sdk._utils.errors import intercept_errors
-from .protocols import WorkspaceInstance
+from .protocols import SandboxInstance
 
 
 class LspLanguageId(Enum):
@@ -92,7 +92,7 @@ class LspServer:
     Attributes:
         language_id (LspLanguageId): The language server type (e.g., "python", "typescript").
         path_to_project (str): Absolute path to the project root directory.
-        instance (WorkspaceInstance): The Sandbox instance this server belongs to.
+        instance (SandboxInstance): The Sandbox instance this server belongs to.
     """
 
     def __init__(
@@ -100,7 +100,7 @@ class LspServer:
         language_id: LspLanguageId,
         path_to_project: str,
         toolbox_api: ToolboxApi,
-        instance: WorkspaceInstance,
+        instance: SandboxInstance,
     ):
         """Initializes a new LSP server instance.
 
@@ -108,7 +108,7 @@ class LspServer:
             language_id (LspLanguageId): The language server type (e.g., LspLanguageId.TYPESCRIPT).
             path_to_project (str): Absolute path to the project root directory.
             toolbox_api (ToolboxApi): API client for Sandbox operations.
-            instance (WorkspaceInstance): The Sandbox instance this server belongs to.
+            instance (SandboxInstance): The Sandbox instance this server belongs to.
         """
         self.language_id = str(language_id)
         self.path_to_project = path_to_project
@@ -124,13 +124,13 @@ class LspServer:
 
         Example:
             ```python
-            lsp = workspace.create_lsp_server("typescript", "/workspace/project")
+            lsp = sandbox.create_lsp_server("typescript", "/sandbox/project")
             lsp.start()  # Initialize the server
             # Now ready for LSP operations
             ```
         """
         self.toolbox_api.lsp_start(
-            workspace_id=self.instance.id,
+            self.instance.id,
             lsp_server_request=LspServerRequest(
                 language_id=self.language_id,
                 path_to_project=self.path_to_project,
@@ -151,7 +151,7 @@ class LspServer:
             ```
         """
         self.toolbox_api.lsp_stop(
-            workspace_id=self.instance.id,
+            self.instance.id,
             lsp_server_request=LspServerRequest(
                 language_id=self.language_id,
                 path_to_project=self.path_to_project,
@@ -172,12 +172,12 @@ class LspServer:
         Example:
             ```python
             # When opening a file for editing
-            lsp.did_open("/workspace/project/src/index.ts")
+            lsp.did_open("/sandbox/project/src/index.ts")
             # Now can get completions, symbols, etc. for this file
             ```
         """
         self.toolbox_api.lsp_did_open(
-            workspace_id=self.instance.id,
+            self.instance.id,
             lsp_document_request=LspDocumentRequest(
                 language_id=self.language_id,
                 path_to_project=self.path_to_project,
@@ -197,11 +197,11 @@ class LspServer:
         Example:
             ```python
             # When done editing a file
-            lsp.did_close("/workspace/project/src/index.ts")
+            lsp.did_close("/sandbox/project/src/index.ts")
             ```
         """
         self.toolbox_api.lsp_did_close(
-            workspace_id=self.instance.id,
+            self.instance.id,
             lsp_document_request=LspDocumentRequest(
                 language_id=self.language_id,
                 path_to_project=self.path_to_project,
@@ -228,20 +228,20 @@ class LspServer:
         Example:
             ```python
             # Get all symbols in a file
-            symbols = lsp.document_symbols("/workspace/project/src/index.ts")
+            symbols = lsp.document_symbols("/sandbox/project/src/index.ts")
             for symbol in symbols:
                 print(f"{symbol.kind} {symbol.name}: {symbol.location}")
             ```
         """
         return self.toolbox_api.lsp_document_symbols(
-            workspace_id=self.instance.id,
+            self.instance.id,
             language_id=self.language_id,
             path_to_project=self.path_to_project,
             uri=f"file://{path}",
         )
 
-    @intercept_errors(message_prefix="Failed to get symbols from workspace: ")
-    def workspace_symbols(self, query: str) -> List[LspSymbol]:
+    @intercept_errors(message_prefix="Failed to get symbols from sandbox: ")
+    def sandbox_symbols(self, query: str) -> List[LspSymbol]:
         """Searches for symbols across the entire Sandbox.
 
         This method searches for symbols matching the query string across all files
@@ -261,13 +261,13 @@ class LspServer:
         Example:
             ```python
             # Search for all symbols containing "User"
-            symbols = lsp.workspace_symbols("User")
+            symbols = lsp.sandbox_symbols("User")
             for symbol in symbols:
                 print(f"{symbol.name} in {symbol.location}")
             ```
         """
-        return self.toolbox_api.lsp_workspace_symbols(
-            workspace_id=self.instance.id,
+        return self.toolbox_api.lsp_sandbox_symbols(
+            self.instance.id,
             language_id=self.language_id,
             path_to_project=self.path_to_project,
             query=query,
@@ -297,13 +297,13 @@ class LspServer:
             ```python
             # Get completions at a specific position
             pos = Position(line=10, character=15)
-            completions = lsp.completions("/workspace/project/src/index.ts", pos)
+            completions = lsp.completions("/sandbox/project/src/index.ts", pos)
             for item in completions.items:
                 print(f"{item.label} ({item.kind}): {item.detail}")
             ```
         """
         return self.toolbox_api.lsp_completions(
-            workspace_id=self.instance.id,
+            self.instance.id,
             lsp_completion_params=LspCompletionParams(
                 language_id=self.language_id,
                 path_to_project=self.path_to_project,

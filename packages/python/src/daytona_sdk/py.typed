@@ -1,4 +1,0 @@
-from typing import Protocol
-
-class WorkspaceCodeToolbox(Protocol):
-    def get_run_command(self, code: str) -> str: ...
