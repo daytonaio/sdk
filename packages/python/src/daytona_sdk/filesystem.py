@@ -6,18 +6,18 @@ This guide covers all available file system operations and best practices.
 Examples:
     Basic file operations:
     ```python
-    workspace = daytona.create()
+    sandbox = daytona.create()
     
     # Create a directory
-    workspace.fs.create_folder("/workspace/data", "755")
+    sandbox.fs.create_folder("/sandbox/data", "755")
     
     # Upload a file
     with open("local_file.txt", "rb") as f:
         content = f.read()
-    workspace.fs.upload_file("/workspace/data/file.txt", content)
+    sandbox.fs.upload_file("/sandbox/data/file.txt", content)
     
     # List directory contents
-    files = workspace.fs.list_files("/workspace")
+    files = sandbox.fs.list_files("/sandbox")
     for file in files:
         print(f"Name: {file.name}")
         print(f"Is directory: {file.is_dir}")
@@ -25,8 +25,8 @@ Examples:
         print(f"Modified: {file.mod_time}")
     
     # Search file contents
-    matches = workspace.fs.find_files(
-        path="/workspace/src",
+    matches = sandbox.fs.find_files(
+        path="/sandbox/src",
         pattern="text-of-interest"
     )
     for match in matches:
@@ -39,21 +39,21 @@ Examples:
     File manipulation:
     ```python
     # Move files
-    workspace.fs.move_files(
-        "/workspace/data/old.txt",
-        "/workspace/data/new.txt"
+    sandbox.fs.move_files(
+        "/sandbox/data/old.txt",
+        "/sandbox/data/new.txt"
     )
     
     # Replace text in files
-    results = workspace.fs.replace_in_files(
-        files=["/workspace/data/new.txt"],
+    results = sandbox.fs.replace_in_files(
+        files=["/sandbox/data/new.txt"],
         pattern="old_version",
         new_value="new_version"
     )
     
     # Set permissions
-    workspace.fs.set_file_permissions(
-        path="/workspace/data/script.sh",
+    sandbox.fs.set_file_permissions(
+        path="/sandbox/data/script.sh",
         mode="755",
         owner="daytona"
     )
@@ -74,7 +74,7 @@ from daytona_api_client import (
     ToolboxApi,
 )
 from daytona_sdk._utils.errors import intercept_errors
-from .protocols import WorkspaceInstance
+from .protocols import SandboxInstance
 
 
 class FileSystem:
@@ -86,14 +86,14 @@ class FileSystem:
     managing permissions.
 
     Attributes:
-        instance (WorkspaceInstance): The Sandbox instance this file system belongs to.
+        instance (SandboxInstance): The Sandbox instance this file system belongs to.
     """
 
-    def __init__(self, instance: WorkspaceInstance, toolbox_api: ToolboxApi):
+    def __init__(self, instance: SandboxInstance, toolbox_api: ToolboxApi):
         """Initializes a new FileSystem instance.
 
         Args:
-            instance (WorkspaceInstance): The Sandbox instance this file system belongs to.
+            instance (SandboxInstance): The Sandbox instance this file system belongs to.
             toolbox_api (ToolboxApi): API client for Sandbox operations.
         """
         self.instance = instance
@@ -113,14 +113,14 @@ class FileSystem:
         Example:
             ```python
             # Create a directory with standard permissions
-            workspace.fs.create_folder("/workspace/data", "755")
+            sandbox.fs.create_folder("/sandbox/data", "755")
 
             # Create a private directory
-            workspace.fs.create_folder("/workspace/secrets", "700")
+            sandbox.fs.create_folder("/sandbox/secrets", "700")
             ```
         """
         self.toolbox_api.create_folder(
-            workspace_id=self.instance.id, path=path, mode=mode
+            self.instance.id, path=path, mode=mode
         )
 
     @intercept_errors(message_prefix="Failed to delete file: ")
@@ -135,11 +135,11 @@ class FileSystem:
         Example:
             ```python
             # Delete a file
-            workspace.fs.delete_file("/workspace/data/old_file.txt")
+            sandbox.fs.delete_file("/sandbox/data/old_file.txt")
             ```
         """
         self.toolbox_api.delete_file(
-            workspace_id=self.instance.id, path=path
+            self.instance.id, path=path
         )
 
     @intercept_errors(message_prefix="Failed to download file: ")
@@ -157,17 +157,17 @@ class FileSystem:
         Example:
             ```python
             # Download and save a file locally
-            content = workspace.fs.download_file("/workspace/data/file.txt")
+            content = sandbox.fs.download_file("/sandbox/data/file.txt")
             with open("local_copy.txt", "wb") as f:
                 f.write(content)
 
             # Download and process text content
-            content = workspace.fs.download_file("/workspace/data/config.json")
+            content = sandbox.fs.download_file("/sandbox/data/config.json")
             config = json.loads(content.decode('utf-8'))
             ```
         """
         return self.toolbox_api.download_file(
-            workspace_id=self.instance.id, path=path
+            self.instance.id, path=path
         )
 
     @intercept_errors(message_prefix="Failed to find files: ")
@@ -190,13 +190,13 @@ class FileSystem:
         Example:
             ```python
             # Search for TODOs in Python files
-            matches = workspace.fs.find_files("/workspace/src", "TODO:")
+            matches = sandbox.fs.find_files("/sandbox/src", "TODO:")
             for match in matches:
                 print(f"{match.file}:{match.line}: {match.content.strip()}")
             ```
         """
         return self.toolbox_api.find_in_files(
-            workspace_id=self.instance.id, path=path, pattern=pattern
+            self.instance.id, path=path, pattern=pattern
         )
 
     @intercept_errors(message_prefix="Failed to get file info: ")
@@ -223,19 +223,19 @@ class FileSystem:
         Example:
             ```python
             # Get file metadata
-            info = workspace.fs.get_file_info("/workspace/data/file.txt")
+            info = sandbox.fs.get_file_info("/sandbox/data/file.txt")
             print(f"Size: {info.size} bytes")
             print(f"Modified: {info.mod_time}")
             print(f"Mode: {info.mode}")
 
             # Check if path is a directory
-            info = workspace.fs.get_file_info("/workspace/data")
+            info = sandbox.fs.get_file_info("/sandbox/data")
             if info.is_dir:
                 print("Path is a directory")
             ```
         """
         return self.toolbox_api.get_file_info(
-            workspace_id=self.instance.id, path=path
+            self.instance.id, path=path
         )
 
     @intercept_errors(message_prefix="Failed to list files: ")
@@ -255,7 +255,7 @@ class FileSystem:
         Example:
             ```python
             # List directory contents
-            files = workspace.fs.list_files("/workspace/data")
+            files = sandbox.fs.list_files("/sandbox/data")
 
             # Print files and their sizes
             for file in files:
@@ -268,7 +268,7 @@ class FileSystem:
             ```
         """
         return self.toolbox_api.list_files(
-            workspace_id=self.instance.id, path=path
+            self.instance.id, path=path
         )
 
     @intercept_errors(message_prefix="Failed to move files: ")
@@ -285,26 +285,26 @@ class FileSystem:
         Example:
             ```python
             # Rename a file
-            workspace.fs.move_files(
-                "/workspace/data/old_name.txt",
-                "/workspace/data/new_name.txt"
+            sandbox.fs.move_files(
+                "/sandbox/data/old_name.txt",
+                "/sandbox/data/new_name.txt"
             )
 
             # Move a file to a different directory
-            workspace.fs.move_files(
-                "/workspace/data/file.txt",
-                "/workspace/archive/file.txt"
+            sandbox.fs.move_files(
+                "/sandbox/data/file.txt",
+                "/sandbox/archive/file.txt"
             )
 
             # Move a directory
-            workspace.fs.move_files(
-                "/workspace/old_dir",
-                "/workspace/new_dir"
+            sandbox.fs.move_files(
+                "/sandbox/old_dir",
+                "/sandbox/new_dir"
             )
             ```
         """
         self.toolbox_api.move_file(
-            workspace_id=self.instance.id,
+            self.instance.id,
             source=source,
             destination=destination,
         )
@@ -332,8 +332,8 @@ class FileSystem:
         Example:
             ```python
             # Replace in specific files
-            results = workspace.fs.replace_in_files(
-                files=["/workspace/src/file1.py", "/workspace/src/file2.py"],
+            results = sandbox.fs.replace_in_files(
+                files=["/sandbox/src/file1.py", "/sandbox/src/file2.py"],
                 pattern="old_function",
                 new_value="new_function"
             )
@@ -351,7 +351,7 @@ class FileSystem:
         )
 
         return self.toolbox_api.replace_in_files(
-            workspace_id=self.instance.id, replace_request=replace_request
+            self.instance.id, replace_request=replace_request
         )
 
     @intercept_errors(message_prefix="Failed to search files: ")
@@ -373,17 +373,17 @@ class FileSystem:
         Example:
             ```python
             # Find all Python files
-            result = workspace.fs.search_files("/workspace", "*.py")
+            result = sandbox.fs.search_files("/sandbox", "*.py")
             for file in result.files:
                 print(file)
 
             # Find files with specific prefix
-            result = workspace.fs.search_files("/workspace/data", "test_*")
+            result = sandbox.fs.search_files("/sandbox/data", "test_*")
             print(f"Found {len(result.files)} test files")
             ```
         """
         return self.toolbox_api.search_files(
-            workspace_id=self.instance.id, path=path, pattern=pattern
+            self.instance.id, path=path, pattern=pattern
         )
 
     @intercept_errors(message_prefix="Failed to set file permissions: ")
@@ -406,21 +406,21 @@ class FileSystem:
         Example:
             ```python
             # Make a file executable
-            workspace.fs.set_file_permissions(
-                path="/workspace/scripts/run.sh",
+            sandbox.fs.set_file_permissions(
+                path="/sandbox/scripts/run.sh",
                 mode="755"  # rwxr-xr-x
             )
 
             # Change file owner
-            workspace.fs.set_file_permissions(
-                path="/workspace/data/file.txt",
+            sandbox.fs.set_file_permissions(
+                path="/sandbox/data/file.txt",
                 owner="daytona",
                 group="daytona"
             )
             ```
         """
         self.toolbox_api.set_file_permissions(
-            workspace_id=self.instance.id,
+            self.instance.id,
             path=path,
             mode=mode,
             owner=owner,
@@ -443,20 +443,20 @@ class FileSystem:
             ```python
             # Upload a text file
             content = b"Hello, World!"
-            workspace.fs.upload_file("/workspace/data/hello.txt", content)
+            sandbox.fs.upload_file("/sandbox/data/hello.txt", content)
 
             # Upload a local file
             with open("local_file.txt", "rb") as f:
                 content = f.read()
-            workspace.fs.upload_file("/workspace/data/file.txt", content)
+            sandbox.fs.upload_file("/sandbox/data/file.txt", content)
 
             # Upload binary data
             import json
             data = {"key": "value"}
             content = json.dumps(data).encode('utf-8')
-            workspace.fs.upload_file("/workspace/data/config.json", content)
+            sandbox.fs.upload_file("/sandbox/data/config.json", content)
             ```
         """
         self.toolbox_api.upload_file(
-            workspace_id=self.instance.id, path=path, file=file
+            self.instance.id, path=path, file=file
         )
