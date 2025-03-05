@@ -2,33 +2,6 @@
 
 A Python SDK for interacting with Daytona Server API, providing a simple interface for Daytona Workspace management, Git operations, file system operations, and language server protocol support.
 
-## Prerequisites
-
-Before using the Daytona SDK, you need to have a running Daytona server instance and proper configuration.
-
-### Server Installation
-
-For detailed instructions on installing and setting up the Daytona server, please refer to the official installation guide at:
-[https://github.com/daytonaio/daytona](https://github.com/daytonaio/daytona)
-
-### Configuration
-
-To use the SDK, you'll need two essential pieces of information:
-
-1. **Server Address**:
-
-   - Run `daytona server config` to get your server's configuration
-   - Look for the `API URL` value in the output
-   - For testing and development, you can use the FRP address provided
-   - For production environments, it's recommended to use a static address
-
-2. **API Key**:
-   - Generate a new API key by running:
-     ```bash
-     daytona api-key generate
-     ```
-   - Save this key securely as it will be needed to authenticate with the server
-
 ## Installation
 
 You can install the package using pip:
@@ -42,17 +15,52 @@ pip install daytona-sdk
 Here's a simple example of using the SDK:
 
 ```python
-from daytona_sdk import Daytona
+from daytona_sdk import Daytona, DaytonaConfig
 
-# Initialize the Daytona client
+# Initialize using environment variables
 daytona = Daytona()
 
-# Create the workspace instance
+# Create a workspace
 workspace = daytona.create()
 
-# Run the code securely inside the workspace
+# Run code in the workspace
 response = workspace.process.code_run('print("Hello World!")')
 print(response.result)
+
+# Clean up when done
+daytona.remove(workspace)
+```
+
+## Configuration
+
+The SDK can be configured using environment variables or by passing a configuration object:
+
+```python
+from daytona_sdk import Daytona, DaytonaConfig
+
+# Initialize with configuration
+config = DaytonaConfig(
+    api_key="your-api-key",
+    server_url="your-server-url",
+    target="us"
+)
+daytona = Daytona(config)
+```
+
+Or using environment variables:
+
+- `DAYTONA_API_KEY`: Your Daytona API key
+- `DAYTONA_SERVER_URL`: The Daytona server URL
+- `DAYTONA_TARGET`: Your target environment
+
+You can also customize workspace creation:
+
+```python
+workspace = daytona.create(CreateWorkspaceParams(
+    language="python",
+    env_vars={"PYTHON_ENV": "development"},
+    auto_stop_interval=60  # Auto-stop after 1 hour of inactivity
+))
 ```
 
 ## Features
@@ -63,38 +71,22 @@ print(response.result)
 - **Language Server Protocol**: Interact with language servers for code intelligence
 - **Process Management**: Execute code and commands in workspaces
 
-## Configuration
-
-The SDK can be configured using environment variables or by passing a configuration object:
-
-```python
-from daytona_sdk import Daytona, DaytonaConfig
-
-config = DaytonaConfig(
-    api_key='your-api-key',
-    server_url='https://your-daytona-server',
-    target='your-target'
-)
-
-daytona = Daytona(config)
-```
-
-Or using environment variables:
-
-- `DAYTONA_API_KEY`: Your Daytona API key
-- `DAYTONA_SERVER_URL`: The Daytona server URL
-- `DAYTONA_TARGET`: Your target environment
-
 ## Examples
 
-### Execute command
+### Execute Commands
 
 ```python
-response = workspace.process.code_run('print("Sum of 3 and 4 is " + str(3 + 4))')
-if response.code != 0:
-    print(f"Error: {response.code} {response.result}")
-else:
-    print(response.result)
+# Execute a shell command
+response = workspace.process.exec('echo "Hello, World!"')
+print(response.result)
+
+# Run Python code
+response = workspace.process.code_run('''
+x = 10
+y = 20
+print(f"Sum: {x + y}")
+''')
+print(response.result)
 ```
 
 ### File Operations
