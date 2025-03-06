@@ -1,6 +1,6 @@
 # Daytona SDK for Python
 
-A Python SDK for interacting with Daytona Server API, providing a simple interface for Daytona Workspace management, Git operations, file system operations, and language server protocol support.
+A Python SDK for interacting with Daytona Server API, providing a simple interface for Daytona Sandbox management, Git operations, file system operations, and language server protocol support.
 
 ## Installation
 
@@ -20,15 +20,15 @@ from daytona_sdk import Daytona
 # Initialize using environment variables
 daytona = Daytona()
 
-# Create a workspace
-workspace = daytona.create()
+# Create a sandbox
+sandbox = daytona.create()
 
-# Run code in the workspace
-response = workspace.process.code_run('print("Hello World!")')
+# Run code in the sandbox
+response = sandbox.process.code_run('print("Hello World!")')
 print(response.result)
 
 # Clean up when done
-daytona.remove(workspace)
+daytona.remove(sandbox)
 ```
 
 ## Configuration
@@ -53,10 +53,10 @@ Or using environment variables:
 - `DAYTONA_SERVER_URL`: The Daytona server URL
 - `DAYTONA_TARGET`: Your target environment
 
-You can also customize workspace creation:
+You can also customize sandbox creation:
 
 ```python
-workspace = daytona.create(CreateWorkspaceParams(
+sandbox = daytona.create(CreateSandboxParams(
     language="python",
     env_vars={"PYTHON_ENV": "development"},
     auto_stop_interval=60  # Auto-stop after 1 hour of inactivity
@@ -65,11 +65,11 @@ workspace = daytona.create(CreateWorkspaceParams(
 
 ## Features
 
-- **Workspace Management**: Create, manage and remove workspaces
+- **Sandbox Management**: Create, manage and remove sandboxs
 - **Git Operations**: Clone repositories, manage branches, and more
 - **File System Operations**: Upload, download, search and manipulate files
 - **Language Server Protocol**: Interact with language servers for code intelligence
-- **Process Management**: Execute code and commands in workspaces
+- **Process Management**: Execute code and commands in sandboxs
 
 ## Examples
 
@@ -77,11 +77,11 @@ workspace = daytona.create(CreateWorkspaceParams(
 
 ```python
 # Execute a shell command
-response = workspace.process.exec('echo "Hello, World!"')
+response = sandbox.process.exec('echo "Hello, World!"')
 print(response.result)
 
 # Run Python code
-response = workspace.process.code_run('''
+response = sandbox.process.code_run('''
 x = 10
 y = 20
 print(f"Sum: {x + y}")
@@ -93,33 +93,33 @@ print(response.result)
 
 ```python
 # Upload a file
-workspace.fs.upload_file('/path/to/file.txt', b'Hello, World!')
+sandbox.fs.upload_file('/path/to/file.txt', b'Hello, World!')
 
 # Download a file
-content = workspace.fs.download_file('/path/to/file.txt')
+content = sandbox.fs.download_file('/path/to/file.txt')
 
 # Search for files
-matches = workspace.fs.find_files(root_dir, 'search_pattern')
+matches = sandbox.fs.find_files(root_dir, 'search_pattern')
 ```
 
 ### Git Operations
 
 ```python
 # Clone a repository
-workspace.git.clone('https://github.com/example/repo', '/path/to/clone')
+sandbox.git.clone('https://github.com/example/repo', '/path/to/clone')
 
 # List branches
-branches = workspace.git.branches('/path/to/repo')
+branches = sandbox.git.branches('/path/to/repo')
 
 # Add files
-workspace.git.add('/path/to/repo', ['file1.txt', 'file2.txt'])
+sandbox.git.add('/path/to/repo', ['file1.txt', 'file2.txt'])
 ```
 
 ### Language Server Protocol
 
 ```python
 # Create and start a language server
-lsp = workspace.create_lsp_server('typescript', '/path/to/project')
+lsp = sandbox.create_lsp_server('typescript', '/path/to/project')
 lsp.start()
 
 # Notify the lsp for the file
