@@ -366,7 +366,7 @@ class Daytona:
             env=params.env_vars if params.env_vars else {},
             labels=params.labels,
             public=params.public,
-            target=params.target if params.target else self.target,
+            target=str(params.target if params.target else self.target),
             auto_stop_interval=params.auto_stop_interval
         )
 
