@@ -1,6 +1,6 @@
 # Daytona SDK for TypeScript
 
-A TypeScript SDK for interacting with Daytona Server API, providing a simple interface for Daytona Workspace management, Git operations, file system operations, and language server protocol support.
+A TypeScript SDK for interacting with Daytona Server API, providing a simple interface for Daytona Sandbox management, Git operations, file system operations, and language server protocol support.
 
 ## Installation
 
@@ -26,15 +26,15 @@ import { Daytona } from '@daytonaio/sdk'
 // Initialize using environment variables
 const daytona = new Daytona()
 
-// Create a workspace
-const workspace = await daytona.create()
+// Create a sandbox
+const sandbox = await daytona.create()
 
-// Run code in the workspace
-const response = await workspace.process.codeRun('console.log("Hello World!")')
+// Run code in the sandbox
+const response = await sandbox.process.codeRun('console.log("Hello World!")')
 console.log(response.result)
 
 // Clean up when done
-await daytona.remove(workspace)
+await daytona.remove(sandbox)
 ```
 
 ## Configuration
@@ -58,10 +58,10 @@ Or using environment variables:
 - `DAYTONA_SERVER_URL`: The Daytona server URL
 - `DAYTONA_TARGET`: Your target environment
 
-You can also customize workspace creation:
+You can also customize sandbox creation:
 
 ```typescript
-const workspace = await daytona.create({
+const sandbox = await daytona.create({
   language: 'typescript',
   envVars: { NODE_ENV: 'development' },
   autoStopInterval: 60, // Auto-stop after 1 hour of inactivity
@@ -70,11 +70,11 @@ const workspace = await daytona.create({
 
 ## Features
 
-- **Workspace Management**: Create, manage and remove workspaces
+- **Sandbox Management**: Create, manage and remove sandboxs
 - **Git Operations**: Clone repositories, manage branches, and more
 - **File System Operations**: Upload, download, search and manipulate files
 - **Language Server Protocol**: Interact with language servers for code intelligence
-- **Process Management**: Execute code and commands in workspaces
+- **Process Management**: Execute code and commands in sandboxs
 
 ## Examples
 
@@ -82,11 +82,11 @@ const workspace = await daytona.create({
 
 ```typescript
 // Execute a shell command
-const response = await workspace.process.executeCommand('echo "Hello, World!"')
+const response = await sandbox.process.executeCommand('echo "Hello, World!"')
 console.log(response.result)
 
 // Run TypeScript code
-const response = await workspace.process.codeRun(`
+const response = await sandbox.process.codeRun(`
 const x = 10
 const y = 20
 console.log(\`Sum: \${x + y}\`)
@@ -98,7 +98,7 @@ console.log(response.result)
 
 ```typescript
 // Upload a file
-await workspace.fs.uploadFile(
+await sandbox.fs.uploadFile(
   '/path/to/file.txt',
   new File(
     [Buffer.from('Hello, World!')],
@@ -108,30 +108,30 @@ await workspace.fs.uploadFile(
 )
 
 // Download a file
-const content = await workspace.fs.downloadFile('/path/to/file.txt')
+const content = await sandbox.fs.downloadFile('/path/to/file.txt')
 
 // Search for files
-const matches = await workspace.fs.findFiles(root_dir, 'search_pattern')
+const matches = await sandbox.fs.findFiles(root_dir, 'search_pattern')
 ```
 
 ### Git Operations
 
 ```typescript
 // Clone a repository
-await workspace.git.clone('https://github.com/example/repo', '/path/to/clone')
+await sandbox.git.clone('https://github.com/example/repo', '/path/to/clone')
 
 // List branches
-const branches = await workspace.git.branches('/path/to/repo')
+const branches = await sandbox.git.branches('/path/to/repo')
 
 // Add files
-await workspace.git.add('/path/to/repo', ['file1.txt', 'file2.txt'])
+await sandbox.git.add('/path/to/repo', ['file1.txt', 'file2.txt'])
 ```
 
 ### Language Server Protocol
 
 ```typescript
 // Create and start a language server
-const lsp = workspace.createLspServer('typescript', '/path/to/project')
+const lsp = sandbox.createLspServer('typescript', '/path/to/project')
 await lsp.start()
 
 // Notify the lsp for the file
