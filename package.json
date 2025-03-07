@@ -1,6 +1,6 @@
 {
   "private": true,
-  "version": "0.9.0",
+  "version": "0.10.2",
   "scripts": {
     "generate-api-clients": "sh ./hack/generate-api-clients.sh",
     "test": "echo \"Error: no test specified\" && exit 1",
