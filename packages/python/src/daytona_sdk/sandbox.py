@@ -54,6 +54,7 @@ from .lsp_server import LspServer, LspLanguageId
 import json
 import time
 from pydantic import Field
+from deprecated import deprecated
 from ._utils.errors import intercept_errors
 from ._utils.timeout import with_timeout
 from ._utils.enum import to_enum
@@ -357,6 +358,21 @@ class Sandbox:
         self.sandbox_api.stop_workspace(self.id, _request_timeout=timeout or None)
         self.wait_for_sandbox_stop()
 
+    @deprecated(reason="Method is deprecated. Use `wait_for_sandbox_start` instead. This method will be removed in a future version.")
+    def wait_for_workspace_start(self, timeout: Optional[float] = 60) -> None:
+        """Waits for the Sandbox to reach the 'started' state.
+
+        This method polls the Sandbox status until it reaches the 'started' state
+        or encounters an error.
+
+        Args:
+            timeout (Optional[float]): Maximum time to wait in seconds. 0 means no timeout. Default is 60 seconds.
+
+        Raises:
+            DaytonaError: If timeout is negative; If Sandbox fails to start or times out
+        """
+        self.wait_for_sandbox_start(timeout)
+
     @intercept_errors(message_prefix="Failure during waiting for sandbox to start: ")
     @with_timeout(error_message=lambda self, timeout: f"Sandbox {self.id} failed to become ready within the {timeout} seconds timeout period")
     def wait_for_sandbox_start(self, timeout: Optional[float] = 60) -> None:
@@ -369,7 +385,7 @@ class Sandbox:
             timeout (Optional[float]): Maximum time to wait in seconds. 0 means no timeout. Default is 60 seconds.
 
         Raises:
-            DaytonaError: If timeout is negative; If sandbox fails to start or times out
+            DaytonaError: If timeout is negative; If Sandbox fails to start or times out
         """
         state = None
         while state != "started":
@@ -382,6 +398,21 @@ class Sandbox:
                     f"Sandbox {self.id} failed to start with state: {state}, error reason: {response.error_reason}")
 
             time.sleep(0.1)  # Wait 100ms between checks
+
+    @deprecated(reason="Method is deprecated. Use `wait_for_sandbox_stop` instead. This method will be removed in a future version.")
+    def wait_for_workspace_stop(self, timeout: Optional[float] = 60) -> None:
+        """Waits for the Sandbox to reach the 'stopped' state.
+
+        This method polls the Sandbox status until it reaches the 'stopped' state
+        or encounters an error. It will wait up to 60 seconds for the Sandbox to stop.
+
+        Args:
+            timeout (Optional[float]): Maximum time to wait in seconds. 0 means no timeout. Default is 60 seconds.
+
+        Raises:
+            DaytonaError: If timeout is negative. If Sandbox fails to stop or times out.
+        """
+        self.wait_for_sandbox_stop(timeout)
 
     @intercept_errors(message_prefix="Failure during waiting for sandbox to stop: ")
     @with_timeout(error_message=lambda self, timeout: f"Sandbox {self.id} failed to become stopped within the {timeout} seconds timeout period")

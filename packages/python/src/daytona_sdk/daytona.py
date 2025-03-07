@@ -76,8 +76,9 @@ from daytona_sdk._utils.errors import intercept_errors, DaytonaError
 from .code_toolbox.sandbox_python_code_toolbox import SandboxPythonCodeToolbox
 from .code_toolbox.sandbox_ts_code_toolbox import SandboxTsCodeToolbox
 from ._utils.enum import to_enum
-from .sandbox import Sandbox, SandboxTargetRegion
+from .sandbox import Sandbox, SandboxTargetRegion, Sandbox as Workspace
 from ._utils.timeout import with_timeout
+from deprecated import deprecated
 
 
 @dataclass
@@ -447,6 +448,18 @@ class Daytona:
             ```
         """
         return self.sandbox_api.delete_workspace(sandbox.id, force=True, _request_timeout=timeout or None)
+
+    @deprecated(reason="Method is deprecated. Use `get_current_sandbox` instead. This method will be removed in a future version.")
+    def get_current_workspace(self, workspace_id: str) -> Workspace:
+        """Get a Sandbox by its ID.
+
+        Args:
+            workspace_id (str): The ID of the Sandbox to retrieve.
+
+        Returns:
+            Workspace: The Sandbox instance.
+        """
+        return self.get_current_sandbox(workspace_id)
 
     @intercept_errors(message_prefix="Failed to get sandbox: ")
     def get_current_sandbox(self, sandbox_id: str) -> Sandbox:
