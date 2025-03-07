@@ -17,10 +17,16 @@ build
 
 # IDE and Editor files
 .idea/
-.vscode/
 *.swp
 *.swo
 .DS_Store
+
+# IDE - VSCode
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
 
 # Testing
 coverage/
@@ -46,3 +52,5 @@ logs
 *.egg
 *.pyc
 __pycache__/
+
+.eslintcache
