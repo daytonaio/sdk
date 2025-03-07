@@ -35,6 +35,7 @@ Note:
 """
 from enum import Enum
 from typing import List
+from deprecated import deprecated
 from daytona_api_client import (
     CompletionList,
     LspSymbol,
@@ -239,6 +240,22 @@ class LspServer:
             path_to_project=self.path_to_project,
             uri=f"file://{path}",
         )
+    
+    @deprecated(reason="Method is deprecated. Use `sandbox_symbols` instead. This method will be removed in a future version.")
+    def workspace_symbols(self, query: str) -> List[LspSymbol]:
+        """Searches for symbols across the entire Sandbox.
+
+        This method searches for symbols matching the query string across all files
+        in the Sandbox. It's useful for finding declarations and definitions
+        without knowing which file they're in.
+
+        Args:
+            query (str): Search query to match against symbol names.
+
+        Returns:
+            List[LspSymbol]: List of matching symbols from all files.
+        """
+        return self.sandbox_symbols(query)
 
     @intercept_errors(message_prefix="Failed to get symbols from sandbox: ")
     def sandbox_symbols(self, query: str) -> List[LspSymbol]:
@@ -266,7 +283,7 @@ class LspServer:
                 print(f"{symbol.name} in {symbol.location}")
             ```
         """
-        return self.toolbox_api.lsp_sandbox_symbols(
+        return self.toolbox_api.lsp_workspace_symbols(
             self.instance.id,
             language_id=self.language_id,
             path_to_project=self.path_to_project,

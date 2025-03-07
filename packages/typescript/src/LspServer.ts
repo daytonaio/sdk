@@ -237,6 +237,25 @@ export class LspServer {
    *                                 - name: The symbol's name
    *                                 - kind: The symbol's kind (function, class, variable, etc.)
    *                                 - location: The location of the symbol in the file
+   *
+   * @deprecated Use `sandboxSymbols` instead. This method will be removed in a future version.
+   */
+  public async workspaceSymbols(query: string): Promise<LspSymbol[]> {
+    return await this.sandboxSymbols(query)
+  }
+
+  /**
+   * Searches for symbols across the entire Sandbox.
+   * 
+   * This method searches for symbols matching the query string across all files
+   * in the Sandbox. It's useful for finding declarations and definitions
+   * without knowing which file they're in.
+   * 
+   * @param {string} query - Search query to match against symbol names
+   * @returns {Promise<LspSymbol[]>} List of matching symbols from all files. Each symbol includes:
+   *                                 - name: The symbol's name
+   *                                 - kind: The symbol's kind (function, class, variable, etc.)
+   *                                 - location: The location of the symbol in the file
    * 
    * @example
    * // Search for all symbols containing "User"
