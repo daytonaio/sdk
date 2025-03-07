@@ -7,29 +7,29 @@ the `git` module.
 Example:
     Basic Git workflow:
     ```python
-    workspace = daytona.create()
+    sandbox = daytona.create()
     
     # Clone a repository
-    workspace.git.clone(
+    sandbox.git.clone(
         url="https://github.com/user/repo.git",
-        path="/workspace/repo"
+        path="/sandbox/repo"
     )
     
     # Make some changes
-    workspace.fs.upload_file("/workspace/repo/test.txt", "Hello, World!")
+    sandbox.fs.upload_file("/sandbox/repo/test.txt", "Hello, World!")
     
     # Stage and commit changes
-    workspace.git.add("/workspace/repo", ["test.txt"])
-    workspace.git.commit(
-        path="/workspace/repo",
+    sandbox.git.add("/sandbox/repo", ["test.txt"])
+    sandbox.git.commit(
+        path="/sandbox/repo",
         message="Add test file",
         author="John Doe",
         email="john@example.com"
     )
     
     # Push changes (with authentication)
-    workspace.git.push(
-        path="/workspace/repo",
+    sandbox.git.push(
+        path="/sandbox/repo",
         username="user",
         password="token"
     )
@@ -51,10 +51,10 @@ from daytona_api_client import (
     GitRepoRequest,
 )
 from daytona_sdk._utils.errors import intercept_errors
-from .protocols import WorkspaceInstance
+from .protocols import SandboxInstance
 
 if TYPE_CHECKING:
-    from .workspace import Workspace
+    from .sandbox import Sandbox
 
 
 class Git:
@@ -66,25 +66,25 @@ class Git:
     changes, and checking repository status.
 
     Attributes:
-        workspace (Workspace): The parent Sandbox instance.
-        instance (WorkspaceInstance): The Sandbox instance this Git handler belongs to.
+        sandbox (Sandbox): The parent Sandbox instance.
+        instance (SandboxInstance): The Sandbox instance this Git handler belongs to.
 
     Example:
         ```python
         # Clone a repository
-        workspace.git.clone(
+        sandbox.git.clone(
             url="https://github.com/user/repo.git",
-            path="/workspace/repo"
+            path="/sandbox/repo"
         )
 
         # Check repository status
-        status = workspace.git.status("/workspace/repo")
+        status = sandbox.git.status("/sandbox/repo")
         print(f"Modified files: {status.modified}")
 
         # Stage and commit changes
-        workspace.git.add("/workspace/repo", ["file.txt"])
-        workspace.git.commit(
-            path="/workspace/repo",
+        sandbox.git.add("/sandbox/repo", ["file.txt"])
+        sandbox.git.commit(
+            path="/sandbox/repo",
             message="Update file",
             author="John Doe",
             email="john@example.com"
@@ -94,18 +94,18 @@ class Git:
 
     def __init__(
         self,
-        workspace: "Workspace",
+        sandbox: "Sandbox",
         toolbox_api: ToolboxApi,
-        instance: WorkspaceInstance,
+        instance: SandboxInstance,
     ):
         """Initializes a new Git handler instance.
 
         Args:
-            workspace (Workspace): The parent Sandbox instance.
+            sandbox (Sandbox): The parent Sandbox instance.
             toolbox_api (ToolboxApi): API client for Sandbox operations.
-            instance (WorkspaceInstance): The Sandbox instance this Git handler belongs to.
+            instance (SandboxInstance): The Sandbox instance this Git handler belongs to.
         """
-        self.workspace = workspace
+        self.sandbox = sandbox
         self.toolbox_api = toolbox_api
         self.instance = instance
 
@@ -123,10 +123,10 @@ class Git:
         Example:
             ```python
             # Stage a single file
-            workspace.git.add("/workspace/repo", ["file.txt"])
+            sandbox.git.add("/sandbox/repo", ["file.txt"])
 
             # Stage multiple files
-            workspace.git.add("/workspace/repo", [
+            sandbox.git.add("/sandbox/repo", [
                 "src/main.py",
                 "tests/test_main.py",
                 "README.md"
@@ -134,7 +134,7 @@ class Git:
             ```
         """
         self.toolbox_api.git_add_files(
-            workspace_id=self.instance.id,
+            self.instance.id,
             git_add_request=GitAddRequest(
                 path=path,
                 files=files
@@ -155,12 +155,12 @@ class Git:
 
         Example:
             ```python
-            response = workspace.git.branches("/workspace/repo")
+            response = sandbox.git.branches("/sandbox/repo")
             print(f"Branches: {response.branches}")
             ```
         """
         return self.toolbox_api.git_list_branches(
-            workspace_id=self.instance.id,
+            self.instance.id,
             path=path,
         )
 
@@ -193,30 +193,30 @@ class Git:
         Example:
             ```python
             # Clone the default branch
-            workspace.git.clone(
+            sandbox.git.clone(
                 url="https://github.com/user/repo.git",
-                path="/workspace/repo"
+                path="/sandbox/repo"
             )
 
             # Clone a specific branch with authentication
-            workspace.git.clone(
+            sandbox.git.clone(
                 url="https://github.com/user/private-repo.git",
-                path="/workspace/private",
+                path="/sandbox/private",
                 branch="develop",
                 username="user",
                 password="token"
             )
 
             # Clone a specific commit
-            workspace.git.clone(
+            sandbox.git.clone(
                 url="https://github.com/user/repo.git",
-                path="/workspace/repo-old",
+                path="/sandbox/repo-old",
                 commit_id="abc123"
             )
             ```
         """
         self.toolbox_api.git_clone_repository(
-            workspace_id=self.instance.id,
+            self.instance.id,
             git_clone_request=GitCloneRequest(
                 url=url,
                 branch=branch,
@@ -243,9 +243,9 @@ class Git:
         Example:
             ```python
             # Stage and commit changes
-            workspace.git.add("/workspace/repo", ["README.md"])
-            workspace.git.commit(
-                path="/workspace/repo",
+            sandbox.git.add("/sandbox/repo", ["README.md"])
+            sandbox.git.commit(
+                path="/sandbox/repo",
                 message="Update documentation",
                 author="John Doe",
                 email="john@example.com"
@@ -253,7 +253,7 @@ class Git:
             ```
         """
         self.toolbox_api.git_commit_changes(
-            workspace_id=self.instance.id,
+            self.instance.id,
             git_commit_request=GitCommitRequest(
                 path=path,
                 message=message,
@@ -280,18 +280,18 @@ class Git:
         Example:
             ```python
             # Push without authentication (for public repos or SSH)
-            workspace.git.push("/workspace/repo")
+            sandbox.git.push("/sandbox/repo")
 
             # Push with authentication
-            workspace.git.push(
-                path="/workspace/repo",
+            sandbox.git.push(
+                path="/sandbox/repo",
                 username="user",
                 password="github_token"
             )
             ```
         """
         self.toolbox_api.git_push_changes(
-            workspace_id=self.instance.id,
+            self.instance.id,
             git_repo_request=GitRepoRequest(
                 path=path,
                 username=username,
@@ -317,18 +317,18 @@ class Git:
         Example:
             ```python
             # Pull without authentication
-            workspace.git.pull("/workspace/repo")
+            sandbox.git.pull("/sandbox/repo")
 
             # Pull with authentication
-            workspace.git.pull(
-                path="/workspace/repo",
+            sandbox.git.pull(
+                path="/sandbox/repo",
                 username="user",
                 password="github_token"
             )
             ```
         """
         self.toolbox_api.git_pull_changes(
-            workspace_id=self.instance.id,
+            self.instance.id,
             git_repo_request=GitRepoRequest(
                 path=path,
                 username=username,
@@ -356,13 +356,13 @@ class Git:
 
         Example:
             ```python
-            status = workspace.git.status("/workspace/repo")
+            status = sandbox.git.status("/sandbox/repo")
             print(f"On branch: {status.current_branch}")
             print(f"Commits ahead: {status.ahead}")
             print(f"Commits behind: {status.behind}")
             ```
         """
         return self.toolbox_api.git_get_status(
-            workspace_id=self.instance.id,
+            self.instance.id,
             path=path,
         )
