@@ -43,7 +43,7 @@ console.log(completions);
 
 ## Sandbox
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/30e0dfde8952b2e6369d58daec6da9433471b811/packages/typescript/src/Sandbox.ts#L185)
+[[view_source]](https://github.com/MDzaja/sdk/blob/1c4fb17f06c53da8875f43f3246b1b01060225d0/packages/typescript/src/Sandbox.ts#L190)
 
 Represents a Daytona Sandbox.
 
@@ -64,7 +64,7 @@ new Sandbox(
    codeToolbox: SandboxCodeToolbox): Sandbox
 ```
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/30e0dfde8952b2e6369d58daec6da9433471b811/packages/typescript/src/Sandbox.ts#L202)
+[[view_source]](https://github.com/MDzaja/sdk/blob/1c4fb17f06c53da8875f43f3246b1b01060225d0/packages/typescript/src/Sandbox.ts#L207)
 
 Creates a new Sandbox instance
 
@@ -102,7 +102,7 @@ Creates a new Sandbox instance
 static toSandboxInfo(instance: Workspace): SandboxInfo
 ```
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/30e0dfde8952b2e6369d58daec6da9433471b811/packages/typescript/src/Sandbox.ts#L430)
+[[view_source]](https://github.com/MDzaja/sdk/blob/1c4fb17f06c53da8875f43f3246b1b01060225d0/packages/typescript/src/Sandbox.ts#L446)
 
 Converts an API sandbox instance to a SandboxInfo object.
 
@@ -120,13 +120,41 @@ The converted SandboxInfo object
 
 ***
 
+#### ~~toWorkspaceInfo()~~
+
+```ts
+static toWorkspaceInfo(instance: Workspace): SandboxInfo
+```
+
+[[view_source]](https://github.com/MDzaja/sdk/blob/1c4fb17f06c53da8875f43f3246b1b01060225d0/packages/typescript/src/Sandbox.ts#L437)
+
+Converts an API workspace instance to a WorkspaceInfo object.
+
+##### Parameters
+
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
+| `instance` | `Workspace` | The API workspace instance to convert |
+
+##### Returns
+
+`SandboxInfo`
+
+The converted WorkspaceInfo object
+
+##### Deprecated
+
+Use `toSandboxInfo` instead. This method will be removed in a future version.
+
+***
+
 #### archive()
 
 ```ts
 archive(): Promise<void>
 ```
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/30e0dfde8952b2e6369d58daec6da9433471b811/packages/typescript/src/Sandbox.ts#L517)
+[[view_source]](https://github.com/MDzaja/sdk/blob/1c4fb17f06c53da8875f43f3246b1b01060225d0/packages/typescript/src/Sandbox.ts#L533)
 
 Archives the sandbox, making it inactive and preserving its state. When sandboxes are archived, the entire filesystem
 state is moved to cost-effective object storage, making it possible to keep sandboxes available for an extended period.
@@ -145,7 +173,7 @@ Sandbox must be stopped before archiving.
 createLspServer(languageId: string, pathToProject: string): LspServer
 ```
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/30e0dfde8952b2e6369d58daec6da9433471b811/packages/typescript/src/Sandbox.ts#L243)
+[[view_source]](https://github.com/MDzaja/sdk/blob/1c4fb17f06c53da8875f43f3246b1b01060225d0/packages/typescript/src/Sandbox.ts#L248)
 
 Creates a new Language Server Protocol (LSP) server instance.
 
@@ -179,7 +207,7 @@ const lsp = sandbox.createLspServer('typescript', '/sandbox/project');
 delete(): Promise<void>
 ```
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/30e0dfde8952b2e6369d58daec6da9433471b811/packages/typescript/src/Sandbox.ts#L328)
+[[view_source]](https://github.com/MDzaja/sdk/blob/1c4fb17f06c53da8875f43f3246b1b01060225d0/packages/typescript/src/Sandbox.ts#L333)
 
 Deletes the Sandbox.
 
@@ -195,7 +223,7 @@ Deletes the Sandbox.
 getPreviewLink(port: number): string
 ```
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/30e0dfde8952b2e6369d58daec6da9433471b811/packages/typescript/src/Sandbox.ts#L502)
+[[view_source]](https://github.com/MDzaja/sdk/blob/1c4fb17f06c53da8875f43f3246b1b01060225d0/packages/typescript/src/Sandbox.ts#L518)
 
 Gets the preview link for the sandbox at a specific port. If the port is not open, it will open it and return the link.
 
@@ -223,7 +251,7 @@ If the node domain is not found in the provider metadata
 getWorkspaceRootDir(): Promise<undefined | string>
 ```
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/30e0dfde8952b2e6369d58daec6da9433471b811/packages/typescript/src/Sandbox.ts#L223)
+[[view_source]](https://github.com/MDzaja/sdk/blob/1c4fb17f06c53da8875f43f3246b1b01060225d0/packages/typescript/src/Sandbox.ts#L228)
 
 Gets the root directory path for the logged in user inside the Sandbox. Default user is `daytona`.
 
@@ -248,7 +276,7 @@ console.log(`Sandbox root: ${rootDir}`);
 info(): Promise<SandboxInfo>
 ```
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/30e0dfde8952b2e6369d58daec6da9433471b811/packages/typescript/src/Sandbox.ts#L418)
+[[view_source]](https://github.com/MDzaja/sdk/blob/1c4fb17f06c53da8875f43f3246b1b01060225d0/packages/typescript/src/Sandbox.ts#L423)
 
 Gets structured information about the Sandbox.
 
@@ -276,7 +304,7 @@ console.log(`Resources: ${info.resources.cpu} CPU, ${info.resources.memory} RAM`
 setAutostopInterval(interval: number): Promise<void>
 ```
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/30e0dfde8952b2e6369d58daec6da9433471b811/packages/typescript/src/Sandbox.ts#L487)
+[[view_source]](https://github.com/MDzaja/sdk/blob/1c4fb17f06c53da8875f43f3246b1b01060225d0/packages/typescript/src/Sandbox.ts#L503)
 
 Set the auto-stop interval for the Sandbox.
 
@@ -315,7 +343,7 @@ await sandbox.setAutostopInterval(0);
 setLabels(labels: Record<string, string>): Promise<void>
 ```
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/30e0dfde8952b2e6369d58daec6da9433471b811/packages/typescript/src/Sandbox.ts#L271)
+[[view_source]](https://github.com/MDzaja/sdk/blob/1c4fb17f06c53da8875f43f3246b1b01060225d0/packages/typescript/src/Sandbox.ts#L276)
 
 Sets labels for the Sandbox.
 
@@ -350,7 +378,7 @@ await sandbox.setLabels({
 start(timeout?: number): Promise<void>
 ```
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/30e0dfde8952b2e6369d58daec6da9433471b811/packages/typescript/src/Sandbox.ts#L290)
+[[view_source]](https://github.com/MDzaja/sdk/blob/1c4fb17f06c53da8875f43f3246b1b01060225d0/packages/typescript/src/Sandbox.ts#L295)
 
 Start the Sandbox.
 
@@ -386,7 +414,7 @@ console.log('Sandbox started successfully');
 stop(timeout?: number): Promise<void>
 ```
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/30e0dfde8952b2e6369d58daec6da9433471b811/packages/typescript/src/Sandbox.ts#L314)
+[[view_source]](https://github.com/MDzaja/sdk/blob/1c4fb17f06c53da8875f43f3246b1b01060225d0/packages/typescript/src/Sandbox.ts#L319)
 
 Stops the Sandbox.
 
@@ -418,7 +446,7 @@ console.log('Sandbox stopped successfully');
 waitUntilStarted(timeout?: number): Promise<void>
 ```
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/30e0dfde8952b2e6369d58daec6da9433471b811/packages/typescript/src/Sandbox.ts#L343)
+[[view_source]](https://github.com/MDzaja/sdk/blob/1c4fb17f06c53da8875f43f3246b1b01060225d0/packages/typescript/src/Sandbox.ts#L348)
 
 Waits for the Sandbox to reach the 'started' state.
 
@@ -447,7 +475,7 @@ or encounters an error.
 waitUntilStopped(timeout?: number): Promise<void>
 ```
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/30e0dfde8952b2e6369d58daec6da9433471b811/packages/typescript/src/Sandbox.ts#L380)
+[[view_source]](https://github.com/MDzaja/sdk/blob/1c4fb17f06c53da8875f43f3246b1b01060225d0/packages/typescript/src/Sandbox.ts#L385)
 
 Wait for Sandbox to reach 'stopped' state.
 
@@ -472,7 +500,7 @@ or encounters an error.
 
 ## SandboxCodeToolbox
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/30e0dfde8952b2e6369d58daec6da9433471b811/packages/typescript/src/Sandbox.ts#L164)
+[[view_source]](https://github.com/MDzaja/sdk/blob/1c4fb17f06c53da8875f43f3246b1b01060225d0/packages/typescript/src/Sandbox.ts#L169)
 
 Interface defining methods that a code toolbox must implement
  SandboxCodeToolbox
@@ -485,7 +513,7 @@ Interface defining methods that a code toolbox must implement
 getRunCommand(code: string, params?: CodeRunParams): string
 ```
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/30e0dfde8952b2e6369d58daec6da9433471b811/packages/typescript/src/Sandbox.ts#L166)
+[[view_source]](https://github.com/MDzaja/sdk/blob/1c4fb17f06c53da8875f43f3246b1b01060225d0/packages/typescript/src/Sandbox.ts#L171)
 
 Generates a command to run the provided code
 
@@ -504,7 +532,7 @@ Generates a command to run the provided code
 
 ## SandboxInfo
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/30e0dfde8952b2e6369d58daec6da9433471b811/packages/typescript/src/Sandbox.ts#L116)
+[[view_source]](https://github.com/MDzaja/sdk/blob/1c4fb17f06c53da8875f43f3246b1b01060225d0/packages/typescript/src/Sandbox.ts#L120)
 
 Structured information about a Sandbox
 
@@ -555,7 +583,7 @@ console.log(`Resources: ${info.resources.cpu} CPU, ${info.resources.memory} RAM`
 
 ## SandboxInstance
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/30e0dfde8952b2e6369d58daec6da9433471b811/packages/typescript/src/Sandbox.ts#L57)
+[[view_source]](https://github.com/MDzaja/sdk/blob/1c4fb17f06c53da8875f43f3246b1b01060225d0/packages/typescript/src/Sandbox.ts#L61)
 
 ### Extends
 
@@ -571,7 +599,7 @@ console.log(`Resources: ${info.resources.cpu} CPU, ${info.resources.memory} RAM`
 
 ## SandboxResources
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/30e0dfde8952b2e6369d58daec6da9433471b811/packages/typescript/src/Sandbox.ts#L78)
+[[view_source]](https://github.com/MDzaja/sdk/blob/1c4fb17f06c53da8875f43f3246b1b01060225d0/packages/typescript/src/Sandbox.ts#L82)
 
 Resources allocated to a Sandbox
 
