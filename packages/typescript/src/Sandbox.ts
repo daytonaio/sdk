@@ -46,13 +46,17 @@ import {
   Workspace as ApiSandbox,
   WorkspaceInfo as ApiSandboxInfo,
   CreateNodeClassEnum as SandboxClass,
-  CreateNodeRegionEnum as SandboxTargetRegion
+  CreateNodeRegionEnum as SandboxTargetRegion,
+  Workspace as ApiWorkspace,
 } from '@daytonaio/api-client'
 import { FileSystem } from './FileSystem'
 import { Git } from './Git'
 import { CodeRunParams, Process } from './Process'
 import { LspLanguageId, LspServer } from './LspServer'
 import { DaytonaError } from './errors/DaytonaError'
+
+/** @deprecated Use SandboxInfo instead. This type will be removed in a future version. */
+type WorkspaceInfo = SandboxInfo;
 
 export interface SandboxInstance extends Omit<ApiSandbox, 'info'> {
   info?: SandboxInfo;
@@ -157,6 +161,7 @@ export interface SandboxInfo extends ApiSandboxInfo {
    */
   providerMetadata?: string;
 }
+
 /**
  * Interface defining methods that a code toolbox must implement
  * @interface SandboxCodeToolbox
@@ -421,6 +426,17 @@ export class Sandbox {
     return Sandbox.toSandboxInfo(instance)
   }
 
+  /**
+   * Converts an API workspace instance to a WorkspaceInfo object.
+   * 
+   * @param {ApiWorkspace} instance - The API workspace instance to convert
+   * @returns {WorkspaceInfo} The converted WorkspaceInfo object
+   * 
+   * @deprecated Use `toSandboxInfo` instead. This method will be removed in a future version.
+   */
+  public static toWorkspaceInfo(instance: ApiWorkspace): WorkspaceInfo {
+    return Sandbox.toSandboxInfo(instance)
+  }
   /**
    * Converts an API sandbox instance to a SandboxInfo object.
    * 

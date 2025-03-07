@@ -49,7 +49,7 @@
 import { v4 as uuidv4 } from 'uuid'
 
 import { SandboxPythonCodeToolbox } from './code-toolbox/SandboxPythonCodeToolbox'
-import { Sandbox, SandboxInstance } from './Sandbox'
+import { Sandbox, SandboxInstance, Sandbox as Workspace } from './Sandbox'
 import {
   Configuration,
   WorkspaceApi as SandboxApi,
@@ -467,6 +467,18 @@ export class Daytona {
   /**
    * Gets the Sandbox by ID.
    * 
+   * @param {string} workspaceId - The ID of the Sandbox to retrieve
+   * @returns {Promise<Workspace>} The Sandbox
+   * 
+   * @deprecated Use `getCurrentSandbox` instead. This method will be removed in a future version.
+   */
+  public async getCurrentWorkspace(workspaceId: string): Promise<Workspace> {
+    return await this.getCurrentSandbox(workspaceId)
+  }
+
+  /**
+   * Gets the Sandbox by ID.
+   * 
    * @param {string} sandboxId - The ID of the Sandbox to retrieve
    * @returns {Promise<Sandbox>} The Sandbox
    * 
@@ -475,7 +487,7 @@ export class Daytona {
    * console.log(`Current sandbox state: ${sandbox.instance.state}`);
    */
   public async getCurrentSandbox(sandboxId: string): Promise<Sandbox> {
-    return this.get(sandboxId)
+    return await this.get(sandboxId)
   }
 
   /**
