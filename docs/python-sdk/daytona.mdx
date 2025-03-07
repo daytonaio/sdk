@@ -68,7 +68,7 @@ sandbox.process.execute_command("python -m pytest")
 class Daytona()
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/30e0dfde8952b2e6369d58daec6da9433471b811/packages/python/src/daytona_sdk/daytona.py#L198)
+[[view_source]](https://github.com/daytonaio/sdk/blob/1c4fb17f06c53da8875f43f3246b1b01060225d0/packages/python/src/daytona_sdk/daytona.py#L199)
 
 Main class for interacting with Daytona Server API.
 
@@ -106,7 +106,7 @@ daytona = Daytona(config)
 def __init__(config: Optional[DaytonaConfig] = None)
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/30e0dfde8952b2e6369d58daec6da9433471b811/packages/python/src/daytona_sdk/daytona.py#L226)
+[[view_source]](https://github.com/daytonaio/sdk/blob/1c4fb17f06c53da8875f43f3246b1b01060225d0/packages/python/src/daytona_sdk/daytona.py#L227)
 
 Initializes Daytona instance with optional configuration.
 
@@ -149,7 +149,7 @@ def create(params: Optional[CreateSandboxParams] = None,
            timeout: Optional[float] = 60) -> Sandbox
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/30e0dfde8952b2e6369d58daec6da9433471b811/packages/python/src/daytona_sdk/daytona.py#L285)
+[[view_source]](https://github.com/daytonaio/sdk/blob/1c4fb17f06c53da8875f43f3246b1b01060225d0/packages/python/src/daytona_sdk/daytona.py#L286)
 
 Creates Sandboxes with default or custom configurations. You can specify various parameters,
 including language, image, resources, environment variables, and volumes for the Sandbox.
@@ -199,7 +199,7 @@ sandbox = daytona.create(params, 40)
 def remove(sandbox: Sandbox, timeout: Optional[float] = 60) -> None
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/30e0dfde8952b2e6369d58daec6da9433471b811/packages/python/src/daytona_sdk/daytona.py#L430)
+[[view_source]](https://github.com/daytonaio/sdk/blob/1c4fb17f06c53da8875f43f3246b1b01060225d0/packages/python/src/daytona_sdk/daytona.py#L431)
 
 Removes a Sandbox.
 
@@ -223,6 +223,30 @@ daytona.remove(sandbox)  # Clean up when done
 ```
 
 
+#### Daytona.get\_current\_workspace
+
+```python
+@deprecated(
+    reason=
+    "Method is deprecated. Use `get_current_sandbox` instead. This method will be removed in a future version."
+)
+def get_current_workspace(workspace_id: str) -> Workspace
+```
+
+[[view_source]](https://github.com/daytonaio/sdk/blob/1c4fb17f06c53da8875f43f3246b1b01060225d0/packages/python/src/daytona_sdk/daytona.py#L451)
+
+Get a Sandbox by its ID.
+
+**Arguments**:
+
+- `workspace_id` _str_ - The ID of the Sandbox to retrieve.
+  
+
+**Returns**:
+
+- `Workspace` - The Sandbox instance.
+
+
 #### Daytona.get\_current\_sandbox
 
 ```python
@@ -230,7 +254,7 @@ daytona.remove(sandbox)  # Clean up when done
 def get_current_sandbox(sandbox_id: str) -> Sandbox
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/30e0dfde8952b2e6369d58daec6da9433471b811/packages/python/src/daytona_sdk/daytona.py#L450)
+[[view_source]](https://github.com/daytonaio/sdk/blob/1c4fb17f06c53da8875f43f3246b1b01060225d0/packages/python/src/daytona_sdk/daytona.py#L463)
 
 Get a Sandbox by its ID.
 
@@ -264,7 +288,7 @@ print(sandbox.status)
 def list() -> List[Sandbox]
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/30e0dfde8952b2e6369d58daec6da9433471b811/packages/python/src/daytona_sdk/daytona.py#L487)
+[[view_source]](https://github.com/daytonaio/sdk/blob/1c4fb17f06c53da8875f43f3246b1b01060225d0/packages/python/src/daytona_sdk/daytona.py#L500)
 
 Lists all Sandboxes.
 
@@ -288,7 +312,7 @@ for sandbox in sandboxs:
 def start(sandbox: Sandbox, timeout: Optional[float] = 60) -> None
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/30e0dfde8952b2e6369d58daec6da9433471b811/packages/python/src/daytona_sdk/daytona.py#L552)
+[[view_source]](https://github.com/daytonaio/sdk/blob/1c4fb17f06c53da8875f43f3246b1b01060225d0/packages/python/src/daytona_sdk/daytona.py#L565)
 
 Starts a Sandbox and waits for it to be ready.
 
@@ -309,7 +333,7 @@ Starts a Sandbox and waits for it to be ready.
 def stop(sandbox: Sandbox, timeout: Optional[float] = 60) -> None
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/30e0dfde8952b2e6369d58daec6da9433471b811/packages/python/src/daytona_sdk/daytona.py#L564)
+[[view_source]](https://github.com/daytonaio/sdk/blob/1c4fb17f06c53da8875f43f3246b1b01060225d0/packages/python/src/daytona_sdk/daytona.py#L577)
 
 Stops a Sandbox and waits for it to be stopped.
 
@@ -392,7 +416,7 @@ sandbox.process.execute_command("python -m pytest")
 class CodeLanguage(Enum)
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/30e0dfde8952b2e6369d58daec6da9433471b811/packages/python/src/daytona_sdk/daytona.py#L85)
+[[view_source]](https://github.com/daytonaio/sdk/blob/1c4fb17f06c53da8875f43f3246b1b01060225d0/packages/python/src/daytona_sdk/daytona.py#L86)
 
 Programming languages supported by Daytona
 
@@ -405,7 +429,7 @@ Programming languages supported by Daytona
 class DaytonaConfig()
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/30e0dfde8952b2e6369d58daec6da9433471b811/packages/python/src/daytona_sdk/daytona.py#L101)
+[[view_source]](https://github.com/daytonaio/sdk/blob/1c4fb17f06c53da8875f43f3246b1b01060225d0/packages/python/src/daytona_sdk/daytona.py#L102)
 
 Configuration options for initializing the Daytona client.
 
@@ -436,7 +460,7 @@ daytona = Daytona(config)
 class SandboxResources()
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/30e0dfde8952b2e6369d58daec6da9433471b811/packages/python/src/daytona_sdk/daytona.py#L125)
+[[view_source]](https://github.com/daytonaio/sdk/blob/1c4fb17f06c53da8875f43f3246b1b01060225d0/packages/python/src/daytona_sdk/daytona.py#L126)
 
 Resources configuration for Sandbox.
 
@@ -471,7 +495,7 @@ params = CreateSandboxParams(
 class CreateSandboxParams(BaseModel)
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/30e0dfde8952b2e6369d58daec6da9433471b811/packages/python/src/daytona_sdk/daytona.py#L154)
+[[view_source]](https://github.com/daytonaio/sdk/blob/1c4fb17f06c53da8875f43f3246b1b01060225d0/packages/python/src/daytona_sdk/daytona.py#L155)
 
 Parameters for creating a new Sandbox.
 
