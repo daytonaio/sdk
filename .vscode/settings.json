@@ -1,0 +1,41 @@
+{
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": null,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit",
+    "source.organizeImports": "explicit"
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true,
+    "editor.tabSize": 2
+  },
+  "[python]": {
+    "editor.defaultFormatter": "ms-python.python",
+    "editor.formatOnSave": true,
+    "editor.tabSize": 4,
+    "editor.codeActionsOnSave": {
+      "source.organizeImports": "explicit"
+    }
+  },
+  "[jupyter]": {
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "ms-python.python",
+    "editor.tabSize": 4
+  },
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "typescript.enablePromptUseWorkspaceTsdk": true,
+  "typescript.updateImportsOnFileMove.enabled": "always",
+  "eslint.validate": [
+    "typescript",
+    "typescriptreact"
+  ],
+  "eslint.workingDirectories": [
+    {
+      "pattern": "packages/*/"
+    },
+    {
+      "pattern": "examples/*/"
+    }
+  ]
+} 
