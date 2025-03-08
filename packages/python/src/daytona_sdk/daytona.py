@@ -272,6 +272,9 @@ class Daytona:
         if not self.server_url:
             raise DaytonaError("Server URL is required")
 
+        if not self.target:
+            self.target = WorkspaceTargetRegion.US
+
         # Create API configuration without api_key
         configuration = Configuration(host=self.server_url)
         api_client = ApiClient(configuration)
@@ -358,6 +361,8 @@ class Daytona:
             raise DaytonaError(
                 "auto_stop_interval must be a non-negative integer")
 
+        target = params.target if params.target else self.target
+
         # Create workspace using dictionary
         workspace_data = CreateWorkspace(
             id=params.id,
@@ -367,7 +372,7 @@ class Daytona:
             env=params.env_vars if params.env_vars else {},
             labels=params.labels,
             public=params.public,
-            target=params.target if params.target else self.target,
+            target=str(target) if target else None,
             auto_stop_interval=params.auto_stop_interval
         )
 
