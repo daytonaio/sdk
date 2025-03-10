@@ -159,7 +159,7 @@ class CreateWorkspaceParams(BaseModel):
         id (Optional[str]): Custom identifier for the Sandbox. If not provided, a random ID will be generated.
         name (Optional[str]): Display name for the Sandbox. Defaults to Sandbox ID if not provided.
         image (Optional[str]): Custom Docker image to use for the Sandbox.
-        os_user (Optional[str]): OS user for the Sandbox. Defaults to "daytona".
+        os_user (Optional[str]): OS user for the Sandbox.
         env_vars (Optional[Dict[str, str]]): Environment variables to set in the Sandbox.
         labels (Optional[Dict[str, str]]): Custom labels for the Sandbox.
         public (Optional[bool]): Whether the Sandbox should be public.
@@ -368,7 +368,7 @@ class Daytona:
             id=params.id,
             name=params.name if params.name else params.id,
             image=params.image,
-            user=params.os_user if params.os_user else "daytona",
+            user=params.os_user,
             env=params.env_vars if params.env_vars else {},
             labels=params.labels,
             public=params.public,
