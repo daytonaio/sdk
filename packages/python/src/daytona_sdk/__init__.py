@@ -8,10 +8,12 @@ from .daytona import (
     SessionExecuteResponse,
     DaytonaError,
     WorkspaceTargetRegion,
+    WorkspaceResources
 )
 from .lsp_server import LspLanguageId
 from .workspace import WorkspaceState
 from .common.code_run_params import CodeRunParams
+from .charts import Chart, ChartType
 
 __all__ = [
     "Daytona",
@@ -25,5 +27,8 @@ __all__ = [
     "LspLanguageId",
     "WorkspaceTargetRegion",
     "WorkspaceState",
-    "CodeRunParams"
+    "CodeRunParams",
+    "WorkspaceResources",
+    "ChartType",
+    "Chart"
 ]

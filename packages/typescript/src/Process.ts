@@ -36,7 +36,6 @@
 
 import {
   Command,
-  ExecuteResponse,
   Session,
   SessionExecuteRequest,
   SessionExecuteResponse,
@@ -44,7 +43,8 @@ import {
   Workspace,
 } from '@daytonaio/api-client'
 import { WorkspaceCodeToolbox, WorkspaceInstance } from './Workspace'
-import { RawAxiosRequestConfig } from 'axios'
+import { ArtifactParser } from './utils/ArtifactParser'
+import { ExecuteResponse } from './types/ExecuteResponse'
 
 /**
  * Parameters for code execution
@@ -77,6 +77,7 @@ export class Process {
    * @returns {Promise<ExecuteResponse>} Command execution results containing:
    *                                    - exitCode: The command's exit status
    *                                    - result: Standard output from the command
+   *                                    - artifacts: Parsed artifacts like charts
    * 
    * @example
    * // Simple command
@@ -102,7 +103,17 @@ export class Process {
       cwd,
     })
 
-    return response.data
+    // console.log(response)
+
+    // Parse artifacts from the output
+    const artifacts = ArtifactParser.parseArtifacts(response.data.result)
+    
+    // Return enhanced response with parsed artifacts
+    return {
+      ...response.data,
+      result: artifacts.stdout,
+      artifacts
+    }
   }
 
   /**
@@ -110,9 +121,11 @@ export class Process {
    * 
    * @param {string} code - Code to execute
    * @param {CodeRunParams} params - Parameters for code execution
+   * @param {number} [timeout] - Maximum time in seconds to wait for execution to complete
    * @returns {Promise<ExecuteResponse>} Code execution results containing:
    *                                    - exitCode: The execution's exit status
    *                                    - result: Standard output from the code
+   *                                    - artifacts: Parsed artifacts like charts
    * 
    * @example
    * // Run TypeScript code
@@ -122,13 +135,37 @@ export class Process {
    *   console.log(\`Sum: \${x + y}\`);
    * `);
    * console.log(response.result);  // Prints: Sum: 30
+   * 
+   * @example
+   * // Run Python code with matplotlib
+   * const response = await process.codeRun(`
+   *   import matplotlib.pyplot as plt
+   *   import numpy as np
+   *   
+   *   x = np.linspace(0, 10, 100)
+   *   y = np.sin(x)
+   *   
+   *   plt.plot(x, y)
+   *   plt.title('Sine Wave')
+   *   plt.xlabel('x')
+   *   plt.ylabel('sin(x)')
+   *   plt.show()
+   * `);
+   * 
+   * // Access chart artifacts
+   * if (response.artifacts?.charts) {
+   *   const chart = response.artifacts.charts[0];
+   *   console.log(`Chart title: ${chart.title}`);
+   *   console.log(`Chart image: ${chart.png?.substring(0, 20)}...`);
+   * }
    */
-  public async codeRun(code: string, params?: CodeRunParams, timeout?: number): Promise<ExecuteResponse> {
+  public async codeRun(
+    code: string, 
+    params?: CodeRunParams, 
+    timeout?: number
+  ): Promise<ExecuteResponse> {
     const runCommand = this.codeToolbox.getRunCommand(code, params)
-
-    const response = await this.executeCommand(runCommand, undefined, timeout)
-
-    return response
+    return this.executeCommand(runCommand, undefined, timeout)
   }
 
   /**
