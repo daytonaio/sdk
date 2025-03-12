@@ -11,6 +11,13 @@ export { LspLanguageId } from './LspServer'
 // export type { LspLanguageId, Position } from './LspServer'
 export { DaytonaError } from './errors/DaytonaError'
 
+
+// Chart and artifact types
+export { ChartType } from './types/Chart'
+export type { Chart } from './types/Chart'
+
+export type { ExecutionArtifacts, ExecuteResponse as EnhancedExecuteResponse } from './types/ExecuteResponse'
+
 // Re-export necessary types from client
 export type {
   FileInfo,
@@ -19,7 +26,6 @@ export type {
   SearchFilesResponse,
   GitStatus,
   ListBranchResponse,
-  ExecuteResponse,
 } from '@daytonaio/api-client'
 
 export { WorkspaceState, CreateWorkspaceTargetEnum as WorkspaceTargetRegion } from '@daytonaio/api-client'
