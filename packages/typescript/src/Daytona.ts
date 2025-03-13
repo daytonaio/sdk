@@ -46,8 +46,6 @@
  * await workspace.process.executeCommand('npm test');
  */
 
-import { v4 as uuidv4 } from 'uuid'
-
 import { WorkspacePythonCodeToolbox } from './code-toolbox/WorkspacePythonCodeToolbox'
 import { Workspace, WorkspaceInstance } from './Workspace'
 import {
@@ -309,8 +307,6 @@ export class Daytona {
       labels[`code-toolbox-language`] = params.language
     }
 
-    params.id = params.id || `sandbox-${uuidv4().slice(0, 8)}`
-
     // remove this when params.timeout is removed
     const effectiveTimeout = params.timeout || timeout
     if (effectiveTimeout < 0) {
@@ -348,17 +344,17 @@ export class Daytona {
       workspaceInstance.info = workspaceInfo
 
       const workspace = new Workspace(
-        params.id!,
+        workspaceInstance.id,
         workspaceInstance as WorkspaceInstance,
         this.workspaceApi,
         this.toolboxApi,
         codeToolbox,
       )
 
-      if (!params.async) {
-        const timeElapsed = Date.now() - startTime;
-        await workspace.waitUntilStarted(effectiveTimeout ? effectiveTimeout - (timeElapsed / 1000) : 0);
-      }
+      // if (!params.async) {
+      //   const timeElapsed = Date.now() - startTime;
+      //   await workspace.waitUntilStarted(effectiveTimeout ? effectiveTimeout - (timeElapsed / 1000) : 0);
+      // }
 
       return workspace
     } catch (error) {

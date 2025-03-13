@@ -59,7 +59,6 @@ Examples:
 """
 
 from enum import Enum
-import uuid
 from typing import Optional, Dict, List, Annotated
 from pydantic import BaseModel, Field
 from dataclasses import dataclass
@@ -323,8 +322,6 @@ class Daytona:
         if params is None:
             params = CreateWorkspaceParams(language="python")
 
-        params.id = params.id if params.id else f"sandbox-{str(uuid.uuid4())[:8]}"
-
         effective_timeout = params.timeout if params.timeout else timeout
 
         try:
@@ -388,19 +385,19 @@ class Daytona:
         response.info = workspace_info
 
         workspace = Workspace(
-            params.id,
+            response.id,
             response,
             self.workspace_api,
             self.toolbox_api,
             code_toolbox
         )
 
-        # Wait for workspace to start
-        try:
-            workspace.wait_for_workspace_start()
-        finally:
-            # If not Daytona SaaS, we don't need to handle pulling image state
-            pass
+        # # Wait for workspace to start
+        # try:
+        #     workspace.wait_for_workspace_start()
+        # finally:
+        #     # If not Daytona SaaS, we don't need to handle pulling image state
+        #     pass
 
         return workspace
 
