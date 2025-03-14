@@ -35,10 +35,10 @@ async function main() {
     console.log(response.result)
   }
 
-  const sandboxs = await daytona.list()
-  console.log("Total sandboxs count:", sandboxs.length)
+  const sandboxes = await daytona.list()
+  console.log("Total sandboxes count:", sandboxes.length)
   // Use util.inspect to pretty print the sandbox info like Python's pprint
-  console.log(inspect(await sandboxs[0].info(), { depth: null, colors: true }))
+  console.log(inspect(await sandboxes[0].info(), { depth: null, colors: true }))
 
   console.log("Removing sandbox")
   await sandbox.delete()

@@ -70,7 +70,7 @@ These SDKs extend Daytona's capabilities by allowing you to:
 - Automate development environment creation and management
 - Programmatically handle sandbox configurations
 - Manage Git operations and repository connections
-- Control file system operations within sandboxs
+- Control file system operations within sandboxes
 - Interface with language server protocols
 - Build custom tooling and automation around your development environments
 - Create isolated environments for running AI-generated code safely
