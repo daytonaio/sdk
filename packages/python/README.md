@@ -65,11 +65,11 @@ sandbox = daytona.create(CreateSandboxParams(
 
 ## Features
 
-- **Sandbox Management**: Create, manage and remove sandboxs
+- **Sandbox Management**: Create, manage and remove sandboxes
 - **Git Operations**: Clone repositories, manage branches, and more
 - **File System Operations**: Upload, download, search and manipulate files
 - **Language Server Protocol**: Interact with language servers for code intelligence
-- **Process Management**: Execute code and commands in sandboxs
+- **Process Management**: Execute code and commands in sandboxes
 
 ## Examples
 

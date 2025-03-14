@@ -498,7 +498,7 @@ class Daytona:
             code_toolbox
         )
 
-    @intercept_errors(message_prefix="Failed to list sandboxs: ")
+    @intercept_errors(message_prefix="Failed to list sandboxes: ")
     def list(self) -> List[Sandbox]:
         """Lists all Sandboxes.
 
@@ -507,14 +507,14 @@ class Daytona:
 
         Example:
             ```python
-            sandboxs = daytona.list()
-            for sandbox in sandboxs:
+            sandboxes = daytona.list()
+            for sandbox in sandboxes:
                 print(f"{sandbox.id}: {sandbox.status}")
             ```
         """
-        sandboxs = self.sandbox_api.list_workspaces()
+        sandboxes = self.sandbox_api.list_workspaces()
 
-        for sandbox in sandboxs:
+        for sandbox in sandboxes:
             sandbox_info = Sandbox._to_sandbox_info(sandbox)
             sandbox.info = sandbox_info
 
@@ -531,7 +531,7 @@ class Daytona:
                     )
                 )
             )
-            for sandbox in sandboxs
+            for sandbox in sandboxes
         ]
 
     def _validate_language_label(self, language: Optional[str]) -> CodeLanguage:

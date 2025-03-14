@@ -30,10 +30,10 @@ if response.exit_code != 0:
 else:
     print(response.result)
 
-sandboxs = daytona.list()
-print("Total sandboxs count:", len(sandboxs))
+sandboxes = daytona.list()
+print("Total sandboxes count:", len(sandboxes))
 # This will show all attributes of the first sandbox
-pprint(vars(sandboxs[0].info()))
+pprint(vars(sandboxes[0].info()))
 
 print("Removing sandbox")
 daytona.remove(sandbox)

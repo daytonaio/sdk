@@ -79,7 +79,7 @@ export interface DaytonaConfig {
   apiKey: string
   /** URL of the Daytona server */
   serverUrl: string
-  /** Target environment for sandboxs */
+  /** Target environment for sandboxes */
   target: SandboxTargetRegion
 }
 
@@ -393,8 +393,8 @@ export class Daytona {
    * @returns {Promise<Sandbox[]>} Array of Sandboxes
    * 
    * @example
-   * const sandboxs = await daytona.list();
-   * for (const sandbox of sandboxs) {
+   * const sandboxes = await daytona.list();
+   * for (const sandbox of sandboxes) {
    *     console.log(`${sandbox.id}: ${sandbox.instance.state}`);
    * }
    */
