@@ -13,8 +13,8 @@ from .common.code_run_params import CodeRunParams
 from .sandbox import (
     Sandbox,
     SandboxTargetRegion,
-    SandboxState,
 )
+from daytona_api_client import WorkspaceState as SandboxState
 
 
 # Create deprecated aliases with proper warnings
@@ -25,7 +25,6 @@ WorkspaceTargetRegion = deprecated_alias('WorkspaceTargetRegion', 'SandboxTarget
 WorkspaceResources = deprecated_alias('WorkspaceResources', 'SandboxResources')(SandboxResources)
 WorkspaceState = deprecated_alias('WorkspaceState', 'SandboxState')(SandboxState)
 
-
 __all__ = [
     "Daytona",
     "DaytonaConfig",
@@ -35,7 +34,6 @@ __all__ = [
     "DaytonaError",
     "LspLanguageId",
     "WorkspaceTargetRegion",
-    "WorkspaceState",
     "CodeRunParams",
     "CreateSandboxParams",
     "Sandbox",
