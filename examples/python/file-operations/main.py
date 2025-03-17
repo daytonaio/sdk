@@ -10,7 +10,7 @@ params = CreateSandboxParams(
 sandbox = daytona.create(params)
 
 # Get sandbox root directory
-root_dir = sandbox.get_workspace_root_dir()
+root_dir = sandbox.get_user_root_dir()
 
 # List files in the sandbox
 files = sandbox.fs.list_files(root_dir)

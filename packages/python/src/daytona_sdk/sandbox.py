@@ -248,20 +248,24 @@ class Sandbox:
         return Sandbox._to_sandbox_info(instance)
 
     @intercept_errors(message_prefix="Failed to get sandbox root directory: ")
-    def get_workspace_root_dir(self) -> str:
-        """Gets the root directory path for the logged in user inside the Sandbox. Default user is `daytona`.
+    def get_user_root_dir(self) -> str:
+        """Gets the root directory path for the logged in user inside the Sandbox.
 
         Returns:
             str: The absolute path to the Sandbox root directory for the logged in user.
 
         Example:
             ```python
-            root_dir = sandbox.get_workspace_root_dir()
+            root_dir = sandbox.get_user_root_dir()
             print(f"Sandbox root: {root_dir}")
             ```
         """
         response = self.toolbox_api.get_project_dir(self.instance.id)
         return response.dir
+
+    @deprecated(reason="Method is deprecated. Use `get_user_root_dir` instead. This method will be removed in a future version.")
+    def get_workspace_root_dir(self) -> str:
+        return self.get_user_root_dir()
 
     def create_lsp_server(
         self, language_id: LspLanguageId, path_to_project: str

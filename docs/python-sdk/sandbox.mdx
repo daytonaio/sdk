@@ -47,7 +47,7 @@ print(completions)
 class Sandbox()
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/aac1f63c998eea2b3868fa6d5a8689fa71f75b0d/packages/python/src/daytona_sdk/sandbox.py#L189)
+[[view_source]](https://github.com/daytonaio/sdk/blob/dd9532596a339882e2272f36b7b78ee1903debe2/packages/python/src/daytona_sdk/sandbox.py#L189)
 
 Represents a Daytona Sandbox.
 
@@ -72,7 +72,7 @@ def __init__(id: str, instance: SandboxInstance, sandbox_api: SandboxApi,
              toolbox_api: ToolboxApi, code_toolbox: SandboxCodeToolbox)
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/aac1f63c998eea2b3868fa6d5a8689fa71f75b0d/packages/python/src/daytona_sdk/sandbox.py#L205)
+[[view_source]](https://github.com/daytonaio/sdk/blob/dd9532596a339882e2272f36b7b78ee1903debe2/packages/python/src/daytona_sdk/sandbox.py#L205)
 
 Initialize a new Sandbox instance.
 
@@ -91,7 +91,7 @@ Initialize a new Sandbox instance.
 def info() -> SandboxInfo
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/aac1f63c998eea2b3868fa6d5a8689fa71f75b0d/packages/python/src/daytona_sdk/sandbox.py#L232)
+[[view_source]](https://github.com/daytonaio/sdk/blob/dd9532596a339882e2272f36b7b78ee1903debe2/packages/python/src/daytona_sdk/sandbox.py#L232)
 
 Gets structured information about the Sandbox.
 
@@ -111,16 +111,16 @@ print(f"Resources: {info.resources.cpu} CPU, {info.resources.memory} RAM")
 ```
 
 
-#### Sandbox.get\_workspace\_root\_dir
+#### Sandbox.get\_user\_root\_dir
 
 ```python
 @intercept_errors(message_prefix="Failed to get sandbox root directory: ")
-def get_workspace_root_dir() -> str
+def get_user_root_dir() -> str
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/aac1f63c998eea2b3868fa6d5a8689fa71f75b0d/packages/python/src/daytona_sdk/sandbox.py#L251)
+[[view_source]](https://github.com/daytonaio/sdk/blob/dd9532596a339882e2272f36b7b78ee1903debe2/packages/python/src/daytona_sdk/sandbox.py#L251)
 
-Gets the root directory path for the logged in user inside the Sandbox. Default user is `daytona`.
+Gets the root directory path for the logged in user inside the Sandbox.
 
 **Returns**:
 
@@ -130,7 +130,7 @@ Gets the root directory path for the logged in user inside the Sandbox. Default 
 **Example**:
 
 ```python
-root_dir = sandbox.get_workspace_root_dir()
+root_dir = sandbox.get_user_root_dir()
 print(f"Sandbox root: {root_dir}")
 ```
 
@@ -142,7 +142,7 @@ def create_lsp_server(language_id: LspLanguageId,
                       path_to_project: str) -> LspServer
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/aac1f63c998eea2b3868fa6d5a8689fa71f75b0d/packages/python/src/daytona_sdk/sandbox.py#L266)
+[[view_source]](https://github.com/daytonaio/sdk/blob/dd9532596a339882e2272f36b7b78ee1903debe2/packages/python/src/daytona_sdk/sandbox.py#L270)
 
 Creates a new Language Server Protocol (LSP) server instance.
 
@@ -174,7 +174,7 @@ lsp = sandbox.create_lsp_server("python", "/workspace/project")
 def set_labels(labels: Dict[str, str]) -> Dict[str, str]
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/aac1f63c998eea2b3868fa6d5a8689fa71f75b0d/packages/python/src/daytona_sdk/sandbox.py#L289)
+[[view_source]](https://github.com/daytonaio/sdk/blob/dd9532596a339882e2272f36b7b78ee1903debe2/packages/python/src/daytona_sdk/sandbox.py#L293)
 
 Sets labels for the Sandbox.
 
@@ -213,7 +213,7 @@ print(f"Updated labels: {new_labels}")
 def start(timeout: Optional[float] = 60)
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/aac1f63c998eea2b3868fa6d5a8689fa71f75b0d/packages/python/src/daytona_sdk/sandbox.py#L318)
+[[view_source]](https://github.com/daytonaio/sdk/blob/dd9532596a339882e2272f36b7b78ee1903debe2/packages/python/src/daytona_sdk/sandbox.py#L322)
 
 Starts the Sandbox.
 
@@ -249,7 +249,7 @@ print("Sandbox started successfully")
 def stop(timeout: Optional[float] = 60)
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/aac1f63c998eea2b3868fa6d5a8689fa71f75b0d/packages/python/src/daytona_sdk/sandbox.py#L342)
+[[view_source]](https://github.com/daytonaio/sdk/blob/dd9532596a339882e2272f36b7b78ee1903debe2/packages/python/src/daytona_sdk/sandbox.py#L346)
 
 Stops the Sandbox.
 
@@ -284,7 +284,7 @@ print("Sandbox stopped successfully")
 def wait_for_workspace_start(timeout: Optional[float] = 60) -> None
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/aac1f63c998eea2b3868fa6d5a8689fa71f75b0d/packages/python/src/daytona_sdk/sandbox.py#L365)
+[[view_source]](https://github.com/daytonaio/sdk/blob/dd9532596a339882e2272f36b7b78ee1903debe2/packages/python/src/daytona_sdk/sandbox.py#L369)
 
 Waits for the Sandbox to reach the 'started' state.
 
@@ -313,7 +313,7 @@ or encounters an error.
 def wait_for_sandbox_start(timeout: Optional[float] = 60) -> None
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/aac1f63c998eea2b3868fa6d5a8689fa71f75b0d/packages/python/src/daytona_sdk/sandbox.py#L381)
+[[view_source]](https://github.com/daytonaio/sdk/blob/dd9532596a339882e2272f36b7b78ee1903debe2/packages/python/src/daytona_sdk/sandbox.py#L385)
 
 Waits for the Sandbox to reach the 'started' state.
 
@@ -340,7 +340,7 @@ or encounters an error.
 def wait_for_workspace_stop(timeout: Optional[float] = 60) -> None
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/aac1f63c998eea2b3868fa6d5a8689fa71f75b0d/packages/python/src/daytona_sdk/sandbox.py#L406)
+[[view_source]](https://github.com/daytonaio/sdk/blob/dd9532596a339882e2272f36b7b78ee1903debe2/packages/python/src/daytona_sdk/sandbox.py#L410)
 
 Waits for the Sandbox to reach the 'stopped' state.
 
@@ -369,7 +369,7 @@ or encounters an error. It will wait up to 60 seconds for the Sandbox to stop.
 def wait_for_sandbox_stop(timeout: Optional[float] = 60) -> None
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/aac1f63c998eea2b3868fa6d5a8689fa71f75b0d/packages/python/src/daytona_sdk/sandbox.py#L422)
+[[view_source]](https://github.com/daytonaio/sdk/blob/dd9532596a339882e2272f36b7b78ee1903debe2/packages/python/src/daytona_sdk/sandbox.py#L426)
 
 Waits for the Sandbox to reach the 'stopped' state.
 
@@ -393,7 +393,7 @@ or encounters an error. It will wait up to 60 seconds for the Sandbox to stop.
 def set_autostop_interval(interval: int) -> None
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/aac1f63c998eea2b3868fa6d5a8689fa71f75b0d/packages/python/src/daytona_sdk/sandbox.py#L453)
+[[view_source]](https://github.com/daytonaio/sdk/blob/dd9532596a339882e2272f36b7b78ee1903debe2/packages/python/src/daytona_sdk/sandbox.py#L457)
 
 Sets the auto-stop interval for the Sandbox.
 
@@ -429,7 +429,7 @@ sandbox.set_autostop_interval(0)
 def get_preview_link(port: int) -> str
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/aac1f63c998eea2b3868fa6d5a8689fa71f75b0d/packages/python/src/daytona_sdk/sandbox.py#L483)
+[[view_source]](https://github.com/daytonaio/sdk/blob/dd9532596a339882e2272f36b7b78ee1903debe2/packages/python/src/daytona_sdk/sandbox.py#L487)
 
 Gets the preview link for the sandbox at a specific port. If the port is not open, it will open it and return the link.
 
@@ -450,7 +450,7 @@ Gets the preview link for the sandbox at a specific port. If the port is not ope
 def archive() -> None
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/aac1f63c998eea2b3868fa6d5a8689fa71f75b0d/packages/python/src/daytona_sdk/sandbox.py#L501)
+[[view_source]](https://github.com/daytonaio/sdk/blob/dd9532596a339882e2272f36b7b78ee1903debe2/packages/python/src/daytona_sdk/sandbox.py#L505)
 
 Archives the sandbox, making it inactive and preserving its state. When sandboxes are archived, the entire filesystem
 state is moved to cost-effective object storage, making it possible to keep sandboxes available for an extended period.
@@ -505,7 +505,7 @@ print(completions)
 class SandboxTargetRegion(Enum)
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/aac1f63c998eea2b3868fa6d5a8689fa71f75b0d/packages/python/src/daytona_sdk/sandbox.py#L66)
+[[view_source]](https://github.com/daytonaio/sdk/blob/dd9532596a339882e2272f36b7b78ee1903debe2/packages/python/src/daytona_sdk/sandbox.py#L66)
 
 Target regions for Sandboxes
 
@@ -518,7 +518,7 @@ Target regions for Sandboxes
 class SandboxResources()
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/aac1f63c998eea2b3868fa6d5a8689fa71f75b0d/packages/python/src/daytona_sdk/sandbox.py#L82)
+[[view_source]](https://github.com/daytonaio/sdk/blob/dd9532596a339882e2272f36b7b78ee1903debe2/packages/python/src/daytona_sdk/sandbox.py#L82)
 
 Resources allocated to a Sandbox.
 
@@ -550,7 +550,7 @@ resources = SandboxResources(
 class SandboxState(Enum)
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/aac1f63c998eea2b3868fa6d5a8689fa71f75b0d/packages/python/src/daytona_sdk/sandbox.py#L108)
+[[view_source]](https://github.com/daytonaio/sdk/blob/dd9532596a339882e2272f36b7b78ee1903debe2/packages/python/src/daytona_sdk/sandbox.py#L108)
 
 States of a Sandbox.
 
@@ -562,7 +562,7 @@ States of a Sandbox.
 class SandboxInfo(ApiSandboxInfo)
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/aac1f63c998eea2b3868fa6d5a8689fa71f75b0d/packages/python/src/daytona_sdk/sandbox.py#L132)
+[[view_source]](https://github.com/daytonaio/sdk/blob/dd9532596a339882e2272f36b7b78ee1903debe2/packages/python/src/daytona_sdk/sandbox.py#L132)
 
 Structured information about a Sandbox.
 
@@ -603,7 +603,7 @@ print(f"Resources: {info.resources.cpu} CPU, {info.resources.memory} RAM")
 class SandboxInstance(ApiSandbox)
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/aac1f63c998eea2b3868fa6d5a8689fa71f75b0d/packages/python/src/daytona_sdk/sandbox.py#L184)
+[[view_source]](https://github.com/daytonaio/sdk/blob/dd9532596a339882e2272f36b7b78ee1903debe2/packages/python/src/daytona_sdk/sandbox.py#L184)
 
 Represents a Daytona Sandbox instance.
 

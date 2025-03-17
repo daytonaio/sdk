@@ -8,7 +8,7 @@ def main():
     sandbox = daytona.create()
 
     try:
-        root_dir = sandbox.get_workspace_root_dir()
+        root_dir = sandbox.get_user_root_dir()
         project_dir = os.path.join(root_dir, "learn-typescript")
 
         # Clone the repository

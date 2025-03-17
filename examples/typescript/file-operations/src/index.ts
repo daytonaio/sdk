@@ -8,7 +8,7 @@ async function main() {
   const sandbox = await daytona.create()
 
   try {
-    const rootDir = await sandbox.getWorkspaceRootDir()
+    const rootDir = await sandbox.getUserRootDir()
     if (!rootDir) {
       throw new Error('Failed to get sandbox root directory')
     }

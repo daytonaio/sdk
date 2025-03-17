@@ -217,19 +217,26 @@ export class Sandbox {
   }
 
   /**
-   * Gets the root directory path for the logged in user inside the Sandbox. Default user is `daytona`.
+   * Gets the root directory path for the logged in user inside the Sandbox.
    * 
    * @returns {Promise<string | undefined>} The absolute path to the Sandbox root directory for the logged in user
    * 
    * @example
-   * const rootDir = await sandbox.getWorkspaceRootDir();
+   * const rootDir = await sandbox.getUserRootDir();
    * console.log(`Sandbox root: ${rootDir}`);
    */
-  public async getWorkspaceRootDir(): Promise<string | undefined> {
+  public async getUserRootDir(): Promise<string | undefined> {
     const response = await this.toolboxApi.getProjectDir(
       this.instance.id,
     )
     return response.data.dir
+  }
+
+  /**
+   * @deprecated Use `getUserRootDir` instead. This method will be removed in a future version.
+   */
+  public async getWorkspaceRootDir(): Promise<string | undefined> {
+    return this.getUserRootDir()
   }
 
   /**
