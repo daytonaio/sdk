@@ -7,31 +7,31 @@
  * 
  * @example
  * // Execute a shell command
- * const response = await workspace.process.executeCommand('ls -la');
+ * const response = await sandbox.process.executeCommand('ls -la');
  * console.log(response.result);
  * 
  * // Run TypeScript code
- * const response = await workspace.process.codeRun('console.log("Hello, World!")');
+ * const response = await sandbox.process.codeRun('console.log("Hello, World!")');
  * console.log(response.result);
  * 
  * @example
  * // Using interactive sessions
  * // Create a new session
  * const sessionId = 'my-session';
- * await workspace.process.createSession(sessionId);
+ * await sandbox.process.createSession(sessionId);
  * 
  * // Execute commands in the session
- * const response = await workspace.process.executeSessionCommand(sessionId, {
+ * const response = await sandbox.process.executeSessionCommand(sessionId, {
  *   command: 'cd /workspace'
  * });
  * 
- * const response2 = await workspace.process.executeSessionCommand(sessionId, {
+ * const response2 = await sandbox.process.executeSessionCommand(sessionId, {
  *   command: 'pwd'
  * });
  * console.log(response2.result);  // Should print "/workspace"
  * 
  * // Clean up
- * await workspace.process.deleteSession(sessionId);
+ * await sandbox.process.deleteSession(sessionId);
  */
 
 import {
@@ -41,10 +41,8 @@ import {
   SessionExecuteRequest,
   SessionExecuteResponse,
   ToolboxApi,
-  Workspace,
 } from '@daytonaio/api-client'
-import { WorkspaceCodeToolbox, WorkspaceInstance } from './Workspace'
-import { RawAxiosRequestConfig } from 'axios'
+import { SandboxCodeToolbox, SandboxInstance } from './Sandbox'
 
 /**
  * Parameters for code execution
@@ -63,9 +61,9 @@ export class CodeRunParams {
 
 export class Process {
   constructor(
-    private readonly codeToolbox: WorkspaceCodeToolbox,
+    private readonly codeToolbox: SandboxCodeToolbox,
     private readonly toolboxApi: ToolboxApi,
-    private readonly instance: WorkspaceInstance,
+    private readonly instance: SandboxInstance,
   ) {}
 
   /**
@@ -156,7 +154,7 @@ export class Process {
   }
 
   /**
-   * Get a session in the workspace.
+   * Get a session in the sandbox.
    * 
    * @param {string} sessionId - Unique identifier of the session to retrieve
    * @returns {Promise<Session>} Session information including:

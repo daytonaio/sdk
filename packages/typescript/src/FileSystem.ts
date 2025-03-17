@@ -7,18 +7,18 @@
  * 
  * @example
  * // Basic file operations
- * // Create a workspace
- * const workspace = await daytona.create();
+ * // Create a sandbox
+ * const sandbox = await daytona.create();
  * 
  * // Create a directory
- * await workspace.fs.createFolder('/workspace/data', '755');
+ * await sandbox.fs.createFolder('/workspace/data', '755');
  * 
  * // Upload a file
  * const fileContent = new File(['content'], 'local_file.txt');
- * await workspace.fs.uploadFile('/workspace/data/file.txt', fileContent);
+ * await sandbox.fs.uploadFile('/workspace/data/file.txt', fileContent);
  * 
  * // List directory contents
- * const files = await workspace.fs.listFiles('/workspace');
+ * const files = await sandbox.fs.listFiles('/workspace');
  * files.forEach(file => {
  *   console.log(`Name: ${file.name}`);
  *   console.log(`Is directory: ${file.isDir}`);
@@ -27,7 +27,7 @@
  * });
  * 
  * // Search file contents
- * const matches = await workspace.fs.findFiles(
+ * const matches = await sandbox.fs.findFiles(
  *   '/workspace/src',
  *   'text-of-interest'
  * );
@@ -40,20 +40,20 @@
  * @example
  * // File manipulation
  * // Move files
- * await workspace.fs.moveFiles(
+ * await sandbox.fs.moveFiles(
  *   '/workspace/data/old.txt',
  *   '/workspace/data/new.txt'
  * );
  * 
  * // Replace text in files
- * const results = await workspace.fs.replaceInFiles(
+ * const results = await sandbox.fs.replaceInFiles(
  *   ['/workspace/data/new.txt'],
  *   'old_version',
  *   'new_version'
  * );
  * 
  * // Set permissions
- * await workspace.fs.setFilePermissions(
+ * await sandbox.fs.setFilePermissions(
  *   '/workspace/data/script.sh',
  *   {
  *     mode: '755',
@@ -70,7 +70,7 @@ import {
   SearchFilesResponse,
   ToolboxApi,
 } from '@daytonaio/api-client'
-import { WorkspaceInstance } from './Workspace'
+import { SandboxInstance } from './Sandbox'
 
 /**
  * Parameters for setting file permissions in the Sandbox.
@@ -106,7 +106,7 @@ export type FilePermissionsParams = {
  */
 export class FileSystem {
   constructor(
-    private readonly instance: WorkspaceInstance,
+    private readonly instance: SandboxInstance,
     private readonly toolboxApi: ToolboxApi,
   ) {}
 

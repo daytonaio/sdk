@@ -4,35 +4,35 @@ import { Daytona } from '@daytonaio/sdk'
 async function main() {
   const daytona = new Daytona()
 
-  //  first, create a workspace
-  const workspace = await daytona.create({
+  //  first, create a sandbox
+  const sandbox = await daytona.create({
     language: 'typescript'
   })
 
   try {
-    const rootDir = await workspace.getWorkspaceRootDir()
+    const rootDir = await sandbox.getUserRootDir()
     if (!rootDir) {
-      throw new Error('Failed to get workspace root directory')
+      throw new Error('Failed to get sandbox root directory')
     }
 
     const projectDir = path.join(rootDir, 'learn-typescript')
     
     //  clone the repository
-    await workspace.git.clone(
+    await sandbox.git.clone(
       'https://github.com/panaverse/learn-typescript',
       projectDir,
       'master',
     )
 
     //  search for the file we want to work on
-    const matches = await workspace.fs.findFiles(
+    const matches = await sandbox.fs.findFiles(
       projectDir,
       'var obj1 = new Base();',
     )
     console.log('Matches:', matches)
 
     //  start the language server
-    const lsp = workspace.createLspServer('typescript', projectDir)
+    const lsp = sandbox.createLspServer('typescript', projectDir)
     await lsp.start()
 
     //  notify the language server of the document we want to work on
@@ -43,7 +43,7 @@ async function main() {
     console.log('Symbols:', symbols)
 
     //  fix the error in the document
-    await workspace.fs.replaceInFiles(
+    await sandbox.fs.replaceInFiles(
       [matches[0].file!],
       'var obj1 = new Base();',
       'var obj1 = new E();',
@@ -60,10 +60,10 @@ async function main() {
     })
     console.log('Completions:', completions)
   } catch (error) {
-    console.error('Error creating workspace:', error)
+    console.error('Error creating sandbox:', error)
   } finally {
     //  cleanup
-    await daytona.remove(workspace)
+    await daytona.remove(sandbox)
   }
 }
 

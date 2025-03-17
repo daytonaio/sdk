@@ -1,9 +1,10 @@
-import { WorkspaceCodeToolbox } from '../Workspace'
+import { SandboxCodeToolbox } from '../Sandbox'
 import { CodeRunParams } from '../Process'
 
-export class WorkspacePythonCodeToolbox implements WorkspaceCodeToolbox {
+
+export class SandboxTsCodeToolbox implements SandboxCodeToolbox {
   public getDefaultImage(): string {
-    return 'daytonaio/sdk-python:v0.49.0-2'
+    return 'daytonaio/sdk-typescript:v0.49.0-3'
   }
 
   public getRunCommand(code: string, params?: CodeRunParams): string {
@@ -11,6 +12,6 @@ export class WorkspacePythonCodeToolbox implements WorkspaceCodeToolbox {
     const envVars = params?.env ? Object.entries(params.env).map(([key, value]) => `${key}='${value}'`).join(' ') : ''
     const argv = params?.argv ? params.argv.join(' ') : ''
 
-    return `sh -c '${envVars} python3 -c "exec(__import__(\\\"base64\\\").b64decode(\\\"${base64Code}\\\").decode())" ${argv}'`
+    return `sh -c 'echo ${base64Code} | base64 --decode | ${envVars} npx ts-node -O "{\\\"module\\\":\\\"CommonJS\\\"}" -e "$(cat)" x ${argv} 2>&1 | grep -vE "npm notice|npm warn exec"'`
   }
 }

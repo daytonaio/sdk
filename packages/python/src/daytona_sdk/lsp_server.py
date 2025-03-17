@@ -5,10 +5,10 @@ This enables advanced language features like code completion, diagnostics, and m
 Example:
     Basic LSP server usage:
     ```python
-    workspace = daytona.create()
+    sandbox = daytona.create()
     
     # Create and start LSP server
-    lsp = workspace.create_lsp_server("typescript", "/workspace/project")
+    lsp = sandbox.create_lsp_server("typescript", "/workspace/project")
     lsp.start()
     
     # Open a file for editing
@@ -35,6 +35,7 @@ Note:
 """
 from enum import Enum
 from typing import List
+from deprecated import deprecated
 from daytona_api_client import (
     CompletionList,
     LspSymbol,
@@ -44,7 +45,7 @@ from daytona_api_client import (
     LspCompletionParams
 )
 from daytona_sdk._utils.errors import intercept_errors
-from .protocols import WorkspaceInstance
+from .protocols import SandboxInstance
 
 
 class LspLanguageId(Enum):
@@ -92,7 +93,7 @@ class LspServer:
     Attributes:
         language_id (LspLanguageId): The language server type (e.g., "python", "typescript").
         path_to_project (str): Absolute path to the project root directory.
-        instance (WorkspaceInstance): The Sandbox instance this server belongs to.
+        instance (SandboxInstance): The Sandbox instance this server belongs to.
     """
 
     def __init__(
@@ -100,7 +101,7 @@ class LspServer:
         language_id: LspLanguageId,
         path_to_project: str,
         toolbox_api: ToolboxApi,
-        instance: WorkspaceInstance,
+        instance: SandboxInstance,
     ):
         """Initializes a new LSP server instance.
 
@@ -108,7 +109,7 @@ class LspServer:
             language_id (LspLanguageId): The language server type (e.g., LspLanguageId.TYPESCRIPT).
             path_to_project (str): Absolute path to the project root directory.
             toolbox_api (ToolboxApi): API client for Sandbox operations.
-            instance (WorkspaceInstance): The Sandbox instance this server belongs to.
+            instance (SandboxInstance): The Sandbox instance this server belongs to.
         """
         self.language_id = str(language_id)
         self.path_to_project = path_to_project
@@ -124,13 +125,13 @@ class LspServer:
 
         Example:
             ```python
-            lsp = workspace.create_lsp_server("typescript", "/workspace/project")
+            lsp = sandbox.create_lsp_server("typescript", "/workspace/project")
             lsp.start()  # Initialize the server
             # Now ready for LSP operations
             ```
         """
         self.toolbox_api.lsp_start(
-            workspace_id=self.instance.id,
+            self.instance.id,
             lsp_server_request=LspServerRequest(
                 language_id=self.language_id,
                 path_to_project=self.path_to_project,
@@ -151,7 +152,7 @@ class LspServer:
             ```
         """
         self.toolbox_api.lsp_stop(
-            workspace_id=self.instance.id,
+            self.instance.id,
             lsp_server_request=LspServerRequest(
                 language_id=self.language_id,
                 path_to_project=self.path_to_project,
@@ -177,7 +178,7 @@ class LspServer:
             ```
         """
         self.toolbox_api.lsp_did_open(
-            workspace_id=self.instance.id,
+            self.instance.id,
             lsp_document_request=LspDocumentRequest(
                 language_id=self.language_id,
                 path_to_project=self.path_to_project,
@@ -201,7 +202,7 @@ class LspServer:
             ```
         """
         self.toolbox_api.lsp_did_close(
-            workspace_id=self.instance.id,
+            self.instance.id,
             lsp_document_request=LspDocumentRequest(
                 language_id=self.language_id,
                 path_to_project=self.path_to_project,
@@ -234,14 +235,30 @@ class LspServer:
             ```
         """
         return self.toolbox_api.lsp_document_symbols(
-            workspace_id=self.instance.id,
+            self.instance.id,
             language_id=self.language_id,
             path_to_project=self.path_to_project,
             uri=f"file://{path}",
         )
 
-    @intercept_errors(message_prefix="Failed to get symbols from workspace: ")
+    @deprecated(reason="Method is deprecated. Use `sandbox_symbols` instead. This method will be removed in a future version.")
     def workspace_symbols(self, query: str) -> List[LspSymbol]:
+        """Searches for symbols across the entire Sandbox.
+
+        This method searches for symbols matching the query string across all files
+        in the Sandbox. It's useful for finding declarations and definitions
+        without knowing which file they're in.
+
+        Args:
+            query (str): Search query to match against symbol names.
+
+        Returns:
+            List[LspSymbol]: List of matching symbols from all files.
+        """
+        return self.sandbox_symbols(query)
+
+    @intercept_errors(message_prefix="Failed to get symbols from sandbox: ")
+    def sandbox_symbols(self, query: str) -> List[LspSymbol]:
         """Searches for symbols across the entire Sandbox.
 
         This method searches for symbols matching the query string across all files
@@ -261,13 +278,13 @@ class LspServer:
         Example:
             ```python
             # Search for all symbols containing "User"
-            symbols = lsp.workspace_symbols("User")
+            symbols = lsp.sandbox_symbols("User")
             for symbol in symbols:
                 print(f"{symbol.name} in {symbol.location}")
             ```
         """
         return self.toolbox_api.lsp_workspace_symbols(
-            workspace_id=self.instance.id,
+            self.instance.id,
             language_id=self.language_id,
             path_to_project=self.path_to_project,
             query=query,
@@ -303,7 +320,7 @@ class LspServer:
             ```
         """
         return self.toolbox_api.lsp_completions(
-            workspace_id=self.instance.id,
+            self.instance.id,
             lsp_completion_params=LspCompletionParams(
                 language_id=self.language_id,
                 path_to_project=self.path_to_project,

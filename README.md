@@ -22,13 +22,13 @@ import { Daytona } from '@daytonaio/sdk'
 // Initialize the Daytona client
 const daytona = new Daytona()
 
-// Create the workspace instance
-const workspace = await daytona.create({
+// Create the sandbox instance
+const sandbox = await daytona.create({
   language: 'typescript',
 })
 
-// Run the code securely inside the workspace
-const response = await workspace.process.code_run('console.log("Hello World!")')
+// Run the code securely inside the sandbox
+const response = await sandbox.process.code_run('console.log("Hello World!")')
 console.log(response.result)
 ```
 
@@ -48,11 +48,11 @@ from daytona_sdk import Daytona
 # Initialize the Daytona client
 daytona = Daytona()
 
-# Create the workspace instance
-workspace = daytona.create()
+# Create the sandbox instance
+sandbox = daytona.create()
 
-# Run the code securely inside the workspace
-response = workspace.process.code_run('print("Hello World!")')
+# Run the code securely inside the sandbox
+response = sandbox.process.code_run('print("Hello World!")')
 print(response.result)
 ```
 
@@ -68,9 +68,9 @@ These SDKs extend Daytona's capabilities by allowing you to:
 
 - Integrate Daytona's functionality into your existing Python and TypeScript applications
 - Automate development environment creation and management
-- Programmatically handle workspace configurations
+- Programmatically handle sandbox configurations
 - Manage Git operations and repository connections
-- Control file system operations within workspaces
+- Control file system operations within sandboxes
 - Interface with language server protocols
 - Build custom tooling and automation around your development environments
 - Create isolated environments for running AI-generated code safely

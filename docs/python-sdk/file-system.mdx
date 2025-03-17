@@ -10,18 +10,18 @@ This guide covers all available file system operations and best practices.
 
   Basic file operations:
 ```python
-    workspace = daytona.create()
+    sandbox = daytona.create()
 
     # Create a directory
-    workspace.fs.create_folder("/workspace/data", "755")
+    sandbox.fs.create_folder("/workspace/data", "755")
 
     # Upload a file
     with open("local_file.txt", "rb") as f:
         content = f.read()
-    workspace.fs.upload_file("/workspace/data/file.txt", content)
+    sandbox.fs.upload_file("/workspace/data/file.txt", content)
 
     # List directory contents
-    files = workspace.fs.list_files("/workspace")
+    files = sandbox.fs.list_files("/workspace")
     for file in files:
         print(f"Name: {file.name}")
         print(f"Is directory: {file.is_dir}")
@@ -29,7 +29,7 @@ This guide covers all available file system operations and best practices.
         print(f"Modified: {file.mod_time}")
 
     # Search file contents
-    matches = workspace.fs.find_files(
+    matches = sandbox.fs.find_files(
         path="/workspace/src",
         pattern="text-of-interest"
     )
@@ -44,20 +44,20 @@ This guide covers all available file system operations and best practices.
   File manipulation:
 ```python
 # Move files
-workspace.fs.move_files(
+sandbox.fs.move_files(
     "/workspace/data/old.txt",
     "/workspace/data/new.txt"
 )
 
 # Replace text in files
-results = workspace.fs.replace_in_files(
+results = sandbox.fs.replace_in_files(
     files=["/workspace/data/new.txt"],
     pattern="old_version",
     new_value="new_version"
 )
 
 # Set permissions
-workspace.fs.set_file_permissions(
+sandbox.fs.set_file_permissions(
     path="/workspace/data/script.sh",
     mode="755",
     owner="daytona"
@@ -77,7 +77,7 @@ workspace.fs.set_file_permissions(
 class FileSystem()
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/python/src/daytona_sdk/filesystem.py#L80)
+[[view_source]](https://github.com/daytonaio/sdk/blob/dd9532596a339882e2272f36b7b78ee1903debe2/packages/python/src/daytona_sdk/filesystem.py#L80)
 
 Provides file system operations within a Sandbox.
 
@@ -88,22 +88,22 @@ managing permissions.
 
 **Attributes**:
 
-- `instance` _WorkspaceInstance_ - The Sandbox instance this file system belongs to.
+- `instance` _SandboxInstance_ - The Sandbox instance this file system belongs to.
 
 
 #### FileSystem.\_\_init\_\_
 
 ```python
-def __init__(instance: WorkspaceInstance, toolbox_api: ToolboxApi)
+def __init__(instance: SandboxInstance, toolbox_api: ToolboxApi)
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/python/src/daytona_sdk/filesystem.py#L92)
+[[view_source]](https://github.com/daytonaio/sdk/blob/dd9532596a339882e2272f36b7b78ee1903debe2/packages/python/src/daytona_sdk/filesystem.py#L92)
 
 Initializes a new FileSystem instance.
 
 **Arguments**:
 
-- `instance` _WorkspaceInstance_ - The Sandbox instance this file system belongs to.
+- `instance` _SandboxInstance_ - The Sandbox instance this file system belongs to.
 - `toolbox_api` _ToolboxApi_ - API client for Sandbox operations.
 
 
@@ -114,7 +114,7 @@ Initializes a new FileSystem instance.
 def create_folder(path: str, mode: str) -> None
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/python/src/daytona_sdk/filesystem.py#L103)
+[[view_source]](https://github.com/daytonaio/sdk/blob/dd9532596a339882e2272f36b7b78ee1903debe2/packages/python/src/daytona_sdk/filesystem.py#L103)
 
 Creates a new directory in the Sandbox.
 
@@ -131,10 +131,10 @@ permissions.
 
 ```python
 # Create a directory with standard permissions
-workspace.fs.create_folder("/workspace/data", "755")
+sandbox.fs.create_folder("/workspace/data", "755")
 
 # Create a private directory
-workspace.fs.create_folder("/workspace/secrets", "700")
+sandbox.fs.create_folder("/workspace/secrets", "700")
 ```
 
 
@@ -145,7 +145,7 @@ workspace.fs.create_folder("/workspace/secrets", "700")
 def delete_file(path: str) -> None
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/python/src/daytona_sdk/filesystem.py#L127)
+[[view_source]](https://github.com/daytonaio/sdk/blob/dd9532596a339882e2272f36b7b78ee1903debe2/packages/python/src/daytona_sdk/filesystem.py#L127)
 
 Deletes a file from the Sandbox.
 
@@ -160,7 +160,7 @@ This method permanently deletes a file from the Sandbox.
 
 ```python
 # Delete a file
-workspace.fs.delete_file("/workspace/data/old_file.txt")
+sandbox.fs.delete_file("/workspace/data/old_file.txt")
 ```
 
 
@@ -171,7 +171,7 @@ workspace.fs.delete_file("/workspace/data/old_file.txt")
 def download_file(path: str) -> bytes
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/python/src/daytona_sdk/filesystem.py#L146)
+[[view_source]](https://github.com/daytonaio/sdk/blob/dd9532596a339882e2272f36b7b78ee1903debe2/packages/python/src/daytona_sdk/filesystem.py#L146)
 
 Downloads a file from the Sandbox.
 
@@ -191,12 +191,12 @@ This method retrieves the contents of a file from the Sandbox.
 
 ```python
 # Download and save a file locally
-content = workspace.fs.download_file("/workspace/data/file.txt")
+content = sandbox.fs.download_file("/workspace/data/file.txt")
 with open("local_copy.txt", "wb") as f:
     f.write(content)
 
 # Download and process text content
-content = workspace.fs.download_file("/workspace/data/config.json")
+content = sandbox.fs.download_file("/workspace/data/config.json")
 config = json.loads(content.decode('utf-8'))
 ```
 
@@ -208,7 +208,7 @@ config = json.loads(content.decode('utf-8'))
 def find_files(path: str, pattern: str) -> List[Match]
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/python/src/daytona_sdk/filesystem.py#L174)
+[[view_source]](https://github.com/daytonaio/sdk/blob/dd9532596a339882e2272f36b7b78ee1903debe2/packages/python/src/daytona_sdk/filesystem.py#L174)
 
 Searches for files containing a pattern.
 
@@ -233,7 +233,7 @@ the grep command.
 
 ```python
 # Search for TODOs in Python files
-matches = workspace.fs.find_files("/workspace/src", "TODO:")
+matches = sandbox.fs.find_files("/workspace/src", "TODO:")
 for match in matches:
     print(f"{match.file}:{match.line}: {match.content.strip()}")
 ```
@@ -246,7 +246,7 @@ for match in matches:
 def get_file_info(path: str) -> FileInfo
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/python/src/daytona_sdk/filesystem.py#L203)
+[[view_source]](https://github.com/daytonaio/sdk/blob/dd9532596a339882e2272f36b7b78ee1903debe2/packages/python/src/daytona_sdk/filesystem.py#L203)
 
 Gets detailed information about a file.
 
@@ -275,13 +275,13 @@ size, permissions, and timestamps.
 
 ```python
 # Get file metadata
-info = workspace.fs.get_file_info("/workspace/data/file.txt")
+info = sandbox.fs.get_file_info("/workspace/data/file.txt")
 print(f"Size: {info.size} bytes")
 print(f"Modified: {info.mod_time}")
 print(f"Mode: {info.mode}")
 
 # Check if path is a directory
-info = workspace.fs.get_file_info("/workspace/data")
+info = sandbox.fs.get_file_info("/workspace/data")
 if info.is_dir:
     print("Path is a directory")
 ```
@@ -294,7 +294,7 @@ if info.is_dir:
 def list_files(path: str) -> List[FileInfo]
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/python/src/daytona_sdk/filesystem.py#L242)
+[[view_source]](https://github.com/daytonaio/sdk/blob/dd9532596a339882e2272f36b7b78ee1903debe2/packages/python/src/daytona_sdk/filesystem.py#L242)
 
 Lists files and directories in a given path.
 
@@ -316,7 +316,7 @@ specified directory, similar to the ls -l command.
 
 ```python
 # List directory contents
-files = workspace.fs.list_files("/workspace/data")
+files = sandbox.fs.list_files("/workspace/data")
 
 # Print files and their sizes
 for file in files:
@@ -336,7 +336,7 @@ print("Subdirectories:", ", ".join(d.name for d in dirs))
 def move_files(source: str, destination: str) -> None
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/python/src/daytona_sdk/filesystem.py#L275)
+[[view_source]](https://github.com/daytonaio/sdk/blob/dd9532596a339882e2272f36b7b78ee1903debe2/packages/python/src/daytona_sdk/filesystem.py#L275)
 
 Moves files from one location to another.
 
@@ -353,19 +353,19 @@ of the destination must exist.
 
 ```python
 # Rename a file
-workspace.fs.move_files(
+sandbox.fs.move_files(
     "/workspace/data/old_name.txt",
     "/workspace/data/new_name.txt"
 )
 
 # Move a file to a different directory
-workspace.fs.move_files(
+sandbox.fs.move_files(
     "/workspace/data/file.txt",
     "/workspace/archive/file.txt"
 )
 
 # Move a directory
-workspace.fs.move_files(
+sandbox.fs.move_files(
     "/workspace/old_dir",
     "/workspace/new_dir"
 )
@@ -380,7 +380,7 @@ def replace_in_files(files: List[str], pattern: str,
                      new_value: str) -> List[ReplaceResult]
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/python/src/daytona_sdk/filesystem.py#L313)
+[[view_source]](https://github.com/daytonaio/sdk/blob/dd9532596a339882e2272f36b7b78ee1903debe2/packages/python/src/daytona_sdk/filesystem.py#L313)
 
 Replaces text in multiple files.
 
@@ -406,7 +406,7 @@ This method performs search and replace operations across multiple files.
 
 ```python
 # Replace in specific files
-results = workspace.fs.replace_in_files(
+results = sandbox.fs.replace_in_files(
     files=["/workspace/src/file1.py", "/workspace/src/file2.py"],
     pattern="old_function",
     new_value="new_function"
@@ -428,7 +428,7 @@ for result in results:
 def search_files(path: str, pattern: str) -> SearchFilesResponse
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/python/src/daytona_sdk/filesystem.py#L358)
+[[view_source]](https://github.com/daytonaio/sdk/blob/dd9532596a339882e2272f36b7b78ee1903debe2/packages/python/src/daytona_sdk/filesystem.py#L358)
 
 Searches for files and directories matching a pattern in their names.
 
@@ -452,12 +452,12 @@ specified pattern. The pattern can be a simple string or a glob pattern.
 
 ```python
 # Find all Python files
-result = workspace.fs.search_files("/workspace", "*.py")
+result = sandbox.fs.search_files("/workspace", "*.py")
 for file in result.files:
     print(file)
 
 # Find files with specific prefix
-result = workspace.fs.search_files("/workspace/data", "test_*")
+result = sandbox.fs.search_files("/workspace/data", "test_*")
 print(f"Found {len(result.files)} test files")
 ```
 
@@ -472,7 +472,7 @@ def set_file_permissions(path: str,
                          group: str = None) -> None
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/python/src/daytona_sdk/filesystem.py#L390)
+[[view_source]](https://github.com/daytonaio/sdk/blob/dd9532596a339882e2272f36b7b78ee1903debe2/packages/python/src/daytona_sdk/filesystem.py#L390)
 
 Sets permissions and ownership for a file or directory.
 
@@ -493,13 +493,13 @@ unchanged.
 
 ```python
 # Make a file executable
-workspace.fs.set_file_permissions(
+sandbox.fs.set_file_permissions(
     path="/workspace/scripts/run.sh",
     mode="755"  # rwxr-xr-x
 )
 
 # Change file owner
-workspace.fs.set_file_permissions(
+sandbox.fs.set_file_permissions(
     path="/workspace/data/file.txt",
     owner="daytona",
     group="daytona"
@@ -514,7 +514,7 @@ workspace.fs.set_file_permissions(
 def upload_file(path: str, file: bytes) -> None
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/python/src/daytona_sdk/filesystem.py#L431)
+[[view_source]](https://github.com/daytonaio/sdk/blob/dd9532596a339882e2272f36b7b78ee1903debe2/packages/python/src/daytona_sdk/filesystem.py#L431)
 
 Uploads a file to the Sandbox.
 
@@ -533,18 +533,18 @@ path, it will be overwritten.
 ```python
 # Upload a text file
 content = b"Hello, World!"
-workspace.fs.upload_file("/workspace/data/hello.txt", content)
+sandbox.fs.upload_file("/workspace/data/hello.txt", content)
 
 # Upload a local file
 with open("local_file.txt", "rb") as f:
     content = f.read()
-workspace.fs.upload_file("/workspace/data/file.txt", content)
+sandbox.fs.upload_file("/workspace/data/file.txt", content)
 
 # Upload binary data
 import json
 data = {"key": "value"}
 content = json.dumps(data).encode('utf-8')
-workspace.fs.upload_file("/workspace/data/config.json", content)
+sandbox.fs.upload_file("/workspace/data/config.json", content)
 ```
 
 
@@ -556,18 +556,18 @@ This guide covers all available file system operations and best practices.
 
   Basic file operations:
 ```python
-    workspace = daytona.create()
+    sandbox = daytona.create()
 
     # Create a directory
-    workspace.fs.create_folder("/workspace/data", "755")
+    sandbox.fs.create_folder("/workspace/data", "755")
 
     # Upload a file
     with open("local_file.txt", "rb") as f:
         content = f.read()
-    workspace.fs.upload_file("/workspace/data/file.txt", content)
+    sandbox.fs.upload_file("/workspace/data/file.txt", content)
 
     # List directory contents
-    files = workspace.fs.list_files("/workspace")
+    files = sandbox.fs.list_files("/workspace")
     for file in files:
         print(f"Name: {file.name}")
         print(f"Is directory: {file.is_dir}")
@@ -575,7 +575,7 @@ This guide covers all available file system operations and best practices.
         print(f"Modified: {file.mod_time}")
 
     # Search file contents
-    matches = workspace.fs.find_files(
+    matches = sandbox.fs.find_files(
         path="/workspace/src",
         pattern="text-of-interest"
     )
@@ -590,20 +590,20 @@ This guide covers all available file system operations and best practices.
   File manipulation:
 ```python
 # Move files
-workspace.fs.move_files(
+sandbox.fs.move_files(
     "/workspace/data/old.txt",
     "/workspace/data/new.txt"
 )
 
 # Replace text in files
-results = workspace.fs.replace_in_files(
+results = sandbox.fs.replace_in_files(
     files=["/workspace/data/new.txt"],
     pattern="old_version",
     new_value="new_version"
 )
 
 # Set permissions
-workspace.fs.set_file_permissions(
+sandbox.fs.set_file_permissions(
     path="/workspace/data/script.sh",
     mode="755",
     owner="daytona"

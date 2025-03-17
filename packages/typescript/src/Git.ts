@@ -8,24 +8,24 @@
  * 
  * @example
  * // Basic Git workflow
- * // Create and initialize workspace
- * const workspace = await daytona.create();
+ * // Create and initialize sandbox
+ * const sandbox = await daytona.create();
  * 
  * // Clone a repository
- * await workspace.git.clone(
+ * await sandbox.git.clone(
  *   'https://github.com/user/repo.git',
  *   '/workspace/repo'
  * );
  * 
  * // Make some changes
- * await workspace.fs.uploadFile(
+ * await sandbox.fs.uploadFile(
  *   '/workspace/repo/test.txt',
  *   new File([Buffer.from('Hello, World!')], 'test.txt')
  * );
  * 
  * // Stage and commit changes
- * await workspace.git.add('/workspace/repo', ['test.txt']);
- * await workspace.git.commit(
+ * await sandbox.git.add('/workspace/repo', ['test.txt']);
+ * await sandbox.git.commit(
  *   '/workspace/repo',
  *   'Add test file',
  *   'John Doe',
@@ -33,7 +33,7 @@
  * );
  * 
  * // Push changes (with authentication)
- * await workspace.git.push(
+ * await sandbox.git.push(
  *   '/workspace/repo',
  *   'user',
  *   'token'
@@ -46,13 +46,13 @@ import {
   ListBranchResponse,
   GitStatus,
 } from '@daytonaio/api-client'
-import { Workspace, WorkspaceInstance } from './Workspace'
+import { Sandbox, SandboxInstance } from './Sandbox'
 
 export class Git {
   constructor(
-    private readonly workspace: Workspace,
+    private readonly sandbox: Sandbox,
     private readonly toolboxApi: ToolboxApi,
-    private readonly instance: WorkspaceInstance,
+    private readonly instance: SandboxInstance,
   ) {}
 
   /**
@@ -277,7 +277,7 @@ export class Git {
    *                               - fileStatus: List of file statuses
    * 
    * @example
-   * const status = await workspace.git.status('/workspace/repo');
+   * const status = await sandbox.git.status('/workspace/repo');
    * console.log(`Current branch: ${status.currentBranch}`);
    * console.log(`Commits ahead: ${status.ahead}`);
    * console.log(`Commits behind: ${status.behind}`);

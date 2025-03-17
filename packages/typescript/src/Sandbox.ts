@@ -1,35 +1,35 @@
 /**
  * The Daytona SDK core Sandbox functionality.
  * 
- * Provides the main Workspace class representing a Daytona Sandbox that coordinates file system,
+ * Provides the main Sandbox class representing a Daytona Sandbox that coordinates file system,
  * Git, process execution, and LSP functionality. It serves as the central point
  * for interacting with Daytona Sandboxes.
  * 
  * The Sandbox must be in a 'started' state before performing operations.
  * 
- * @module Workspace
+ * @module Sandbox
  * 
  * @example
- * // Create and initialize workspace
+ * // Create and initialize sandbox
  * const daytona = new Daytona();
- * const workspace = await daytona.create();
+ * const sandbox = await daytona.create();
  * 
  * // File operations
- * await workspace.fs.uploadFile(
+ * await sandbox.fs.uploadFile(
  *   '/app/config.json',
  *   new File(['{"setting": "value"}'], 'config.json')
  * );
- * const contentBlob = await workspace.fs.downloadFile('/app/config.json');
+ * const contentBlob = await sandbox.fs.downloadFile('/app/config.json');
  * 
  * // Git operations
- * await workspace.git.clone('https://github.com/user/repo.git');
+ * await sandbox.git.clone('https://github.com/user/repo.git');
  * 
  * // Process execution
- * const response = await workspace.process.executeCommand('ls -la');
+ * const response = await sandbox.process.executeCommand('ls -la');
  * console.log(response.result);
  * 
  * // LSP functionality
- * const lsp = workspace.createLspServer('typescript', '/workspace/project');
+ * const lsp = sandbox.createLspServer('typescript', '/workspace/project');
  * await lsp.didOpen('/workspace/project/src/index.ts');
  * const completions = await lsp.completions('/workspace/project/src/index.ts', {
  *   line: 10,
@@ -39,13 +39,15 @@
  * 
  */
 
-import { ToolboxApi, WorkspaceApi } from '@daytonaio/api-client'
 import { 
-  WorkspaceState,
+  ToolboxApi,
+  WorkspaceState as SandboxState,
+  WorkspaceApi as SandboxApi,
+  Workspace as ApiSandbox,
+  WorkspaceInfo as ApiSandboxInfo,
+  CreateNodeClassEnum as SandboxClass,
+  CreateNodeRegionEnum as SandboxTargetRegion,
   Workspace as ApiWorkspace,
-  WorkspaceInfo as ApiWorkspaceInfo,
-  CreateWorkspaceTargetEnum as WorkspaceTargetRegion,
-  CreateWorkspaceClassEnum as WorkspaceClass
 } from '@daytonaio/api-client'
 import { FileSystem } from './FileSystem'
 import { Git } from './Git'
@@ -53,28 +55,31 @@ import { CodeRunParams, Process } from './Process'
 import { LspLanguageId, LspServer } from './LspServer'
 import { DaytonaError } from './errors/DaytonaError'
 
-export interface WorkspaceInstance extends Omit<ApiWorkspace, 'info'> {
-  info?: WorkspaceInfo;
+/** @deprecated Use SandboxInfo instead. This type will be removed in a future version. */
+type WorkspaceInfo = SandboxInfo;
+
+export interface SandboxInstance extends Omit<ApiSandbox, 'info'> {
+  info?: SandboxInfo;
 }
 
 /**
  * Resources allocated to a Sandbox
  * 
- * @interface WorkspaceResources
+ * @interface SandboxResources
  * @property {string} cpu - Number of CPU cores allocated (e.g., "1", "2")
  * @property {string | null} gpu - Number of GPUs allocated (e.g., "1") or null if no GPU
  * @property {string} memory - Amount of memory allocated with unit (e.g., "2Gi", "4Gi")
  * @property {string} disk - Amount of disk space allocated with unit (e.g., "10Gi", "20Gi")
  * 
  * @example
- * const resources: WorkspaceResources = {
+ * const resources: SandboxResources = {
  *   cpu: "2",
  *   gpu: "1",
  *   memory: "4Gi",
  *   disk: "20Gi"
  * };
  */
-export interface WorkspaceResources {
+export interface SandboxResources {
   /** CPU allocation */
   cpu: string;
   /** GPU allocation */
@@ -91,7 +96,7 @@ export interface WorkspaceResources {
  * This interface provides detailed information about a Sandbox's configuration,
  * resources, and current state.
  * 
- * @interface WorkspaceInfo
+ * @interface SandboxInfo
  * @property {string} id - Unique identifier for the Sandbox
  * @property {string} name - Display name of the Sandbox
  * @property {string} image - Docker image used for the Sandbox
@@ -100,22 +105,22 @@ export interface WorkspaceResources {
  * @property {Record<string, string>} labels - Custom labels attached to the Sandbox
  * @property {boolean} public - Whether the Sandbox is publicly accessible
  * @property {string} target - Target environment where the Sandbox runs
- * @property {WorkspaceResources} resources - Resource allocations for the Sandbox
+ * @property {SandboxResources} resources - Resource allocations for the Sandbox
  * @property {string} state - Current state of the Sandbox (e.g., "started", "stopped")
  * @property {string | null} errorReason - Error message if Sandbox is in error state
  * @property {string | null} snapshotState - Current state of Sandbox snapshot
  * @property {Date | null} snapshotStateCreatedAt - When the snapshot state was created
  * 
  * @example
- * const workspace = await daytona.create();
- * const info = await workspace.info();
- * console.log(`Workspace ${info.name} is ${info.state}`);
+ * const sandbox = await daytona.create();
+ * const info = await sandbox.info();
+ * console.log(`Sandbox ${info.name} is ${info.state}`);
  * console.log(`Resources: ${info.resources.cpu} CPU, ${info.resources.memory} RAM`);
  */
-export interface WorkspaceInfo extends ApiWorkspaceInfo {
+export interface SandboxInfo extends ApiSandboxInfo {
   /** Unique identifier */
   id: string;
-  /** Workspace name */
+  /** Sandbox name */
   name: string;
   /** Docker image */
   image: string;
@@ -123,16 +128,16 @@ export interface WorkspaceInfo extends ApiWorkspaceInfo {
   user: string;
   /** Environment variables */
   env: Record<string, string>;
-  /** Workspace labels */
+  /** Sandbox labels */
   labels: Record<string, string>;
   /** Public access flag */
   public: boolean;
   /** Target location */
-  target: WorkspaceTargetRegion | string;
+  target: SandboxTargetRegion | string;
   /** Resource allocations */
-  resources: WorkspaceResources;
+  resources: SandboxResources;
   /** Current state */
-  state: WorkspaceState;
+  state: SandboxState;
   /** Error reason if any */
   errorReason: string | null;
   /** Snapshot state */
@@ -142,9 +147,9 @@ export interface WorkspaceInfo extends ApiWorkspaceInfo {
   /** Node domain */
   nodeDomain: string;
   /** Region */
-  region: WorkspaceTargetRegion;
+  region: SandboxTargetRegion;
   /** Class */
-  class: WorkspaceClass;
+  class: SandboxClass;
   /** Updated at */
   updatedAt: string;
   /** Last snapshot */
@@ -156,11 +161,12 @@ export interface WorkspaceInfo extends ApiWorkspaceInfo {
    */
   providerMetadata?: string;
 }
+
 /**
  * Interface defining methods that a code toolbox must implement
- * @interface WorkspaceCodeToolbox
+ * @interface SandboxCodeToolbox
  */
-export interface WorkspaceCodeToolbox {
+export interface SandboxCodeToolbox {
   /** Generates a command to run the provided code */
   getRunCommand(code: string, params?: CodeRunParams): string
 }
@@ -170,18 +176,18 @@ export interface WorkspaceCodeToolbox {
  * 
  * A Sandbox provides file system operations, Git operations, process execution,
  * and LSP functionality. It serves as the main interface for interacting with
- * a Daytona workspace.
+ * a Daytona sandbox.
  * 
  * @property {string} id - Unique identifier for the Sandbox
- * @property {WorkspaceInstance} instance - The underlying Sandbox instance
- * @property {WorkspaceApi} workspaceApi - API client for Sandbox operations
+ * @property {SandboxInstance} instance - The underlying Sandbox instance
+ * @property {SandboxApi} sandboxApi - API client for Sandbox operations
  * @property {ToolboxApi} toolboxApi - API client for toolbox operations
- * @property {WorkspaceCodeToolbox} codeToolbox - Language-specific toolbox implementation
+ * @property {SandboxCodeToolbox} codeToolbox - Language-specific toolbox implementation
  * @property {FileSystem} fs - File system operations interface
  * @property {Git} git - Git operations interface
  * @property {Process} process - Process execution interface
  */
-export class Workspace {
+export class Sandbox {
   /** File system operations for the Sandbox */
   public readonly fs: FileSystem
   /** Git operations for the Sandbox */
@@ -193,17 +199,17 @@ export class Workspace {
    * Creates a new Sandbox instance
    * 
    * @param {string} id - Unique identifier for the Sandbox
-   * @param {WorkspaceInstance} instance - The underlying Sandbox instance
-   * @param {WorkspaceApi} workspaceApi - API client for Sandbox operations
+   * @param {SandboxInstance} instance - The underlying Sandbox instance
+   * @param {SandboxApi} sandboxApi - API client for Sandbox operations
    * @param {ToolboxApi} toolboxApi - API client for toolbox operations
-   * @param {WorkspaceCodeToolbox} codeToolbox - Language-specific toolbox implementation
+   * @param {SandboxCodeToolbox} codeToolbox - Language-specific toolbox implementation
    */
   constructor(
     public readonly id: string,
-    public readonly instance: WorkspaceInstance,
-    public readonly workspaceApi: WorkspaceApi,
+    public readonly instance: SandboxInstance,
+    public readonly sandboxApi: SandboxApi,
     public readonly toolboxApi: ToolboxApi,
-    private readonly codeToolbox: WorkspaceCodeToolbox,
+    private readonly codeToolbox: SandboxCodeToolbox,
   ) {
     this.fs = new FileSystem(instance, this.toolboxApi)
     this.git = new Git(this, this.toolboxApi, instance)
@@ -211,19 +217,26 @@ export class Workspace {
   }
 
   /**
-   * Gets the root directory path of the Sandbox.
+   * Gets the root directory path for the logged in user inside the Sandbox.
    * 
-   * @returns {Promise<string | undefined>} The absolute path to the Sandbox root directory
+   * @returns {Promise<string | undefined>} The absolute path to the Sandbox root directory for the logged in user
    * 
    * @example
-   * const rootDir = await workspace.getWorkspaceRootDir();
-   * console.log(`Workspace root: ${rootDir}`);
+   * const rootDir = await sandbox.getUserRootDir();
+   * console.log(`Sandbox root: ${rootDir}`);
    */
-  public async getWorkspaceRootDir(): Promise<string | undefined> {
+  public async getUserRootDir(): Promise<string | undefined> {
     const response = await this.toolboxApi.getProjectDir(
       this.instance.id,
     )
     return response.data.dir
+  }
+
+  /**
+   * @deprecated Use `getUserRootDir` instead. This method will be removed in a future version.
+   */
+  public async getWorkspaceRootDir(): Promise<string | undefined> {
+    return this.getUserRootDir()
   }
 
   /**
@@ -237,7 +250,7 @@ export class Workspace {
    * @returns {LspServer} A new LSP server instance configured for the specified language
    * 
    * @example
-   * const lsp = workspace.createLspServer('typescript', '/workspace/project');
+   * const lsp = sandbox.createLspServer('typescript', '/workspace/project');
    */
   public createLspServer(
     languageId: LspLanguageId | string,
@@ -260,15 +273,15 @@ export class Workspace {
    * @returns {Promise<void>}
    * 
    * @example
-   * // Set workspace labels
-   * await workspace.setLabels({
+   * // Set sandbox labels
+   * await sandbox.setLabels({
    *   project: 'my-project',
    *   environment: 'development',
    *   team: 'backend'
    * });
    */
   public async setLabels(labels: Record<string, string>): Promise<void> {
-    await this.workspaceApi.replaceLabels(this.instance.id, { labels })
+    await this.sandboxApi.replaceLabels(this.instance.id, { labels })
   }
   
   /**
@@ -282,16 +295,16 @@ export class Workspace {
    * @throws {DaytonaError} - `DaytonaError` - If Sandbox fails to start or times out
    * 
    * @example
-   * const workspace = await daytona.getCurrentWorkspace('my-workspace');
-   * await workspace.start(40);  // Wait up to 40 seconds
-   * console.log('Workspace started successfully');
+   * const sandbox = await daytona.getCurrentSandbox('my-sandbox');
+   * await sandbox.start(40);  // Wait up to 40 seconds
+   * console.log('Sandbox started successfully');
    */
   public async start(timeout: number = 60): Promise<void> {
     if (timeout < 0) {
       throw new DaytonaError('Timeout must be a non-negative number');
     }
     const startTime = Date.now();
-    await this.workspaceApi.startWorkspace(this.instance.id, { timeout: timeout * 1000 })
+    await this.sandboxApi.startWorkspace(this.instance.id, { timeout: timeout * 1000 })
     const timeElapsed = Date.now() - startTime;
     await this.waitUntilStarted(timeout ? timeout - (timeElapsed / 1000) : 0)
   }
@@ -306,16 +319,16 @@ export class Workspace {
    * @returns {Promise<void>}
    * 
    * @example
-   * const workspace = await daytona.getCurrentWorkspace('my-workspace');
-   * await workspace.stop();
-   * console.log('Workspace stopped successfully');
+   * const sandbox = await daytona.getCurrentSandbox('my-sandbox');
+   * await sandbox.stop();
+   * console.log('Sandbox stopped successfully');
    */
   public async stop(timeout: number = 60): Promise<void> {
     if (timeout < 0) {
       throw new DaytonaError('Timeout must be a non-negative number');
     }
     const startTime = Date.now();
-    await this.workspaceApi.stopWorkspace(this.instance.id, { timeout: timeout * 1000 })
+    await this.sandboxApi.stopWorkspace(this.instance.id, { timeout: timeout * 1000 })
     const timeElapsed = Date.now() - startTime;
     await this.waitUntilStopped(timeout ? timeout - (timeElapsed / 1000) : 0)
   }
@@ -325,7 +338,7 @@ export class Workspace {
    * @returns {Promise<void>}
    */
   public async delete(): Promise<void> {
-    await this.workspaceApi.deleteWorkspace(this.instance.id, true)
+    await this.sandboxApi.deleteWorkspace(this.instance.id, true)
   }
 
   /**
@@ -337,7 +350,7 @@ export class Workspace {
    * @param {number} [timeout] - Maximum time to wait in seconds. 0 means no timeout.
    *                               Defaults to 60 seconds.
    * @returns {Promise<void>}
-   * @throws {DaytonaError} - `DaytonaError` - If the workspace ends up in an error state or fails to start within the timeout period.
+   * @throws {DaytonaError} - `DaytonaError` - If the sandbox ends up in an error state or fails to start within the timeout period.
    */
   public async waitUntilStarted(timeout: number = 60) {
     if (timeout < 0) {
@@ -348,7 +361,7 @@ export class Workspace {
     const startTime = Date.now();
 
     while (timeout === 0 || (Date.now() - startTime) < (timeout * 1000)) {
-      const response = await this.workspaceApi.getWorkspace(this.id);
+      const response = await this.sandboxApi.getWorkspace(this.id);
       const state = response.data.state;
 
       if (state === 'started') {
@@ -356,13 +369,13 @@ export class Workspace {
       }
 
       if (state === 'error') {
-        throw new DaytonaError(`Workspace failed to start with status: ${state}, error reason: ${response.data.errorReason}`);
+        throw new DaytonaError(`Sandbox failed to start with status: ${state}, error reason: ${response.data.errorReason}`);
       }
 
       await new Promise(resolve => setTimeout(resolve, checkInterval));
     }
 
-    throw new DaytonaError(`Workspace failed to become ready within the timeout period`);
+    throw new DaytonaError(`Sandbox failed to become ready within the timeout period`);
   }
 
   /**
@@ -374,7 +387,7 @@ export class Workspace {
    * @param {number} [timeout] - Maximum time to wait in seconds. 0 means no timeout.
    *                               Defaults to 60 seconds.
    * @returns {Promise<void>}
-   * @throws {DaytonaError} - `DaytonaError` - If the workspace fails to stop within the timeout period.
+   * @throws {DaytonaError} - `DaytonaError` - If the sandbox fails to stop within the timeout period.
    */
   public async waitUntilStopped(timeout: number = 60) {
     if (timeout < 0) {
@@ -385,7 +398,7 @@ export class Workspace {
     const startTime = Date.now();
 
     while (timeout === 0 || (Date.now() - startTime) < (timeout * 1000)) {
-      const response = await this.workspaceApi.getWorkspace(this.id);
+      const response = await this.sandboxApi.getWorkspace(this.id);
       const state = response.data.state;
 
       if (state === 'stopped') {
@@ -393,31 +406,31 @@ export class Workspace {
       }
 
       if (state === 'error') {
-        throw new DaytonaError(`Workspace failed to stop with status: ${state}, error reason: ${response.data.errorReason}`);
+        throw new DaytonaError(`Sandbox failed to stop with status: ${state}, error reason: ${response.data.errorReason}`);
       }
 
       await new Promise(resolve => setTimeout(resolve, checkInterval));
     }
 
-    throw new DaytonaError('Workspace failed to become stopped within the timeout period');
+    throw new DaytonaError('Sandbox failed to become stopped within the timeout period');
   }
 
   /**
    * Gets structured information about the Sandbox.
    * 
-   * @returns {Promise<WorkspaceInfo>} Detailed information about the Sandbox including its
+   * @returns {Promise<SandboxInfo>} Detailed information about the Sandbox including its
    *                                   configuration, resources, and current state
    * 
    * @example
-   * const info = await workspace.info();
-   * console.log(`Workspace ${info.name}:`);
+   * const info = await sandbox.info();
+   * console.log(`Sandbox ${info.name}:`);
    * console.log(`State: ${info.state}`);
    * console.log(`Resources: ${info.resources.cpu} CPU, ${info.resources.memory} RAM`);
    */
-  public async info(): Promise<WorkspaceInfo> {
-    const response = await this.workspaceApi.getWorkspace(this.id)
+  public async info(): Promise<SandboxInfo> {
+    const response = await this.sandboxApi.getWorkspace(this.id)
     const instance = response.data
-    return Workspace.toWorkspaceInfo(instance)
+    return Sandbox.toSandboxInfo(instance)
   }
 
   /**
@@ -425,13 +438,24 @@ export class Workspace {
    * 
    * @param {ApiWorkspace} instance - The API workspace instance to convert
    * @returns {WorkspaceInfo} The converted WorkspaceInfo object
+   * 
+   * @deprecated Use `toSandboxInfo` instead. This method will be removed in a future version.
    */
   public static toWorkspaceInfo(instance: ApiWorkspace): WorkspaceInfo {
+    return Sandbox.toSandboxInfo(instance)
+  }
+  /**
+   * Converts an API sandbox instance to a SandboxInfo object.
+   * 
+   * @param {ApiSandbox} instance - The API sandbox instance to convert
+   * @returns {SandboxInfo} The converted SandboxInfo object
+   */
+  public static toSandboxInfo(instance: ApiSandbox): SandboxInfo {
     const providerMetadata = JSON.parse(instance.info?.providerMetadata || '{}')
     var resourcesData = providerMetadata.resources || providerMetadata
 
     // Extract resources with defaults
-    const resources: WorkspaceResources = {
+    const resources: SandboxResources = {
       cpu: String(resourcesData.cpu || '1'),
       gpu: resourcesData.gpu ? String(resourcesData.gpu) : null,
       memory: `${resourcesData.memory ?? 2}Gi`,
@@ -479,23 +503,23 @@ export class Workspace {
    * 
    * @example
    * // Auto-stop after 1 hour
-   * await workspace.setAutostopInterval(60);
+   * await sandbox.setAutostopInterval(60);
    * // Or disable auto-stop
-   * await workspace.setAutostopInterval(0);
+   * await sandbox.setAutostopInterval(0);
    */
   public async setAutostopInterval(interval: number): Promise<void> {
     if (!Number.isInteger(interval) || interval < 0) {
       throw new DaytonaError('autoStopInterval must be a non-negative integer');
     }
     
-    await this.workspaceApi.setAutostopInterval(this.id, interval)
+    await this.sandboxApi.setAutostopInterval(this.id, interval)
     this.instance.autoStopInterval = interval
   }
 
   /**
-   * Gets the preview link for the workspace at a specific port. If the port is not open, it will open it and return the link.
+   * Gets the preview link for the sandbox at a specific port. If the port is not open, it will open it and return the link.
    * @param {number} port - The port to open the preview link on
-   * @returns {string} The preview link for the workspace at the specified port
+   * @returns {string} The preview link for the sandbox at the specified port
    * @throws {DaytonaError} If the node domain is not found in the provider metadata
    */
   public getPreviewLink(port: number): string {
@@ -508,12 +532,12 @@ export class Workspace {
   }
 
   /**
-   * Archives the workspace, making it inactive and preserving its state. When sandboxes are archived, the entire filesystem
+   * Archives the sandbox, making it inactive and preserving its state. When sandboxes are archived, the entire filesystem
    * state is moved to cost-effective object storage, making it possible to keep sandboxes available for an extended period.
    * The tradeoff between archived and stopped states is that starting an archived sandbox takes more time, depending on its size.
-   * Workspace must be stopped before archiving.
+   * Sandbox must be stopped before archiving.
    */
   public async archive(): Promise<void> {
-    await this.workspaceApi.archiveWorkspace(this.id)
+    await this.sandboxApi.archiveWorkspace(this.id)
   }
 }

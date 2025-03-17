@@ -9,27 +9,27 @@ Examples:
     # Initialize using environment variables
     daytona = Daytona()  # Uses env vars DAYTONA_API_KEY, DAYTONA_SERVER_URL, DAYTONA_TARGET
     
-    # Create a default Python workspace with custom environment variables
-    workspace = daytona.create(CreateWorkspaceParams(
+    # Create a default Python sandbox with custom environment variables
+    sandbox = daytona.create(CreateSandboxParams(
         language="python",
         env_vars={"PYTHON_ENV": "development"}
     ))
     
-    # Execute commands in the workspace
-    response = workspace.process.execute_command('echo "Hello, World!"')
+    # Execute commands in the sandbox
+    response = sandbox.process.execute_command('echo "Hello, World!"')
     print(response.result)
     
-    # Run Python code securely inside the workspace
-    response = workspace.process.code_run('print("Hello from Python!")')
+    # Run Python code securely inside the sandbox
+    response = sandbox.process.code_run('print("Hello from Python!")')
     print(response.result)
     
-    # Remove the workspace after use
-    daytona.remove(workspace)
+    # Remove the sandbox after use
+    daytona.remove(sandbox)
     ```
 
     Usage with explicit configuration:
     ```python
-    from daytona_sdk import Daytona, DaytonaConfig, CreateWorkspaceParams, WorkspaceResources
+    from daytona_sdk import Daytona, DaytonaConfig, CreateSandboxParams, SandboxResources
 
     # Initialize with explicit configuration
     config = DaytonaConfig(
@@ -39,11 +39,11 @@ Examples:
     )
     daytona = Daytona(config)
     
-    # Create a custom workspace with specific resources and settings
-    workspace = daytona.create(CreateWorkspaceParams(
+    # Create a custom sandbox with specific resources and settings
+    sandbox = daytona.create(CreateSandboxParams(
         language="python",
         image="python:3.11",
-        resources=WorkspaceResources(
+        resources=SandboxResources(
             cpu=2,
             memory=4,  # 4GB RAM
             disk=20    # 20GB disk
@@ -52,9 +52,9 @@ Examples:
         auto_stop_interval=60  # Auto-stop after 1 hour of inactivity
     ))
     
-    # Use workspace features
-    workspace.git.clone("https://github.com/user/repo.git")
-    workspace.process.execute_command("python -m pytest")
+    # Use sandbox features
+    sandbox.git.clone("https://github.com/user/repo.git")
+    sandbox.process.execute_command("python -m pytest")
     ```
 """
 
@@ -65,19 +65,20 @@ from dataclasses import dataclass
 from environs import Env
 from daytona_api_client import (
     Configuration,
-    WorkspaceApi,
+    WorkspaceApi as SandboxApi,
     ToolboxApi,
     ApiClient,
-    CreateWorkspace,
+    CreateWorkspace as CreateSandbox,
     SessionExecuteRequest,
     SessionExecuteResponse
 )
 from daytona_sdk._utils.errors import intercept_errors, DaytonaError
-from .code_toolbox.workspace_python_code_toolbox import WorkspacePythonCodeToolbox
-from .code_toolbox.workspace_ts_code_toolbox import WorkspaceTsCodeToolbox
+from .code_toolbox.sandbox_python_code_toolbox import SandboxPythonCodeToolbox
+from .code_toolbox.sandbox_ts_code_toolbox import SandboxTsCodeToolbox
 from ._utils.enum import to_enum
-from .workspace import Workspace, WorkspaceTargetRegion
+from .sandbox import Sandbox, SandboxTargetRegion, Sandbox as Workspace
 from ._utils.timeout import with_timeout
+from deprecated import deprecated
 
 
 @dataclass
@@ -117,11 +118,11 @@ class DaytonaConfig:
     """
     api_key: str
     server_url: str
-    target: WorkspaceTargetRegion
+    target: SandboxTargetRegion
 
 
 @dataclass
-class WorkspaceResources:
+class SandboxResources:
     """Resources configuration for Sandbox.
 
     Attributes:
@@ -132,13 +133,13 @@ class WorkspaceResources:
 
     Example:
         ```python
-        resources = WorkspaceResources(
+        resources = SandboxResources(
             cpu=2,
             memory=4,  # 4GB RAM
             disk=20,   # 20GB disk
             gpu=1
         )
-        params = CreateWorkspaceParams(
+        params = CreateSandboxParams(
             language="python",
             resources=resources
         )
@@ -150,7 +151,7 @@ class WorkspaceResources:
     gpu: Optional[int] = None
 
 
-class CreateWorkspaceParams(BaseModel):
+class CreateSandboxParams(BaseModel):
     """Parameters for creating a new Sandbox.
 
     Attributes:
@@ -163,20 +164,20 @@ class CreateWorkspaceParams(BaseModel):
         labels (Optional[Dict[str, str]]): Custom labels for the Sandbox.
         public (Optional[bool]): Whether the Sandbox should be public.
         target (Optional[str]): Target location for the Sandbox. Can be "us", "eu", or "asia".
-        resources (Optional[WorkspaceResources]): Resource configuration for the Sandbox.
+        resources (Optional[SandboxResources]): Resource configuration for the Sandbox.
         timeout (Optional[float]): Timeout in seconds for Sandbox to be created and started.
         auto_stop_interval (Optional[int]): Interval in minutes after which Sandbox will automatically stop if no Sandbox event occurs during that time. Default is 15 minutes. 0 means no auto-stop.
 
     Example:
         ```python
-        params = CreateWorkspaceParams(
+        params = CreateSandboxParams(
             language="python",
-            name="my-workspace",
+            name="my-sandbox",
             env_vars={"DEBUG": "true"},
-            resources=WorkspaceResources(cpu=2, memory=4),
+            resources=SandboxResources(cpu=2, memory=4),
             auto_stop_interval=20
         )
-        workspace = daytona.create(params, 50)
+        sandbox = daytona.create(params, 50)
         ```
     """
     language: CodeLanguage
@@ -187,8 +188,8 @@ class CreateWorkspaceParams(BaseModel):
     env_vars: Optional[Dict[str, str]] = None
     labels: Optional[Dict[str, str]] = None
     public: Optional[bool] = None
-    target: Optional[WorkspaceTargetRegion] = None
-    resources: Optional[WorkspaceResources] = None
+    target: Optional[SandboxTargetRegion] = None
+    resources: Optional[SandboxResources] = None
     timeout: Annotated[Optional[float], Field(
         default=None, deprecated='The `timeout` field is deprecated and will be removed in future versions. Use `timeout` argument in method calls instead.')]
     auto_stop_interval: Optional[int] = None
@@ -228,7 +229,7 @@ class Daytona:
         If no config is provided, reads from environment variables:
         - `DAYTONA_API_KEY`: Required API key for authentication
         - `DAYTONA_SERVER_URL`: Required server URL
-        - `DAYTONA_TARGET`: Optional target environment (defaults to WorkspaceTargetRegion.US)
+        - `DAYTONA_TARGET`: Optional target environment (defaults to SandboxTargetRegion.US)
 
         Args:
             config (Optional[DaytonaConfig]): Object containing api_key, server_url, and target.
@@ -259,7 +260,7 @@ class Daytona:
 
             self.api_key = env.str("DAYTONA_API_KEY")
             self.server_url = env.str("DAYTONA_SERVER_URL")
-            self.target = env.str("DAYTONA_TARGET", WorkspaceTargetRegion.US)
+            self.target = env.str("DAYTONA_TARGET", SandboxTargetRegion.US)
         else:
             self.api_key = config.api_key
             self.server_url = config.server_url
@@ -272,7 +273,7 @@ class Daytona:
             raise DaytonaError("Server URL is required")
 
         if not self.target:
-            self.target = WorkspaceTargetRegion.US
+            self.target = SandboxTargetRegion.US
 
         # Create API configuration without api_key
         configuration = Configuration(host=self.server_url)
@@ -280,47 +281,47 @@ class Daytona:
         api_client.default_headers["Authorization"] = f"Bearer {self.api_key}"
 
         # Initialize API clients with the api_client instance
-        self.workspace_api = WorkspaceApi(api_client)
+        self.sandbox_api = SandboxApi(api_client)
         self.toolbox_api = ToolboxApi(api_client)
 
-    @intercept_errors(message_prefix="Failed to create workspace: ")
-    def create(self, params: Optional[CreateWorkspaceParams] = None, timeout: Optional[float] = 60) -> Workspace:
+    @intercept_errors(message_prefix="Failed to create sandbox: ")
+    def create(self, params: Optional[CreateSandboxParams] = None, timeout: Optional[float] = 60) -> Sandbox:
         """Creates Sandboxes with default or custom configurations. You can specify various parameters,
         including language, image, resources, environment variables, and volumes for the Sandbox.
 
         Args:
-            params (Optional[CreateWorkspaceParams]): Parameters for Sandbox creation. If not provided,
+            params (Optional[CreateSandboxParams]): Parameters for Sandbox creation. If not provided,
                    defaults to Python language.
-            timeout (Optional[float]): Timeout (in seconds) for workspace creation. 0 means no timeout. Default is 60 seconds.
+            timeout (Optional[float]): Timeout (in seconds) for sandbox creation. 0 means no timeout. Default is 60 seconds.
 
         Returns:
-            Workspace: The created Sandbox instance.
+            Sandbox: The created Sandbox instance.
 
         Raises:
-            DaytonaError: If timeout or auto_stop_interval is negative; If workspace fails to start or times out
+            DaytonaError: If timeout or auto_stop_interval is negative; If sandbox fails to start or times out
 
         Example:
             Create a default Python Sandbox:
             ```python
-            workspace = daytona.create()
+            sandbox = daytona.create()
             ```
 
             Create a custom Sandbox:
             ```python
-            params = CreateWorkspaceParams(
+            params = CreateSandboxParams(
                 language="python",
-                name="my-workspace",
+                name="my-sandbox",
                 image="debian:12.9",
                 env_vars={"DEBUG": "true"},
-                resources=WorkspaceResources(cpu=2, memory=4096),
+                resources=SandboxResources(cpu=2, memory=4096),
                 auto_stop_interval=0
             )
-            workspace = daytona.create(params, 40)
+            sandbox = daytona.create(params, 40)
             ```
         """
         # If no params provided, create default params for Python
         if params is None:
-            params = CreateWorkspaceParams(language="python")
+            params = CreateSandboxParams(language="python")
 
         effective_timeout = params.timeout if params.timeout else timeout
 
@@ -328,26 +329,25 @@ class Daytona:
             return self._create(params, effective_timeout)
         except Exception as e:
             try:
-                self.workspace_api.delete_workspace(
-                    workspace_id=params.id, force=True)
+                self.sandbox_api.delete_workspace(params.id, force=True)
             except Exception:
                 pass
             raise e
 
-    @with_timeout(error_message=lambda self, timeout: f"Failed to create and start workspace within {timeout} seconds timeout period.")
-    def _create(self, params: Optional[CreateWorkspaceParams] = None, timeout: Optional[float] = 60) -> Workspace:
+    @with_timeout(error_message=lambda self, timeout: f"Failed to create and start sandbox within {timeout} seconds timeout period.")
+    def _create(self, params: Optional[CreateSandboxParams] = None, timeout: Optional[float] = 60) -> Sandbox:
         """Creates a new Sandbox and waits for it to start.
 
         Args:
-            params (Optional[CreateWorkspaceParams]): Parameters for Sandbox creation. If not provided,
+            params (Optional[CreateSandboxParams]): Parameters for Sandbox creation. If not provided,
                    defaults to Python language.
-            timeout (Optional[float]): Timeout (in seconds) for workspace creation. 0 means no timeout. Default is 60 seconds.
+            timeout (Optional[float]): Timeout (in seconds) for sandbox creation. 0 means no timeout. Default is 60 seconds.
 
         Returns:
-            Workspace: The created Sandbox instance.
+            Sandbox: The created Sandbox instance.
 
         Raises:
-            DaytonaError: If timeout or auto_stop_interval is negative; If workspace fails to start or times out
+            DaytonaError: If timeout or auto_stop_interval is negative; If sandbox fails to start or times out
         """
         code_toolbox = self._get_code_toolbox(params)
 
@@ -360,8 +360,8 @@ class Daytona:
 
         target = params.target if params.target else self.target
 
-        # Create workspace using dictionary
-        workspace_data = CreateWorkspace(
+        # Create sandbox using dictionary
+        sandbox_data = CreateSandbox(
             id=params.id,
             name=params.name if params.name else params.id,
             image=params.image,
@@ -374,38 +374,37 @@ class Daytona:
         )
 
         if params.resources:
-            workspace_data.cpu = params.resources.cpu
-            workspace_data.memory = params.resources.memory
-            workspace_data.disk = params.resources.disk
-            workspace_data.gpu = params.resources.gpu
+            sandbox_data.cpu = params.resources.cpu
+            sandbox_data.memory = params.resources.memory
+            sandbox_data.disk = params.resources.disk
+            sandbox_data.gpu = params.resources.gpu
 
-        response = self.workspace_api.create_workspace(
-            create_workspace=workspace_data, _request_timeout=timeout or None)
-        workspace_info = Workspace._to_workspace_info(response)
-        response.info = workspace_info
+        response = self.sandbox_api.create_workspace(sandbox_data, _request_timeout=timeout or None)
+        sandbox_info = Sandbox._to_sandbox_info(response)
+        response.info = sandbox_info
 
-        workspace = Workspace(
+        sandbox = Sandbox(
             response.id,
             response,
-            self.workspace_api,
+            self.sandbox_api,
             self.toolbox_api,
             code_toolbox
         )
 
-        # # Wait for workspace to start
+        # # Wait for sandbox to start
         # try:
-        #     workspace.wait_for_workspace_start()
+        #     sandbox.wait_for_sandbox_start()
         # finally:
         #     # If not Daytona SaaS, we don't need to handle pulling image state
         #     pass
 
-        return workspace
+        return sandbox
 
-    def _get_code_toolbox(self, params: Optional[CreateWorkspaceParams] = None):
+    def _get_code_toolbox(self, params: Optional[CreateSandboxParams] = None):
         """Helper method to get the appropriate code toolbox based on language.
 
         Args:
-            params (Optional[CreateWorkspaceParams]): Sandbox parameters. If not provided, defaults to Python toolbox.
+            params (Optional[CreateSandboxParams]): Sandbox parameters. If not provided, defaults to Python toolbox.
 
         Returns:
             The appropriate code toolbox instance for the specified language.
@@ -414,7 +413,7 @@ class Daytona:
             DaytonaError: If an unsupported language is specified.
         """
         if not params:
-            return WorkspacePythonCodeToolbox()
+            return SandboxPythonCodeToolbox()
 
         enum_language = to_enum(CodeLanguage, params.language)
         if enum_language is None:
@@ -424,33 +423,33 @@ class Daytona:
 
         match params.language:
             case CodeLanguage.JAVASCRIPT | CodeLanguage.TYPESCRIPT:
-                return WorkspaceTsCodeToolbox()
+                return SandboxTsCodeToolbox()
             case CodeLanguage.PYTHON:
-                return WorkspacePythonCodeToolbox()
+                return SandboxPythonCodeToolbox()
             case _:
                 raise DaytonaError(f"Unsupported language: {params.language}")
 
-    @intercept_errors(message_prefix="Failed to remove workspace: ")
-    def remove(self, workspace: Workspace, timeout: Optional[float] = 60) -> None:
+    @intercept_errors(message_prefix="Failed to remove sandbox: ")
+    def remove(self, sandbox: Sandbox, timeout: Optional[float] = 60) -> None:
         """Removes a Sandbox.
 
         Args:
-            workspace (Workspace): The Sandbox instance to remove.
-            timeout (Optional[float]): Timeout (in seconds) for workspace removal. 0 means no timeout. Default is 60 seconds.
+            sandbox (Sandbox): The Sandbox instance to remove.
+            timeout (Optional[float]): Timeout (in seconds) for sandbox removal. 0 means no timeout. Default is 60 seconds.
 
         Raises:
-            DaytonaError: If workspace fails to remove or times out
+            DaytonaError: If sandbox fails to remove or times out
 
         Example:
             ```python
-            workspace = daytona.create()
-            # ... use workspace ...
-            daytona.remove(workspace)  # Clean up when done
+            sandbox = daytona.create()
+            # ... use sandbox ...
+            daytona.remove(sandbox)  # Clean up when done
             ```
         """
-        return self.workspace_api.delete_workspace(workspace_id=workspace.id, force=True, _request_timeout=timeout or None)
+        return self.sandbox_api.delete_workspace(sandbox.id, force=True, _request_timeout=timeout or None)
 
-    @intercept_errors(message_prefix="Failed to get workspace: ")
+    @deprecated(reason="Method is deprecated. Use `get_current_sandbox` instead. This method will be removed in a future version.")
     def get_current_workspace(self, workspace_id: str) -> Workspace:
         """Get a Sandbox by its ID.
 
@@ -459,69 +458,80 @@ class Daytona:
 
         Returns:
             Workspace: The Sandbox instance.
+        """
+        return self.get_current_sandbox(workspace_id)
+
+    @intercept_errors(message_prefix="Failed to get sandbox: ")
+    def get_current_sandbox(self, sandbox_id: str) -> Sandbox:
+        """Get a Sandbox by its ID.
+
+        Args:
+            sandbox_id (str): The ID of the Sandbox to retrieve.
+
+        Returns:
+            Sandbox: The Sandbox instance.
 
         Raises:
-            DaytonaError: If workspace_id is not provided.
+            DaytonaError: If sandbox_id is not provided.
 
         Example:
             ```python
-            workspace = daytona.get_current_workspace("my-workspace-id")
-            print(workspace.status)
+            sandbox = daytona.get_current_sandbox("my-sandbox-id")
+            print(sandbox.status)
             ```
         """
-        if not workspace_id:
-            raise DaytonaError("workspace_id is required")
+        if not sandbox_id:
+            raise DaytonaError("sandbox_id is required")
 
-        # Get the workspace instance
-        workspace_instance = self.workspace_api.get_workspace(
-            workspace_id=workspace_id)
-        workspace_info = Workspace._to_workspace_info(workspace_instance)
-        workspace_instance.info = workspace_info
+        # Get the sandbox instance
+        sandbox_instance = self.sandbox_api.get_workspace(sandbox_id)
+        sandbox_info = Sandbox._to_sandbox_info(sandbox_instance)
+        sandbox_instance.info = sandbox_info
 
-        # Create and return workspace with Python code toolbox as default
-        code_toolbox = WorkspacePythonCodeToolbox()
-        return Workspace(
-            workspace_id,
-            workspace_instance,
-            self.workspace_api,
+        # Create and return sandbox with Python code toolbox as default
+        code_toolbox = SandboxPythonCodeToolbox()
+        return Sandbox(
+            sandbox_id,
+            sandbox_instance,
+            self.sandbox_api,
             self.toolbox_api,
             code_toolbox
         )
 
-    @intercept_errors(message_prefix="Failed to list workspaces: ")
-    def list(self) -> List[Workspace]:
+    @intercept_errors(message_prefix="Failed to list sandboxes: ")
+    def list(self) -> List[Sandbox]:
         """Lists all Sandboxes.
 
         Returns:
-            List[Workspace]: List of all available Sandbox instances.
+            List[Sandbox]: List of all available Sandbox instances.
 
         Example:
             ```python
-            workspaces = daytona.list()
-            for workspace in workspaces:
-                print(f"{workspace.id}: {workspace.status}")
+            sandboxes = daytona.list()
+            for sandbox in sandboxes:
+                print(f"{sandbox.id}: {sandbox.status}")
             ```
         """
-        workspaces = self.workspace_api.list_workspaces()
+        sandboxes = self.sandbox_api.list_workspaces()
 
-        for workspace in workspaces:
-            workspace_info = Workspace._to_workspace_info(workspace)
-            workspace.info = workspace_info
+        for sandbox in sandboxes:
+            sandbox_info = Sandbox._to_sandbox_info(sandbox)
+            sandbox.info = sandbox_info
 
         return [
-            Workspace(
-                workspace.id,
-                workspace,
-                self.workspace_api,
+            Sandbox(
+                sandbox.id,
+                sandbox,
+                self.sandbox_api,
                 self.toolbox_api,
                 self._get_code_toolbox(
-                    CreateWorkspaceParams(
+                    CreateSandboxParams(
                         language=self._validate_language_label(
-                            workspace.labels.get("code-toolbox-language"))
+                            sandbox.labels.get("code-toolbox-language"))
                     )
                 )
             )
-            for workspace in workspaces
+            for sandbox in sandboxes
         ]
 
     def _validate_language_label(self, language: Optional[str]) -> CodeLanguage:
@@ -545,47 +555,47 @@ class Daytona:
         else:
             return enum_language
 
-    # def resize(self, workspace: Workspace, resources: WorkspaceResources) -> None:
-    #     """Resizes a workspace.
+    # def resize(self, sandbox: Sandbox, resources: SandboxResources) -> None:
+    #     """Resizes a sandbox.
 
     #     Args:
-    #         workspace: The workspace to resize
+    #         sandbox: The sandbox to resize
     #         resources: The new resources to set
     #     """
-    #     self.workspace_api. (workspace_id=workspace.id, resources=resources)
+    #     self.sandbox_api. (sandbox_id=sandbox.id, resources=resources)
 
-    def start(self, workspace: Workspace, timeout: Optional[float] = 60) -> None:
+    def start(self, sandbox: Sandbox, timeout: Optional[float] = 60) -> None:
         """Starts a Sandbox and waits for it to be ready.
 
         Args:
-            workspace (Workspace): The Sandbox to start.
+            sandbox (Sandbox): The Sandbox to start.
             timeout (Optional[float]): Optional timeout in seconds to wait for the Sandbox to start. 0 means no timeout. Default is 60 seconds.
 
         Raises:
             DaytonaError: If timeout is negative; If Sandbox fails to start or times out
         """
-        workspace.start(timeout)
+        sandbox.start(timeout)
 
-    def stop(self, workspace: Workspace, timeout: Optional[float] = 60) -> None:
+    def stop(self, sandbox: Sandbox, timeout: Optional[float] = 60) -> None:
         """Stops a Sandbox and waits for it to be stopped.
 
         Args:
-            workspace (Workspace): The workspace to stop
-            timeout (Optional[float]): Optional timeout (in seconds) for workspace stop. 0 means no timeout. Default is 60 seconds.
+            sandbox (Sandbox): The sandbox to stop
+            timeout (Optional[float]): Optional timeout (in seconds) for sandbox stop. 0 means no timeout. Default is 60 seconds.
 
         Raises:
             DaytonaError: If timeout is negative; If Sandbox fails to stop or times out
         """
-        workspace.stop(timeout)
+        sandbox.stop(timeout)
 
 
 # Export these at module level
 __all__ = [
     "Daytona",
     "DaytonaConfig",
-    "CreateWorkspaceParams",
+    "CreateSandboxParams",
     "CodeLanguage",
-    "Workspace",
+    "Sandbox",
     "SessionExecuteRequest",
     "SessionExecuteResponse"
 ]

@@ -9,7 +9,7 @@ title: Process and Code Execution
 class Process()
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/python/src/daytona_sdk/process.py#L57)
+[[view_source]](https://github.com/daytonaio/sdk/blob/dd9532596a339882e2272f36b7b78ee1903debe2/packages/python/src/daytona_sdk/process.py#L57)
 
 Handles process and code execution within a Sandbox.
 
@@ -18,27 +18,27 @@ the Sandbox environment.
 
 **Attributes**:
 
-- `code_toolbox` _WorkspacePythonCodeToolbox_ - Language-specific code execution toolbox.
+- `code_toolbox` _SandboxPythonCodeToolbox_ - Language-specific code execution toolbox.
 - `toolbox_api` _ToolboxApi_ - API client for Sandbox operations.
-- `instance` _WorkspaceInstance_ - The Sandbox instance this process belongs to.
+- `instance` _SandboxInstance_ - The Sandbox instance this process belongs to.
 
 
 #### Process.\_\_init\_\_
 
 ```python
-def __init__(code_toolbox: WorkspacePythonCodeToolbox, toolbox_api: ToolboxApi,
-             instance: WorkspaceInstance)
+def __init__(code_toolbox: SandboxPythonCodeToolbox, toolbox_api: ToolboxApi,
+             instance: SandboxInstance)
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/python/src/daytona_sdk/process.py#L69)
+[[view_source]](https://github.com/daytonaio/sdk/blob/dd9532596a339882e2272f36b7b78ee1903debe2/packages/python/src/daytona_sdk/process.py#L69)
 
 Initialize a new Process instance.
 
 **Arguments**:
 
-- `code_toolbox` _WorkspacePythonCodeToolbox_ - Language-specific code execution toolbox.
+- `code_toolbox` _SandboxPythonCodeToolbox_ - Language-specific code execution toolbox.
 - `toolbox_api` _ToolboxApi_ - API client for Sandbox operations.
-- `instance` _WorkspaceInstance_ - The Sandbox instance this process belongs to.
+- `instance` _SandboxInstance_ - The Sandbox instance this process belongs to.
 
 
 #### Process.exec
@@ -50,7 +50,7 @@ def exec(command: str,
          timeout: Optional[int] = None) -> ExecuteResponse
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/python/src/daytona_sdk/process.py#L87)
+[[view_source]](https://github.com/daytonaio/sdk/blob/dd9532596a339882e2272f36b7b78ee1903debe2/packages/python/src/daytona_sdk/process.py#L87)
 
 Execute a shell command in the Sandbox.
 
@@ -74,14 +74,14 @@ Execute a shell command in the Sandbox.
 
 ```python
 # Simple command
-response = workspace.process.exec("echo 'Hello'")
+response = sandbox.process.exec("echo 'Hello'")
 print(response.result)  # Prints: Hello
 
 # Command with working directory
-result = workspace.process.exec("ls", cwd="/workspace/src")
+result = sandbox.process.exec("ls", cwd="/workspace/src")
 
 # Command with timeout
-result = workspace.process.exec("sleep 10", timeout=5)
+result = sandbox.process.exec("sleep 10", timeout=5)
 ```
 
 
@@ -93,7 +93,7 @@ def code_run(code: str,
              timeout: Optional[int] = None) -> ExecuteResponse
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/python/src/daytona_sdk/process.py#L126)
+[[view_source]](https://github.com/daytonaio/sdk/blob/dd9532596a339882e2272f36b7b78ee1903debe2/packages/python/src/daytona_sdk/process.py#L126)
 
 Executes code in the Sandbox using the appropriate language runtime.
 
@@ -116,7 +116,7 @@ Executes code in the Sandbox using the appropriate language runtime.
 
 ```python
 # Run Python code
-response = workspace.process.code_run('''
+response = sandbox.process.code_run('''
     x = 10
     y = 20
     print(f"Sum: {x + y}")
@@ -132,7 +132,7 @@ print(response.result)  # Prints: Sum: 30
 def create_session(session_id: str) -> None
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/python/src/daytona_sdk/process.py#L155)
+[[view_source]](https://github.com/daytonaio/sdk/blob/dd9532596a339882e2272f36b7b78ee1903debe2/packages/python/src/daytona_sdk/process.py#L155)
 
 Create a new long-running background session in the Sandbox.
 
@@ -150,10 +150,10 @@ long-running commands and monitor process status.
 ```python
 # Create a new session
 session_id = "my-session"
-workspace.process.create_session(session_id)
-session = workspace.process.get_session(session_id)
+sandbox.process.create_session(session_id)
+session = sandbox.process.get_session(session_id)
 # Do work...
-workspace.process.delete_session(session_id)
+sandbox.process.delete_session(session_id)
 ```
 
 
@@ -164,7 +164,7 @@ workspace.process.delete_session(session_id)
 def get_session(session_id: str) -> Session
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/python/src/daytona_sdk/process.py#L182)
+[[view_source]](https://github.com/daytonaio/sdk/blob/dd9532596a339882e2272f36b7b78ee1903debe2/packages/python/src/daytona_sdk/process.py#L182)
 
 Get a session in the Sandbox.
 
@@ -183,7 +183,7 @@ Get a session in the Sandbox.
 **Example**:
 
 ```python
-session = workspace.process.get_session("my-session")
+session = sandbox.process.get_session("my-session")
 for cmd in session.commands:
     print(f"Command: {cmd.command}")
 ```
@@ -196,7 +196,7 @@ for cmd in session.commands:
 def get_session_command(session_id: str, command_id: str) -> Command
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/python/src/daytona_sdk/process.py#L206)
+[[view_source]](https://github.com/daytonaio/sdk/blob/dd9532596a339882e2272f36b7b78ee1903debe2/packages/python/src/daytona_sdk/process.py#L206)
 
 Get information about a specific command executed in a session.
 
@@ -217,7 +217,7 @@ Get information about a specific command executed in a session.
 **Example**:
 
 ```python
-cmd = workspace.process.get_session_command("my-session", "cmd-123")
+cmd = sandbox.process.get_session_command("my-session", "cmd-123")
 if cmd.exit_code == 0:
     print(f"Command {cmd.command} completed successfully")
 ```
@@ -233,7 +233,7 @@ def execute_session_command(
         timeout: Optional[int] = None) -> SessionExecuteResponse
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/python/src/daytona_sdk/process.py#L233)
+[[view_source]](https://github.com/daytonaio/sdk/blob/dd9532596a339882e2272f36b7b78ee1903debe2/packages/python/src/daytona_sdk/process.py#L233)
 
 Executes a command in the session.
 
@@ -261,15 +261,15 @@ session_id = "my-session"
 
 # Change directory
 req = SessionExecuteRequest(command="cd /workspace")
-workspace.process.execute_session_command(session_id, req)
+sandbox.process.execute_session_command(session_id, req)
 
 # Create a file
 req = SessionExecuteRequest(command="echo 'Hello' > test.txt")
-workspace.process.execute_session_command(session_id, req)
+sandbox.process.execute_session_command(session_id, req)
 
 # Read the file
 req = SessionExecuteRequest(command="cat test.txt")
-result = workspace.process.execute_session_command(session_id, req)
+result = sandbox.process.execute_session_command(session_id, req)
 print(result.output)  # Prints: Hello
 ```
 
@@ -281,7 +281,7 @@ print(result.output)  # Prints: Hello
 def get_session_command_logs(session_id: str, command_id: str) -> str
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/python/src/daytona_sdk/process.py#L275)
+[[view_source]](https://github.com/daytonaio/sdk/blob/dd9532596a339882e2272f36b7b78ee1903debe2/packages/python/src/daytona_sdk/process.py#L275)
 
 Get the logs for a command executed in a session.
 
@@ -308,12 +308,12 @@ req = SessionExecuteRequest(
     command="sleep 5; echo 'Done'",
     var_async=True
 )
-response = workspace.process.execute_session_command("my-session", req)
+response = sandbox.process.execute_session_command("my-session", req)
 
 # Wait a bit, then get the logs
 import time
 time.sleep(6)
-logs = workspace.process.get_session_command_logs(
+logs = sandbox.process.get_session_command_logs(
     "my-session",
     response.command_id
 )
@@ -328,7 +328,7 @@ print(logs)  # Prints: Done
 def list_sessions() -> List[Session]
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/python/src/daytona_sdk/process.py#L315)
+[[view_source]](https://github.com/daytonaio/sdk/blob/dd9532596a339882e2272f36b7b78ee1903debe2/packages/python/src/daytona_sdk/process.py#L315)
 
 List all sessions in the Sandbox.
 
@@ -340,7 +340,7 @@ List all sessions in the Sandbox.
 **Example**:
 
 ```python
-sessions = workspace.process.list_sessions()
+sessions = sandbox.process.list_sessions()
 for session in sessions:
     print(f"Session {session.session_id}:")
     print(f"  Commands: {len(session.commands)}")
@@ -354,7 +354,7 @@ for session in sessions:
 def delete_session(session_id: str) -> None
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/python/src/daytona_sdk/process.py#L334)
+[[view_source]](https://github.com/daytonaio/sdk/blob/dd9532596a339882e2272f36b7b78ee1903debe2/packages/python/src/daytona_sdk/process.py#L334)
 
 Delete an interactive session from the Sandbox.
 
@@ -370,11 +370,11 @@ associated with it.
 
 ```python
 # Create and use a session
-workspace.process.create_session("temp-session")
+sandbox.process.create_session("temp-session")
 # ... use the session ...
 
 # Clean up when done
-workspace.process.delete_session("temp-session")
+sandbox.process.delete_session("temp-session")
 ```
 
 
@@ -387,7 +387,7 @@ workspace.process.delete_session("temp-session")
 class CodeRunParams()
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/python/src/daytona_sdk/common/code_run_params.py#L5)
+[[view_source]](https://github.com/daytonaio/sdk/blob/dd9532596a339882e2272f36b7b78ee1903debe2/packages/python/src/daytona_sdk/common/code_run_params.py#L5)
 
 Parameters for code execution.
 
@@ -399,14 +399,14 @@ and best practices.
 
   Basic command execution:
 ```python
-workspace = daytona.create()
+sandbox = daytona.create()
 
 # Execute a shell command
-response = workspace.process.exec("ls -la")
+response = sandbox.process.exec("ls -la")
 print(response.result)
 
 # Run Python code
-response = workspace.process.code_run("print('Hello, World!')")
+response = sandbox.process.code_run("print('Hello, World!')")
 print(response.result)
 ```
   
@@ -414,18 +414,18 @@ print(response.result)
 ```python
 # Create a new session
 session_id = "my-session"
-workspace.process.create_session(session_id)
+sandbox.process.create_session(session_id)
 
 # Execute commands in the session
 req = SessionExecuteRequest(command="cd /workspace", var_async=False)
-workspace.process.execute_session_command(session_id, req)
+sandbox.process.execute_session_command(session_id, req)
 
 req = SessionExecuteRequest(command="pwd", var_async=False)
-response = workspace.process.execute_session_command(session_id, req)
+response = sandbox.process.execute_session_command(session_id, req)
 print(response.result)  # Should print "/workspace"
 
 # Clean up
-workspace.process.delete_session(session_id)
+sandbox.process.delete_session(session_id)
 ```
 
 

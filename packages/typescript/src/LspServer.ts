@@ -9,11 +9,11 @@
  * 
  * @example
  * // Basic LSP server usage
- * // Create and initialize workspace
- * const workspace = await daytona.create();
+ * // Create and initialize sandbox
+ * const sandbox = await daytona.create();
  * 
  * // Create and start LSP server
- * const lsp = workspace.createLspServer('typescript', '/workspace/project');
+ * const lsp = sandbox.createLspServer('typescript', '/workspace/project');
  * await lsp.start();
  * 
  * // Open a file for editing
@@ -43,7 +43,7 @@ import {
   LspSymbol,
   ToolboxApi,
 } from '@daytonaio/api-client'
-import { WorkspaceInstance } from './Workspace'
+import { SandboxInstance } from './Sandbox'
 
 /**
  * Supported language server types.
@@ -88,14 +88,14 @@ export type Position = {
  * @property {LspLanguageId} languageId - The language server type (e.g., "typescript")
  * @property {string} pathToProject - Absolute path to the project root directory
  * @property {ToolboxApi} toolboxApi - API client for Sandbox operations
- * @property {WorkspaceInstance} instance - The Sandbox instance this server belongs to
+ * @property {SandboxInstance} instance - The Sandbox instance this server belongs to
  */
 export class LspServer {
   constructor(
     private readonly languageId: LspLanguageId,
     private readonly pathToProject: string,
     private readonly toolboxApi: ToolboxApi,
-    private readonly instance: WorkspaceInstance,
+    private readonly instance: SandboxInstance,
   ) {
     if (!Object.values(LspLanguageId).includes(this.languageId)) {
       throw new Error(`Invalid languageId: ${this.languageId}. Supported values are: ${Object.values(LspLanguageId).join(', ')}`);
@@ -111,7 +111,7 @@ export class LspServer {
    * @returns {Promise<void>}
    * 
    * @example
-   * const lsp = workspace.createLspServer('typescript', '/workspace/project');
+   * const lsp = sandbox.createLspServer('typescript', '/workspace/project');
    * await lsp.start();  // Initialize the server
    * // Now ready for LSP operations
    */
@@ -237,15 +237,34 @@ export class LspServer {
    *                                 - name: The symbol's name
    *                                 - kind: The symbol's kind (function, class, variable, etc.)
    *                                 - location: The location of the symbol in the file
+   *
+   * @deprecated Use `sandboxSymbols` instead. This method will be removed in a future version.
+   */
+  public async workspaceSymbols(query: string): Promise<LspSymbol[]> {
+    return await this.sandboxSymbols(query)
+  }
+
+  /**
+   * Searches for symbols across the entire Sandbox.
+   * 
+   * This method searches for symbols matching the query string across all files
+   * in the Sandbox. It's useful for finding declarations and definitions
+   * without knowing which file they're in.
+   * 
+   * @param {string} query - Search query to match against symbol names
+   * @returns {Promise<LspSymbol[]>} List of matching symbols from all files. Each symbol includes:
+   *                                 - name: The symbol's name
+   *                                 - kind: The symbol's kind (function, class, variable, etc.)
+   *                                 - location: The location of the symbol in the file
    * 
    * @example
    * // Search for all symbols containing "User"
-   * const symbols = await lsp.workspaceSymbols('User');
+   * const symbols = await lsp.sandboxSymbols('User');
    * symbols.forEach(symbol => {
    *   console.log(`${symbol.name} (${symbol.kind}) in ${symbol.location}`);
    * });
    */
-  public async workspaceSymbols(query: string): Promise<LspSymbol[]> {
+  public async sandboxSymbols(query: string): Promise<LspSymbol[]> {
     const response = await this.toolboxApi.lspWorkspaceSymbols(
       this.instance.id,
       this.languageId,

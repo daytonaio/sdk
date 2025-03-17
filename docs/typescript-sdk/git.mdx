@@ -11,24 +11,24 @@ the `git` module.
 
 ```ts
 // Basic Git workflow
-// Create and initialize workspace
-const workspace = await daytona.create();
+// Create and initialize sandbox
+const sandbox = await daytona.create();
 
 // Clone a repository
-await workspace.git.clone(
+await sandbox.git.clone(
   'https://github.com/user/repo.git',
   '/workspace/repo'
 );
 
 // Make some changes
-await workspace.fs.uploadFile(
+await sandbox.fs.uploadFile(
   '/workspace/repo/test.txt',
   new File([Buffer.from('Hello, World!')], 'test.txt')
 );
 
 // Stage and commit changes
-await workspace.git.add('/workspace/repo', ['test.txt']);
-await workspace.git.commit(
+await sandbox.git.add('/workspace/repo', ['test.txt']);
+await sandbox.git.commit(
   '/workspace/repo',
   'Add test file',
   'John Doe',
@@ -36,7 +36,7 @@ await workspace.git.commit(
 );
 
 // Push changes (with authentication)
-await workspace.git.push(
+await sandbox.git.push(
   '/workspace/repo',
   'user',
   'token'
@@ -45,7 +45,7 @@ await workspace.git.push(
 
 ## Git
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/typescript/src/Git.ts#L51)
+[[view_source]](https://github.com/MDzaja/sdk/blob/dd9532596a339882e2272f36b7b78ee1903debe2/packages/typescript/src/Git.ts#L51)
 
 ### Constructors
 
@@ -53,20 +53,20 @@ await workspace.git.push(
 
 ```ts
 new Git(
-   workspace: Workspace, 
+   sandbox: Sandbox, 
    toolboxApi: ToolboxApi, 
-   instance: WorkspaceInstance): Git
+   instance: SandboxInstance): Git
 ```
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/typescript/src/Git.ts#L52)
+[[view_source]](https://github.com/MDzaja/sdk/blob/dd9532596a339882e2272f36b7b78ee1903debe2/packages/typescript/src/Git.ts#L52)
 
 ##### Parameters
 
 | Parameter | Type |
 | ------ | ------ |
-| `workspace` | `Workspace` |
+| `sandbox` | `Sandbox` |
 | `toolboxApi` | `ToolboxApi` |
-| `instance` | `WorkspaceInstance` |
+| `instance` | `SandboxInstance` |
 
 ##### Returns
 
@@ -80,7 +80,7 @@ new Git(
 add(path: string, files: string[]): Promise<void>
 ```
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/typescript/src/Git.ts#L76)
+[[view_source]](https://github.com/MDzaja/sdk/blob/dd9532596a339882e2272f36b7b78ee1903debe2/packages/typescript/src/Git.ts#L76)
 
 Stages files for commit.
 
@@ -118,7 +118,7 @@ await git.add('/workspace/repo', ['.']);
 branches(path: string): Promise<ListBranchResponse>
 ```
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/typescript/src/Git.ts#L95)
+[[view_source]](https://github.com/MDzaja/sdk/blob/dd9532596a339882e2272f36b7b78ee1903debe2/packages/typescript/src/Git.ts#L95)
 
 List branches in the repository.
 
@@ -157,7 +157,7 @@ clone(
 password?: string): Promise<void>
 ```
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/typescript/src/Git.ts#L140)
+[[view_source]](https://github.com/MDzaja/sdk/blob/dd9532596a339882e2272f36b7b78ee1903debe2/packages/typescript/src/Git.ts#L140)
 
 Clones a Git repository.
 
@@ -222,7 +222,7 @@ commit(
 email: string): Promise<void>
 ```
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/typescript/src/Git.ts#L181)
+[[view_source]](https://github.com/MDzaja/sdk/blob/dd9532596a339882e2272f36b7b78ee1903debe2/packages/typescript/src/Git.ts#L181)
 
 Commits staged changes.
 
@@ -266,7 +266,7 @@ pull(
 password?: string): Promise<void>
 ```
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/typescript/src/Git.ts#L253)
+[[view_source]](https://github.com/MDzaja/sdk/blob/dd9532596a339882e2272f36b7b78ee1903debe2/packages/typescript/src/Git.ts#L253)
 
 Pulls changes from the remote repository.
 
@@ -312,7 +312,7 @@ push(
 password?: string): Promise<void>
 ```
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/typescript/src/Git.ts#L218)
+[[view_source]](https://github.com/MDzaja/sdk/blob/dd9532596a339882e2272f36b7b78ee1903debe2/packages/typescript/src/Git.ts#L218)
 
 Push local changes to the remote repository.
 
@@ -355,7 +355,7 @@ await git.push(
 status(path: string): Promise<GitStatus>
 ```
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/typescript/src/Git.ts#L285)
+[[view_source]](https://github.com/MDzaja/sdk/blob/dd9532596a339882e2272f36b7b78ee1903debe2/packages/typescript/src/Git.ts#L285)
 
 Gets the current status of the Git repository.
 
@@ -382,7 +382,7 @@ Current repository status including:
 ##### Example
 
 ```ts
-const status = await workspace.git.status('/workspace/repo');
+const status = await sandbox.git.status('/workspace/repo');
 console.log(`Current branch: ${status.currentBranch}`);
 console.log(`Commits ahead: ${status.ahead}`);
 console.log(`Commits behind: ${status.behind}`);

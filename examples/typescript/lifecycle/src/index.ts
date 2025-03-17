@@ -4,27 +4,27 @@ import { inspect } from 'util'
 async function main() {
   const daytona = new Daytona()
 
-  console.log("Creating workspace")
-  const workspace = await daytona.create()
-  console.log("Workspace created")
+  console.log("Creating sandbox")
+  const sandbox = await daytona.create()
+  console.log("Sandbox created")
 
-  await workspace.setLabels({
+  await sandbox.setLabels({
     'public': 'true',
   })
 
-  console.log("Stopping workspace")
-  await workspace.stop()
-  console.log("Workspace stopped")
+  console.log("Stopping sandbox")
+  await sandbox.stop()
+  console.log("Sandbox stopped")
 
-  console.log("Starting workspace")
-  await workspace.start()
-  console.log("Workspace started")
+  console.log("Starting sandbox")
+  await sandbox.start()
+  console.log("Sandbox started")
 
-  console.log("Getting existing workspace")
-  const existingWorkspace = await daytona.get(workspace.id)
-  console.log("Got existing workspace")
+  console.log("Getting existing sandbox")
+  const existingSandbox = await daytona.get(sandbox.id)
+  console.log("Got existing sandbox")
 
-  const response = await existingWorkspace.process.executeCommand(
+  const response = await existingSandbox.process.executeCommand(
     'echo "Hello World from exec!"',
     "/home/daytona",
     10
@@ -35,14 +35,14 @@ async function main() {
     console.log(response.result)
   }
 
-  const workspaces = await daytona.list()
-  console.log("Total workspaces count:", workspaces.length)
-  // Use util.inspect to pretty print the workspace info like Python's pprint
-  console.log(inspect(await workspaces[0].info(), { depth: null, colors: true }))
+  const sandboxes = await daytona.list()
+  console.log("Total sandboxes count:", sandboxes.length)
+  // Use util.inspect to pretty print the sandbox info like Python's pprint
+  console.log(inspect(await sandboxes[0].info(), { depth: null, colors: true }))
 
-  console.log("Removing workspace")
-  await workspace.delete()
-  console.log("Workspace removed")
+  console.log("Removing sandbox")
+  await sandbox.delete()
+  console.log("Sandbox removed")
 }
 
 main().catch(console.error)

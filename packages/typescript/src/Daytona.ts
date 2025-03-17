@@ -8,18 +8,18 @@
  * // Initialize using environment variables (DAYTONA_API_KEY, DAYTONA_SERVER_URL, DAYTONA_TARGET)
  * const daytona = new Daytona();
  * 
- * // Create and use a workspace
- * const workspace = await daytona.create({
+ * // Create and use a sandbox
+ * const sandbox = await daytona.create({
  *     language: 'typescript',
  *     envVars: { NODE_ENV: 'development' }
  * });
  * 
- * // Execute commands in the workspace
- * const response = await workspace.process.executeCommand('echo "Hello, World!"');
+ * // Execute commands in the sandbox
+ * const response = await sandbox.process.executeCommand('echo "Hello, World!"');
  * console.log(response.result);
  * 
- * // Execute code in the workspace
- * const response = await workspace.process.codeRun('console.log("Hello, World!")');
+ * // Execute code in the sandbox
+ * const response = await sandbox.process.codeRun('console.log("Hello, World!")');
  * console.log(response.result);
  * 
  * @example
@@ -30,8 +30,8 @@
  *     target: 'us'
  * });
  * 
- * // Create a custom workspace
- * const workspace = await daytona.create({
+ * // Create a custom sandbox
+ * const sandbox = await daytona.create({
  *     language: 'typescript',
  *     image: 'node:18',
  *     resources: {
@@ -41,20 +41,20 @@
  *     autoStopInterval: 60 // Auto-stop after 1 hour of inactivity
  * });
  * 
- * // Use workspace features
- * await workspace.git.clone('https://github.com/user/repo.git');
- * await workspace.process.executeCommand('npm test');
+ * // Use sandbox features
+ * await sandbox.git.clone('https://github.com/user/repo.git');
+ * await sandbox.process.executeCommand('npm test');
  */
 
-import { WorkspacePythonCodeToolbox } from './code-toolbox/WorkspacePythonCodeToolbox'
-import { Workspace, WorkspaceInstance } from './Workspace'
+import { SandboxPythonCodeToolbox } from './code-toolbox/SandboxPythonCodeToolbox'
+import { Sandbox, SandboxInstance, Sandbox as Workspace } from './Sandbox'
 import {
   Configuration,
-  WorkspaceApi,
+  WorkspaceApi as SandboxApi,
   ToolboxApi,
-  CreateWorkspaceTargetEnum as WorkspaceTargetRegion
+  CreateWorkspaceTargetEnum as SandboxTargetRegion
 } from '@daytonaio/api-client'
-import { WorkspaceTsCodeToolbox } from './code-toolbox/WorkspaceTsCodeToolbox'
+import { SandboxTsCodeToolbox } from './code-toolbox/SandboxTsCodeToolbox'
 import axios, { AxiosError } from 'axios'
 import { DaytonaError } from './errors/DaytonaError'
 
@@ -64,7 +64,7 @@ import { DaytonaError } from './errors/DaytonaError'
  * @interface
  * @property {string} apiKey - API key for authentication with Daytona server
  * @property {string} serverUrl - URL of the Daytona server
- * @property {CreateWorkspaceTargetEnum} target - Target location for Sandboxes
+ * @property {CreateSandboxTargetEnum} target - Target location for Sandboxes
  * 
  * @example
  * const config: DaytonaConfig = {
@@ -79,8 +79,8 @@ export interface DaytonaConfig {
   apiKey: string
   /** URL of the Daytona server */
   serverUrl: string
-  /** Target environment for workspaces */
-  target: WorkspaceTargetRegion
+  /** Target environment for sandboxes */
+  target: SandboxTargetRegion
 }
 
 /**
@@ -102,20 +102,20 @@ export enum CodeLanguage {
  * @property {number} [disk] - Disk space allocation for the Sandbox in GB
  * 
  * @example
- * const resources: WorkspaceResources = {
+ * const resources: SandboxResources = {
  *     cpu: 2,
  *     memory: 4,  // 4GB RAM
  *     disk: 20    // 20GB disk
  * };
  */
-export interface WorkspaceResources {
+export interface SandboxResources {
   /** CPU allocation for the Sandbox */
   cpu?: number
   /** GPU allocation for the Sandbox */
   gpu?: number
-  /** Memory allocation for the Sandbox in MB */
+  /** Memory allocation for the Sandbox in GB */
   memory?: number
-  /** Disk space allocation for the Sandbox in MB */
+  /** Disk space allocation for the Sandbox in GB */
   disk?: number
 }
 
@@ -131,13 +131,13 @@ export interface WorkspaceResources {
  * @property {Record<string, string>} [labels] - Sandbox labels
  * @property {boolean} [public] - Is the Sandbox port preview public
  * @property {string} [target] - Target location for the Sandbox
- * @property {WorkspaceResources} [resources] - Resource allocation for the Sandbox
+ * @property {SandboxResources} [resources] - Resource allocation for the Sandbox
  * @property {boolean} [async] - If true, will not wait for the Sandbox to be ready before returning
  * @property {number} [timeout] - Timeout in seconds for the Sandbox to be ready (0 means no timeout)
  * @property {number} [autoStopInterval] - Auto-stop interval in minutes (0 means disabled)
  * 
  * @example
- * const params: CreateWorkspaceParams = {
+ * const params: CreateSandboxParams = {
  *     language: 'typescript',
  *     envVars: { NODE_ENV: 'development' },
  *     resources: {
@@ -146,9 +146,9 @@ export interface WorkspaceResources {
  *     },
  *     autoStopInterval: 60  // Auto-stop after 1 hour of inactivity
  * };
- * const workspace = await daytona.create(params, 50);
+ * const sandbox = await daytona.create(params, 50);
  */
-export type CreateWorkspaceParams = {
+export type CreateSandboxParams = {
   /** Optional Sandbox ID. If not provided, a random ID will be generated */
   id?: string
   /** Optional Docker image to use for the Sandbox */
@@ -157,16 +157,16 @@ export type CreateWorkspaceParams = {
   user?: string
   /** Programming language for direct code execution */
   language?: CodeLanguage | string
-  /** Optional environment variables to set in the workspace */
+  /** Optional environment variables to set in the sandbox */
   envVars?: Record<string, string>
   /** Sandbox labels */
   labels?: Record<string, string>
   /** Is the Sandbox port preview public */
   public?: boolean
   /** Target location for the Sandbox */
-  target?: WorkspaceTargetRegion | string
+  target?: SandboxTargetRegion | string
   /** Resource allocation for the Sandbox */
-  resources?: WorkspaceResources
+  resources?: SandboxResources
   /** If true, will not wait for the Sandbox to be ready before returning */
   async?: boolean
   /**
@@ -189,7 +189,7 @@ export type CreateWorkspaceParams = {
  * // Using environment variables
  * // Uses DAYTONA_API_KEY, DAYTONA_SERVER_URL, DAYTONA_TARGET
  * const daytona = new Daytona();
- * const workspace = await daytona.create();
+ * const sandbox = await daytona.create();
  * 
  * @example 
  * // Using explicit configuration
@@ -203,9 +203,9 @@ export type CreateWorkspaceParams = {
  * @class
  */
 export class Daytona {
-  private readonly workspaceApi: WorkspaceApi
+  private readonly sandboxApi: SandboxApi
   private readonly toolboxApi: ToolboxApi
-  private readonly target: WorkspaceTargetRegion
+  private readonly target: SandboxTargetRegion
   private readonly apiKey: string
   private readonly serverUrl: string
 
@@ -224,8 +224,8 @@ export class Daytona {
     if (!serverUrl) {
       throw new DaytonaError('Server URL is required')
     }
-    const envTarget = process.env.DAYTONA_TARGET as WorkspaceTargetRegion
-    const target = config?.target || envTarget || WorkspaceTargetRegion.US
+    const envTarget = process.env.DAYTONA_TARGET as SandboxTargetRegion
+    const target = config?.target || envTarget || SandboxTargetRegion.US
 
     this.apiKey = apiKey
     this.serverUrl = serverUrl
@@ -262,7 +262,7 @@ export class Daytona {
       }
     )
 
-    this.workspaceApi = new WorkspaceApi(configuration, '', axiosInstance)
+    this.sandboxApi = new SandboxApi(configuration, '', axiosInstance)
     this.toolboxApi = new ToolboxApi(configuration, '', axiosInstance)
   }
 
@@ -270,17 +270,17 @@ export class Daytona {
    * Creates Sandboxes with default or custom configurations. You can specify various parameters,
    * including language, image, resources, environment variables, and volumes for the Sandbox.
    * 
-   * @param {CreateWorkspaceParams} [params] - Parameters for Sandbox creation
+   * @param {CreateSandboxParams} [params] - Parameters for Sandbox creation
    * @param {number} [timeout] - Timeout in seconds (0 means no timeout, default is 60)
-   * @returns {Promise<Workspace>} The created Sandbox instance
+   * @returns {Promise<Sandbox>} The created Sandbox instance
    * 
    * @example
-   * // Create a default workspace
-   * const workspace = await daytona.create();
+   * // Create a default sandbox
+   * const sandbox = await daytona.create();
    * 
    * @example
-   * // Create a custom workspace
-   * const params: CreateWorkspaceParams = {
+   * // Create a custom sandbox
+   * const params: CreateSandboxParams = {
    *     language: 'typescript',
    *     image: 'node:18',
    *     envVars: { 
@@ -293,10 +293,10 @@ export class Daytona {
    *     },
    *     autoStopInterval: 60
    * };
-   * const workspace = await daytona.create(params, 40);
+   * const sandbox = await daytona.create(params, 40);
    */
-  public async create(params?: CreateWorkspaceParams, timeout: number = 60): Promise<Workspace> {
-    const startTime = Date.now();
+  public async create(params?: CreateSandboxParams, timeout: number = 60): Promise<Sandbox> {
+    // const startTime = Date.now();
 
     if (params == null) {
       params = { language: 'python' }
@@ -320,7 +320,7 @@ export class Daytona {
     const codeToolbox = this.getCodeToolbox(params.language as CodeLanguage)
 
     try {
-      const response = await this.workspaceApi.createWorkspace({
+      const response = await this.sandboxApi.createWorkspace({
           id: params.id,
           name: params.id,
           image: params.image,
@@ -339,28 +339,28 @@ export class Daytona {
           timeout: effectiveTimeout * 1000
         })
 
-      const workspaceInstance = response.data
-      const workspaceInfo = Workspace.toWorkspaceInfo(workspaceInstance)
-      workspaceInstance.info = workspaceInfo
+      const sandboxInstance = response.data
+      const sandboxInfo = Sandbox.toSandboxInfo(sandboxInstance)
+      sandboxInstance.info = sandboxInfo
 
-      const workspace = new Workspace(
-        workspaceInstance.id,
-        workspaceInstance as WorkspaceInstance,
-        this.workspaceApi,
+      const sandbox = new Sandbox(
+        sandboxInstance.id!,
+        sandboxInstance as SandboxInstance,
+        this.sandboxApi,
         this.toolboxApi,
         codeToolbox,
       )
 
       // if (!params.async) {
       //   const timeElapsed = Date.now() - startTime;
-      //   await workspace.waitUntilStarted(effectiveTimeout ? effectiveTimeout - (timeElapsed / 1000) : 0);
+      //   await sandbox.waitUntilStarted(effectiveTimeout ? effectiveTimeout - (timeElapsed / 1000) : 0);
       // }
 
-      return workspace
+      return sandbox
     } catch (error) {
-      void this.workspaceApi.deleteWorkspace(params.id!, true).catch(() => {});
+      void this.sandboxApi.deleteWorkspace(params.id!, true).catch(() => {});
       if (error instanceof DaytonaError && error.message.includes("Operation timed out")) {
-        throw new DaytonaError(`Failed to create and start workspace within ${effectiveTimeout} seconds. Operation timed out.`)
+        throw new DaytonaError(`Failed to create and start sandbox within ${effectiveTimeout} seconds. Operation timed out.`)
       }
       throw error
     }
@@ -369,46 +369,46 @@ export class Daytona {
   /**
    * Gets a Sandbox by its ID.
    * 
-   * @param {string} workspaceId - The ID of the Sandbox to retrieve
-   * @returns {Promise<Workspace>} The Sandbox
+   * @param {string} sandboxId - The ID of the Sandbox to retrieve
+   * @returns {Promise<Sandbox>} The Sandbox
    * 
    * @example
-   * const workspace = await daytona.get('my-workspace-id');
-   * console.log(`Workspace state: ${workspace.instance.state}`);
+   * const sandbox = await daytona.get('my-sandbox-id');
+   * console.log(`Sandbox state: ${sandbox.instance.state}`);
    */
-  public async get(workspaceId: string): Promise<Workspace> {
-    const response = await this.workspaceApi.getWorkspace(workspaceId)
-    const workspaceInstance = response.data
-    const language = workspaceInstance.labels && workspaceInstance.labels[`code-toolbox-language`]
+  public async get(sandboxId: string): Promise<Sandbox> {
+    const response = await this.sandboxApi.getWorkspace(sandboxId)
+    const sandboxInstance = response.data
+    const language = sandboxInstance.labels && sandboxInstance.labels[`code-toolbox-language`]
     const codeToolbox = this.getCodeToolbox(language as CodeLanguage)
-    const workspaceInfo = Workspace.toWorkspaceInfo(workspaceInstance)
-    workspaceInstance.info = workspaceInfo
+    const sandboxInfo = Sandbox.toSandboxInfo(sandboxInstance)
+    sandboxInstance.info = sandboxInfo
 
-    return new Workspace(workspaceId, workspaceInstance as WorkspaceInstance, this.workspaceApi, this.toolboxApi, codeToolbox)
+    return new Sandbox(sandboxId, sandboxInstance as SandboxInstance, this.sandboxApi, this.toolboxApi, codeToolbox)
   }
 
   /**
    * Lists all Sandboxes.
    * 
-   * @returns {Promise<Workspace[]>} Array of Sandboxes
+   * @returns {Promise<Sandbox[]>} Array of Sandboxes
    * 
    * @example
-   * const workspaces = await daytona.list();
-   * for (const workspace of workspaces) {
-   *     console.log(`${workspace.id}: ${workspace.instance.state}`);
+   * const sandboxes = await daytona.list();
+   * for (const sandbox of sandboxes) {
+   *     console.log(`${sandbox.id}: ${sandbox.instance.state}`);
    * }
    */
-  public async list(): Promise<Workspace[]> {
-    const response = await this.workspaceApi.listWorkspaces()
-    return response.data.map((workspace) => {
-      const language = workspace.labels?.[`code-toolbox-language`] as CodeLanguage
-      const workspaceInfo = Workspace.toWorkspaceInfo(workspace)
-      workspace.info = workspaceInfo
+  public async list(): Promise<Sandbox[]> {
+    const response = await this.sandboxApi.listWorkspaces()
+    return response.data.map((sandbox) => {
+      const language = sandbox.labels?.[`code-toolbox-language`] as CodeLanguage
+      const sandboxInfo = Sandbox.toSandboxInfo(sandbox)
+      sandbox.info = sandboxInfo
 
-      return new Workspace(
-        workspace.id, 
-        workspace as WorkspaceInstance, 
-        this.workspaceApi, 
+      return new Sandbox(
+        sandbox.id, 
+        sandbox as SandboxInstance, 
+        this.sandboxApi, 
         this.toolboxApi, 
         this.getCodeToolbox(language)
       )
@@ -418,46 +418,46 @@ export class Daytona {
   /**
    * Starts a Sandbox and waits for it to be ready.
    * 
-   * @param {Workspace} workspace - The Sandbox to start
+   * @param {Sandbox} sandbox - The Sandbox to start
    * @param {number} [timeout] - Optional timeout in seconds (0 means no timeout)
    * @returns {Promise<void>}
    * 
    * @example
-   * const workspace = await daytona.get('my-workspace-id');
-   * // Wait up to 60 seconds for the workspace to start
-   * await daytona.start(workspace, 60);
+   * const sandbox = await daytona.get('my-sandbox-id');
+   * // Wait up to 60 seconds for the sandbox to start
+   * await daytona.start(sandbox, 60);
    */
-  public async start(workspace: Workspace, timeout?: number) {
-    await workspace.start(timeout)
+  public async start(sandbox: Sandbox, timeout?: number) {
+    await sandbox.start(timeout)
   }
 
   /**
    * Stops a Sandbox.
    * 
-   * @param {Workspace} workspace - The Sandbox to stop
+   * @param {Sandbox} sandbox - The Sandbox to stop
    * @returns {Promise<void>}
    * 
    * @example
-   * const workspace = await daytona.get('my-workspace-id');
-   * await daytona.stop(workspace);
+   * const sandbox = await daytona.get('my-sandbox-id');
+   * await daytona.stop(sandbox);
    */
-  public async stop(workspace: Workspace) {
-    await workspace.stop()
+  public async stop(sandbox: Sandbox) {
+    await sandbox.stop()
   }
 
   /**
    * Removes a Sandbox.
    * 
-   * @param {Workspace} workspace - The Sandbox to remove
+   * @param {Sandbox} sandbox - The Sandbox to remove
    * @param {number} timeout - Timeout in seconds (0 means no timeout, default is 60)
    * @returns {Promise<void>}
    * 
    * @example
-   * const workspace = await daytona.get('my-workspace-id');
-   * await daytona.remove(workspace);
+   * const sandbox = await daytona.get('my-sandbox-id');
+   * await daytona.remove(sandbox);
    */
-  public async remove(workspace: Workspace, timeout: number = 60) {
-    await this.workspaceApi.deleteWorkspace(workspace.id, true, { timeout: timeout * 1000 })
+  public async remove(sandbox: Sandbox, timeout: number = 60) {
+    await this.sandboxApi.deleteWorkspace(sandbox.id, true, { timeout: timeout * 1000 })
   }
 
   /**
@@ -466,12 +466,24 @@ export class Daytona {
    * @param {string} workspaceId - The ID of the Sandbox to retrieve
    * @returns {Promise<Workspace>} The Sandbox
    * 
-   * @example
-   * const workspace = await daytona.getCurrentWorkspace('my-workspace-id');
-   * console.log(`Current workspace state: ${workspace.instance.state}`);
+   * @deprecated Use `getCurrentSandbox` instead. This method will be removed in a future version.
    */
   public async getCurrentWorkspace(workspaceId: string): Promise<Workspace> {
-    return this.get(workspaceId)
+    return await this.getCurrentSandbox(workspaceId)
+  }
+
+  /**
+   * Gets the Sandbox by ID.
+   * 
+   * @param {string} sandboxId - The ID of the Sandbox to retrieve
+   * @returns {Promise<Sandbox>} The Sandbox
+   * 
+   * @example
+   * const sandbox = await daytona.getCurrentSandbox('my-sandbox-id');
+   * console.log(`Current sandbox state: ${sandbox.instance.state}`);
+   */
+  public async getCurrentSandbox(sandboxId: string): Promise<Sandbox> {
+    return await this.get(sandboxId)
   }
 
   /**
@@ -479,17 +491,17 @@ export class Daytona {
    * 
    * @private
    * @param {CodeLanguage} [language] - Programming language for the toolbox
-   * @returns {WorkspaceCodeToolbox} The appropriate code toolbox instance
+   * @returns {SandboxCodeToolbox} The appropriate code toolbox instance
    * @throws {DaytonaError} - `DaytonaError` - When an unsupported language is specified
    */
   private getCodeToolbox(language?: CodeLanguage) {
     switch (language) {
       case CodeLanguage.JAVASCRIPT:
       case CodeLanguage.TYPESCRIPT:
-        return new WorkspaceTsCodeToolbox()
+        return new SandboxTsCodeToolbox()
       case CodeLanguage.PYTHON:
       case undefined:
-        return new WorkspacePythonCodeToolbox()
+        return new SandboxPythonCodeToolbox()
       default:
         throw new DaytonaError(`Unsupported language: ${language}, supported languages: ${Object.values(CodeLanguage).join(', ')}`)
     }

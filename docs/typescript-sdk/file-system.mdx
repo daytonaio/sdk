@@ -10,18 +10,18 @@ This guide covers all available file system operations and best practices.
 
 ```ts
 // Basic file operations
-// Create a workspace
-const workspace = await daytona.create();
+// Create a sandbox
+const sandbox = await daytona.create();
 
 // Create a directory
-await workspace.fs.createFolder('/workspace/data', '755');
+await sandbox.fs.createFolder('/workspace/data', '755');
 
 // Upload a file
 const fileContent = new File(['content'], 'local_file.txt');
-await workspace.fs.uploadFile('/workspace/data/file.txt', fileContent);
+await sandbox.fs.uploadFile('/workspace/data/file.txt', fileContent);
 
 // List directory contents
-const files = await workspace.fs.listFiles('/workspace');
+const files = await sandbox.fs.listFiles('/workspace');
 files.forEach(file => {
   console.log(`Name: ${file.name}`);
   console.log(`Is directory: ${file.isDir}`);
@@ -30,7 +30,7 @@ files.forEach(file => {
 });
 
 // Search file contents
-const matches = await workspace.fs.findFiles(
+const matches = await sandbox.fs.findFiles(
   '/workspace/src',
   'text-of-interest'
 );
@@ -44,20 +44,20 @@ matches.forEach(match => {
 ```ts
 // File manipulation
 // Move files
-await workspace.fs.moveFiles(
+await sandbox.fs.moveFiles(
   '/workspace/data/old.txt',
   '/workspace/data/new.txt'
 );
 
 // Replace text in files
-const results = await workspace.fs.replaceInFiles(
+const results = await sandbox.fs.replaceInFiles(
   ['/workspace/data/new.txt'],
   'old_version',
   'new_version'
 );
 
 // Set permissions
-await workspace.fs.setFilePermissions(
+await sandbox.fs.setFilePermissions(
   '/workspace/data/script.sh',
   {
     mode: '755',
@@ -68,7 +68,7 @@ await workspace.fs.setFilePermissions(
 
 ## FileSystem
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/typescript/src/FileSystem.ts#L107)
+[[view_source]](https://github.com/MDzaja/sdk/blob/dd9532596a339882e2272f36b7b78ee1903debe2/packages/typescript/src/FileSystem.ts#L107)
 
 Provides file system operations within a Sandbox.
 
@@ -82,16 +82,16 @@ managing permissions.
 #### new FileSystem()
 
 ```ts
-new FileSystem(instance: WorkspaceInstance, toolboxApi: ToolboxApi): FileSystem
+new FileSystem(instance: SandboxInstance, toolboxApi: ToolboxApi): FileSystem
 ```
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/typescript/src/FileSystem.ts#L108)
+[[view_source]](https://github.com/MDzaja/sdk/blob/dd9532596a339882e2272f36b7b78ee1903debe2/packages/typescript/src/FileSystem.ts#L108)
 
 ##### Parameters
 
 | Parameter | Type |
 | ------ | ------ |
-| `instance` | `WorkspaceInstance` |
+| `instance` | `SandboxInstance` |
 | `toolboxApi` | `ToolboxApi` |
 
 ##### Returns
@@ -106,7 +106,7 @@ new FileSystem(instance: WorkspaceInstance, toolboxApi: ToolboxApi): FileSystem
 createFolder(path: string, mode: string): Promise<void>
 ```
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/typescript/src/FileSystem.ts#L124)
+[[view_source]](https://github.com/MDzaja/sdk/blob/dd9532596a339882e2272f36b7b78ee1903debe2/packages/typescript/src/FileSystem.ts#L124)
 
 Create a new directory in the Sandbox with specified permissions.
 
@@ -136,7 +136,7 @@ await fs.createFolder('/app/data', '755');
 deleteFile(path: string): Promise<void>
 ```
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/typescript/src/FileSystem.ts#L139)
+[[view_source]](https://github.com/MDzaja/sdk/blob/dd9532596a339882e2272f36b7b78ee1903debe2/packages/typescript/src/FileSystem.ts#L139)
 
 Deletes a file or directory from the Sandbox.
 
@@ -165,7 +165,7 @@ await fs.deleteFile('/app/temp.log');
 downloadFile(path: string): Promise<Blob>
 ```
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/typescript/src/FileSystem.ts#L155)
+[[view_source]](https://github.com/MDzaja/sdk/blob/dd9532596a339882e2272f36b7b78ee1903debe2/packages/typescript/src/FileSystem.ts#L155)
 
 Downloads a file from the Sandbox.
 
@@ -197,7 +197,7 @@ console.log('File content:', fileBlob.toString());
 findFiles(path: string, pattern: string): Promise<Match[]>
 ```
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/typescript/src/FileSystem.ts#L174)
+[[view_source]](https://github.com/MDzaja/sdk/blob/dd9532596a339882e2272f36b7b78ee1903debe2/packages/typescript/src/FileSystem.ts#L174)
 
 Searches for text patterns within files in the Sandbox.
 
@@ -232,7 +232,7 @@ matches.forEach(match => {
 getFileDetails(path: string): Promise<FileInfo>
 ```
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/typescript/src/FileSystem.ts#L190)
+[[view_source]](https://github.com/MDzaja/sdk/blob/dd9532596a339882e2272f36b7b78ee1903debe2/packages/typescript/src/FileSystem.ts#L190)
 
 Retrieves detailed information about a file or directory.
 
@@ -264,7 +264,7 @@ console.log(`Size: ${info.size}, Modified: ${info.modTime}`);
 listFiles(path: string): Promise<FileInfo[]>
 ```
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/typescript/src/FileSystem.ts#L208)
+[[view_source]](https://github.com/MDzaja/sdk/blob/dd9532596a339882e2272f36b7b78ee1903debe2/packages/typescript/src/FileSystem.ts#L208)
 
 Lists contents of a directory in the Sandbox.
 
@@ -298,7 +298,7 @@ files.forEach(file => {
 moveFiles(source: string, destination: string): Promise<void>
 ```
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/typescript/src/FileSystem.ts#L224)
+[[view_source]](https://github.com/MDzaja/sdk/blob/dd9532596a339882e2272f36b7b78ee1903debe2/packages/typescript/src/FileSystem.ts#L224)
 
 Moves or renames a file or directory.
 
@@ -331,7 +331,7 @@ replaceInFiles(
 newValue: string): Promise<ReplaceResult[]>
 ```
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/typescript/src/FileSystem.ts#L245)
+[[view_source]](https://github.com/MDzaja/sdk/blob/dd9532596a339882e2272f36b7b78ee1903debe2/packages/typescript/src/FileSystem.ts#L245)
 
 Replaces text content in multiple files.
 
@@ -368,7 +368,7 @@ const results = await fs.replaceInFiles(
 searchFiles(path: string, pattern: string): Promise<SearchFilesResponse>
 ```
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/typescript/src/FileSystem.ts#L272)
+[[view_source]](https://github.com/MDzaja/sdk/blob/dd9532596a339882e2272f36b7b78ee1903debe2/packages/typescript/src/FileSystem.ts#L272)
 
 Searches for files and directories by name pattern in the Sandbox.
 
@@ -401,7 +401,7 @@ result.files.forEach(file => console.log(file));
 setFilePermissions(path: string, permissions: FilePermissionsParams): Promise<void>
 ```
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/typescript/src/FileSystem.ts#L295)
+[[view_source]](https://github.com/MDzaja/sdk/blob/dd9532596a339882e2272f36b7b78ee1903debe2/packages/typescript/src/FileSystem.ts#L295)
 
 Sets permissions and ownership for a file or directory.
 
@@ -435,7 +435,7 @@ await fs.setFilePermissions('/app/script.sh', {
 uploadFile(path: string, file: File): Promise<void>
 ```
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/typescript/src/FileSystem.ts#L315)
+[[view_source]](https://github.com/MDzaja/sdk/blob/dd9532596a339882e2272f36b7b78ee1903debe2/packages/typescript/src/FileSystem.ts#L315)
 
 Uploads a file to the Sandbox.
 
@@ -462,7 +462,7 @@ await fs.uploadFile('/app/config.json', configFile);
 
 ## FilePermissionsParams
 
-[[view_source]](https://github.com/MDzaja/sdk/blob/e2c391f367e740a14945617b9e5c7b965ba4d7d9/packages/typescript/src/FileSystem.ts#L90)
+[[view_source]](https://github.com/MDzaja/sdk/blob/dd9532596a339882e2272f36b7b78ee1903debe2/packages/typescript/src/FileSystem.ts#L90)
 
 Parameters for setting file permissions in the Sandbox.
 
