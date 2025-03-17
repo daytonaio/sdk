@@ -9,15 +9,15 @@ Examples:
     sandbox = daytona.create()
     
     # Create a directory
-    sandbox.fs.create_folder("/sandbox/data", "755")
+    sandbox.fs.create_folder("/workspace/data", "755")
     
     # Upload a file
     with open("local_file.txt", "rb") as f:
         content = f.read()
-    sandbox.fs.upload_file("/sandbox/data/file.txt", content)
+    sandbox.fs.upload_file("/workspace/data/file.txt", content)
     
     # List directory contents
-    files = sandbox.fs.list_files("/sandbox")
+    files = sandbox.fs.list_files("/workspace")
     for file in files:
         print(f"Name: {file.name}")
         print(f"Is directory: {file.is_dir}")
@@ -26,7 +26,7 @@ Examples:
     
     # Search file contents
     matches = sandbox.fs.find_files(
-        path="/sandbox/src",
+        path="/workspace/src",
         pattern="text-of-interest"
     )
     for match in matches:
@@ -40,20 +40,20 @@ Examples:
     ```python
     # Move files
     sandbox.fs.move_files(
-        "/sandbox/data/old.txt",
-        "/sandbox/data/new.txt"
+        "/workspace/data/old.txt",
+        "/workspace/data/new.txt"
     )
     
     # Replace text in files
     results = sandbox.fs.replace_in_files(
-        files=["/sandbox/data/new.txt"],
+        files=["/workspace/data/new.txt"],
         pattern="old_version",
         new_value="new_version"
     )
     
     # Set permissions
     sandbox.fs.set_file_permissions(
-        path="/sandbox/data/script.sh",
+        path="/workspace/data/script.sh",
         mode="755",
         owner="daytona"
     )
@@ -113,10 +113,10 @@ class FileSystem:
         Example:
             ```python
             # Create a directory with standard permissions
-            sandbox.fs.create_folder("/sandbox/data", "755")
+            sandbox.fs.create_folder("/workspace/data", "755")
 
             # Create a private directory
-            sandbox.fs.create_folder("/sandbox/secrets", "700")
+            sandbox.fs.create_folder("/workspace/secrets", "700")
             ```
         """
         self.toolbox_api.create_folder(
@@ -135,7 +135,7 @@ class FileSystem:
         Example:
             ```python
             # Delete a file
-            sandbox.fs.delete_file("/sandbox/data/old_file.txt")
+            sandbox.fs.delete_file("/workspace/data/old_file.txt")
             ```
         """
         self.toolbox_api.delete_file(
@@ -157,12 +157,12 @@ class FileSystem:
         Example:
             ```python
             # Download and save a file locally
-            content = sandbox.fs.download_file("/sandbox/data/file.txt")
+            content = sandbox.fs.download_file("/workspace/data/file.txt")
             with open("local_copy.txt", "wb") as f:
                 f.write(content)
 
             # Download and process text content
-            content = sandbox.fs.download_file("/sandbox/data/config.json")
+            content = sandbox.fs.download_file("/workspace/data/config.json")
             config = json.loads(content.decode('utf-8'))
             ```
         """
@@ -190,7 +190,7 @@ class FileSystem:
         Example:
             ```python
             # Search for TODOs in Python files
-            matches = sandbox.fs.find_files("/sandbox/src", "TODO:")
+            matches = sandbox.fs.find_files("/workspace/src", "TODO:")
             for match in matches:
                 print(f"{match.file}:{match.line}: {match.content.strip()}")
             ```
@@ -223,13 +223,13 @@ class FileSystem:
         Example:
             ```python
             # Get file metadata
-            info = sandbox.fs.get_file_info("/sandbox/data/file.txt")
+            info = sandbox.fs.get_file_info("/workspace/data/file.txt")
             print(f"Size: {info.size} bytes")
             print(f"Modified: {info.mod_time}")
             print(f"Mode: {info.mode}")
 
             # Check if path is a directory
-            info = sandbox.fs.get_file_info("/sandbox/data")
+            info = sandbox.fs.get_file_info("/workspace/data")
             if info.is_dir:
                 print("Path is a directory")
             ```
@@ -255,7 +255,7 @@ class FileSystem:
         Example:
             ```python
             # List directory contents
-            files = sandbox.fs.list_files("/sandbox/data")
+            files = sandbox.fs.list_files("/workspace/data")
 
             # Print files and their sizes
             for file in files:
@@ -286,20 +286,20 @@ class FileSystem:
             ```python
             # Rename a file
             sandbox.fs.move_files(
-                "/sandbox/data/old_name.txt",
-                "/sandbox/data/new_name.txt"
+                "/workspace/data/old_name.txt",
+                "/workspace/data/new_name.txt"
             )
 
             # Move a file to a different directory
             sandbox.fs.move_files(
-                "/sandbox/data/file.txt",
-                "/sandbox/archive/file.txt"
+                "/workspace/data/file.txt",
+                "/workspace/archive/file.txt"
             )
 
             # Move a directory
             sandbox.fs.move_files(
-                "/sandbox/old_dir",
-                "/sandbox/new_dir"
+                "/workspace/old_dir",
+                "/workspace/new_dir"
             )
             ```
         """
@@ -333,7 +333,7 @@ class FileSystem:
             ```python
             # Replace in specific files
             results = sandbox.fs.replace_in_files(
-                files=["/sandbox/src/file1.py", "/sandbox/src/file2.py"],
+                files=["/workspace/src/file1.py", "/workspace/src/file2.py"],
                 pattern="old_function",
                 new_value="new_function"
             )
@@ -373,12 +373,12 @@ class FileSystem:
         Example:
             ```python
             # Find all Python files
-            result = sandbox.fs.search_files("/sandbox", "*.py")
+            result = sandbox.fs.search_files("/workspace", "*.py")
             for file in result.files:
                 print(file)
 
             # Find files with specific prefix
-            result = sandbox.fs.search_files("/sandbox/data", "test_*")
+            result = sandbox.fs.search_files("/workspace/data", "test_*")
             print(f"Found {len(result.files)} test files")
             ```
         """
@@ -407,13 +407,13 @@ class FileSystem:
             ```python
             # Make a file executable
             sandbox.fs.set_file_permissions(
-                path="/sandbox/scripts/run.sh",
+                path="/workspace/scripts/run.sh",
                 mode="755"  # rwxr-xr-x
             )
 
             # Change file owner
             sandbox.fs.set_file_permissions(
-                path="/sandbox/data/file.txt",
+                path="/workspace/data/file.txt",
                 owner="daytona",
                 group="daytona"
             )
@@ -443,18 +443,18 @@ class FileSystem:
             ```python
             # Upload a text file
             content = b"Hello, World!"
-            sandbox.fs.upload_file("/sandbox/data/hello.txt", content)
+            sandbox.fs.upload_file("/workspace/data/hello.txt", content)
 
             # Upload a local file
             with open("local_file.txt", "rb") as f:
                 content = f.read()
-            sandbox.fs.upload_file("/sandbox/data/file.txt", content)
+            sandbox.fs.upload_file("/workspace/data/file.txt", content)
 
             # Upload binary data
             import json
             data = {"key": "value"}
             content = json.dumps(data).encode('utf-8')
-            sandbox.fs.upload_file("/sandbox/data/config.json", content)
+            sandbox.fs.upload_file("/workspace/data/config.json", content)
             ```
         """
         self.toolbox_api.upload_file(

@@ -14,19 +14,19 @@
  * // Clone a repository
  * await sandbox.git.clone(
  *   'https://github.com/user/repo.git',
- *   '/sandbox/repo'
+ *   '/workspace/repo'
  * );
  * 
  * // Make some changes
  * await sandbox.fs.uploadFile(
- *   '/sandbox/repo/test.txt',
+ *   '/workspace/repo/test.txt',
  *   new File([Buffer.from('Hello, World!')], 'test.txt')
  * );
  * 
  * // Stage and commit changes
- * await sandbox.git.add('/sandbox/repo', ['test.txt']);
+ * await sandbox.git.add('/workspace/repo', ['test.txt']);
  * await sandbox.git.commit(
- *   '/sandbox/repo',
+ *   '/workspace/repo',
  *   'Add test file',
  *   'John Doe',
  *   'john@example.com'
@@ -34,7 +34,7 @@
  * 
  * // Push changes (with authentication)
  * await sandbox.git.push(
- *   '/sandbox/repo',
+ *   '/workspace/repo',
  *   'user',
  *   'token'
  * );
@@ -67,11 +67,11 @@ export class Git {
    * 
    * @example
    * // Stage a single file
-   * await git.add('/sandbox/repo', ['file.txt']);
+   * await git.add('/workspace/repo', ['file.txt']);
    * 
    * @example
    * // Stage whole repository
-   * await git.add('/sandbox/repo', ['.']);
+   * await git.add('/workspace/repo', ['.']);
    */
   public async add(path: string, files: string[]): Promise<void> {
     await this.toolboxApi.gitAddFiles(this.instance.id, {
@@ -89,7 +89,7 @@ export class Git {
    * @returns {Promise<ListBranchResponse>} List of branches in the repository
    * 
    * @example
-   * const response = await git.branches('/sandbox/repo');
+   * const response = await git.branches('/workspace/repo');
    * console.log(`Branches: ${response.branches}`);
    */
   public async branches(path: string): Promise<ListBranchResponse> {
@@ -116,14 +116,14 @@ export class Git {
    * // Clone the default branch
    * await git.clone(
    *   'https://github.com/user/repo.git',
-   *   '/sandbox/repo'
+   *   '/workspace/repo'
    * );
    * 
    * @example
    * // Clone a specific branch with authentication
    * await git.clone(
    *   'https://github.com/user/private-repo.git',
-   *   '/sandbox/private',
+   *   '/workspace/private',
    *   branch='develop',
    *   username='user',
    *   password='token'
@@ -133,7 +133,7 @@ export class Git {
    * // Clone a specific commit
    * await git.clone(
    *   'https://github.com/user/repo.git',
-   *   '/sandbox/repo-old',
+   *   '/workspace/repo-old',
    *   commitId='abc123'
    * );
    */
@@ -170,9 +170,9 @@ export class Git {
    * 
    * @example
    * // Stage and commit changes
-   * await git.add('/sandbox/repo', ['README.md']);
+   * await git.add('/workspace/repo', ['README.md']);
    * await git.commit(
-   *   '/sandbox/repo',
+   *   '/workspace/repo',
    *   'Update documentation',
    *   'John Doe',
    *   'john@example.com'
@@ -205,12 +205,12 @@ export class Git {
    * 
    * @example
    * // Push to a public repository
-   * await git.push('/sandbox/repo');
+   * await git.push('/workspace/repo');
    * 
    * @example
    * // Push to a private repository
    * await git.push(
-   *   '/sandbox/repo',
+   *   '/workspace/repo',
    *   'user',
    *   'token'
    * );
@@ -240,12 +240,12 @@ export class Git {
    * 
    * @example
    * // Pull from a public repository
-   * await git.pull('/sandbox/repo');
+   * await git.pull('/workspace/repo');
    * 
    * @example
    * // Pull from a private repository
    * await git.pull(
-   *   '/sandbox/repo',
+   *   '/workspace/repo',
    *   'user',
    *   'token'
    * );
@@ -277,7 +277,7 @@ export class Git {
    *                               - fileStatus: List of file statuses
    * 
    * @example
-   * const status = await sandbox.git.status('/sandbox/repo');
+   * const status = await sandbox.git.status('/workspace/repo');
    * console.log(`Current branch: ${status.currentBranch}`);
    * console.log(`Commits ahead: ${status.ahead}`);
    * console.log(`Commits behind: ${status.behind}`);

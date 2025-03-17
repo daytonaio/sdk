@@ -12,16 +12,16 @@ Example:
     # Clone a repository
     sandbox.git.clone(
         url="https://github.com/user/repo.git",
-        path="/sandbox/repo"
+        path="/workspace/repo"
     )
     
     # Make some changes
-    sandbox.fs.upload_file("/sandbox/repo/test.txt", "Hello, World!")
+    sandbox.fs.upload_file("/workspace/repo/test.txt", "Hello, World!")
     
     # Stage and commit changes
-    sandbox.git.add("/sandbox/repo", ["test.txt"])
+    sandbox.git.add("/workspace/repo", ["test.txt"])
     sandbox.git.commit(
-        path="/sandbox/repo",
+        path="/workspace/repo",
         message="Add test file",
         author="John Doe",
         email="john@example.com"
@@ -29,7 +29,7 @@ Example:
     
     # Push changes (with authentication)
     sandbox.git.push(
-        path="/sandbox/repo",
+        path="/workspace/repo",
         username="user",
         password="token"
     )
@@ -74,17 +74,17 @@ class Git:
         # Clone a repository
         sandbox.git.clone(
             url="https://github.com/user/repo.git",
-            path="/sandbox/repo"
+            path="/workspace/repo"
         )
 
         # Check repository status
-        status = sandbox.git.status("/sandbox/repo")
+        status = sandbox.git.status("/workspace/repo")
         print(f"Modified files: {status.modified}")
 
         # Stage and commit changes
-        sandbox.git.add("/sandbox/repo", ["file.txt"])
+        sandbox.git.add("/workspace/repo", ["file.txt"])
         sandbox.git.commit(
-            path="/sandbox/repo",
+            path="/workspace/repo",
             message="Update file",
             author="John Doe",
             email="john@example.com"
@@ -123,10 +123,10 @@ class Git:
         Example:
             ```python
             # Stage a single file
-            sandbox.git.add("/sandbox/repo", ["file.txt"])
+            sandbox.git.add("/workspace/repo", ["file.txt"])
 
             # Stage multiple files
-            sandbox.git.add("/sandbox/repo", [
+            sandbox.git.add("/workspace/repo", [
                 "src/main.py",
                 "tests/test_main.py",
                 "README.md"
@@ -155,7 +155,7 @@ class Git:
 
         Example:
             ```python
-            response = sandbox.git.branches("/sandbox/repo")
+            response = sandbox.git.branches("/workspace/repo")
             print(f"Branches: {response.branches}")
             ```
         """
@@ -195,13 +195,13 @@ class Git:
             # Clone the default branch
             sandbox.git.clone(
                 url="https://github.com/user/repo.git",
-                path="/sandbox/repo"
+                path="/workspace/repo"
             )
 
             # Clone a specific branch with authentication
             sandbox.git.clone(
                 url="https://github.com/user/private-repo.git",
-                path="/sandbox/private",
+                path="/workspace/private",
                 branch="develop",
                 username="user",
                 password="token"
@@ -210,7 +210,7 @@ class Git:
             # Clone a specific commit
             sandbox.git.clone(
                 url="https://github.com/user/repo.git",
-                path="/sandbox/repo-old",
+                path="/workspace/repo-old",
                 commit_id="abc123"
             )
             ```
@@ -243,9 +243,9 @@ class Git:
         Example:
             ```python
             # Stage and commit changes
-            sandbox.git.add("/sandbox/repo", ["README.md"])
+            sandbox.git.add("/workspace/repo", ["README.md"])
             sandbox.git.commit(
-                path="/sandbox/repo",
+                path="/workspace/repo",
                 message="Update documentation",
                 author="John Doe",
                 email="john@example.com"
@@ -280,11 +280,11 @@ class Git:
         Example:
             ```python
             # Push without authentication (for public repos or SSH)
-            sandbox.git.push("/sandbox/repo")
+            sandbox.git.push("/workspace/repo")
 
             # Push with authentication
             sandbox.git.push(
-                path="/sandbox/repo",
+                path="/workspace/repo",
                 username="user",
                 password="github_token"
             )
@@ -317,11 +317,11 @@ class Git:
         Example:
             ```python
             # Pull without authentication
-            sandbox.git.pull("/sandbox/repo")
+            sandbox.git.pull("/workspace/repo")
 
             # Pull with authentication
             sandbox.git.pull(
-                path="/sandbox/repo",
+                path="/workspace/repo",
                 username="user",
                 password="github_token"
             )
@@ -356,7 +356,7 @@ class Git:
 
         Example:
             ```python
-            status = sandbox.git.status("/sandbox/repo")
+            status = sandbox.git.status("/workspace/repo")
             print(f"On branch: {status.current_branch}")
             print(f"Commits ahead: {status.ahead}")
             print(f"Commits behind: {status.behind}")

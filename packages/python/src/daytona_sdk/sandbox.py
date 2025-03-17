@@ -27,9 +27,9 @@ Examples:
     print(response.result)
     
     # LSP functionality
-    lsp = sandbox.create_lsp_server('python', '/sandbox/project')
-    lsp.did_open('/sandbox/project/src/main.py')
-    completions = lsp.completions('/sandbox/project/src/main.py', {
+    lsp = sandbox.create_lsp_server('python', '/workspace/project')
+    lsp.did_open('/workspace/project/src/main.py')
+    completions = lsp.completions('/workspace/project/src/main.py', {
         'line': 10,
         'character': 15
     })
@@ -60,6 +60,7 @@ from ._utils.timeout import with_timeout
 from ._utils.enum import to_enum
 from .protocols import SandboxCodeToolbox
 from .common.errors import DaytonaError
+
 
 @dataclass
 class SandboxTargetRegion(Enum):
@@ -279,7 +280,7 @@ class Sandbox:
 
         Example:
             ```python
-            lsp = sandbox.create_lsp_server("python", "/sandbox/project")
+            lsp = sandbox.create_lsp_server("python", "/workspace/project")
             ```
         """
         return LspServer(language_id, path_to_project, self.toolbox_api, self.instance)
@@ -332,7 +333,8 @@ class Sandbox:
             print("Sandbox started successfully")
             ```
         """
-        self.sandbox_api.start_workspace(self.id, _request_timeout=timeout or None)
+        self.sandbox_api.start_workspace(
+            self.id, _request_timeout=timeout or None)
         self.wait_for_sandbox_start()
 
     @intercept_errors(message_prefix="Failed to stop sandbox: ")
@@ -355,7 +357,8 @@ class Sandbox:
             print("Sandbox stopped successfully")
             ```
         """
-        self.sandbox_api.stop_workspace(self.id, _request_timeout=timeout or None)
+        self.sandbox_api.stop_workspace(
+            self.id, _request_timeout=timeout or None)
         self.wait_for_sandbox_stop()
 
     @deprecated(reason="Method is deprecated. Use `wait_for_sandbox_start` instead. This method will be removed in a future version.")

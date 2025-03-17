@@ -8,24 +8,24 @@ Example:
     sandbox = daytona.create()
     
     # Create and start LSP server
-    lsp = sandbox.create_lsp_server("typescript", "/sandbox/project")
+    lsp = sandbox.create_lsp_server("typescript", "/workspace/project")
     lsp.start()
     
     # Open a file for editing
-    lsp.did_open("/sandbox/project/src/index.ts")
+    lsp.did_open("/workspace/project/src/index.ts")
     
     # Get completions at a position
     pos = Position(line=10, character=15)
-    completions = lsp.completions("/sandbox/project/src/index.ts", pos)
+    completions = lsp.completions("/workspace/project/src/index.ts", pos)
     print(f"Completions: {completions}")
     
     # Get document symbols
-    symbols = lsp.document_symbols("/sandbox/project/src/index.ts")
+    symbols = lsp.document_symbols("/workspace/project/src/index.ts")
     for symbol in symbols:
         print(f"{symbol.name}: {symbol.kind}")
     
     # Clean up
-    lsp.did_close("/sandbox/project/src/index.ts")
+    lsp.did_close("/workspace/project/src/index.ts")
     lsp.stop()
     ```
 
@@ -125,7 +125,7 @@ class LspServer:
 
         Example:
             ```python
-            lsp = sandbox.create_lsp_server("typescript", "/sandbox/project")
+            lsp = sandbox.create_lsp_server("typescript", "/workspace/project")
             lsp.start()  # Initialize the server
             # Now ready for LSP operations
             ```
@@ -173,7 +173,7 @@ class LspServer:
         Example:
             ```python
             # When opening a file for editing
-            lsp.did_open("/sandbox/project/src/index.ts")
+            lsp.did_open("/workspace/project/src/index.ts")
             # Now can get completions, symbols, etc. for this file
             ```
         """
@@ -198,7 +198,7 @@ class LspServer:
         Example:
             ```python
             # When done editing a file
-            lsp.did_close("/sandbox/project/src/index.ts")
+            lsp.did_close("/workspace/project/src/index.ts")
             ```
         """
         self.toolbox_api.lsp_did_close(
@@ -229,7 +229,7 @@ class LspServer:
         Example:
             ```python
             # Get all symbols in a file
-            symbols = lsp.document_symbols("/sandbox/project/src/index.ts")
+            symbols = lsp.document_symbols("/workspace/project/src/index.ts")
             for symbol in symbols:
                 print(f"{symbol.kind} {symbol.name}: {symbol.location}")
             ```
@@ -240,7 +240,7 @@ class LspServer:
             path_to_project=self.path_to_project,
             uri=f"file://{path}",
         )
-    
+
     @deprecated(reason="Method is deprecated. Use `sandbox_symbols` instead. This method will be removed in a future version.")
     def workspace_symbols(self, query: str) -> List[LspSymbol]:
         """Searches for symbols across the entire Sandbox.
@@ -314,7 +314,7 @@ class LspServer:
             ```python
             # Get completions at a specific position
             pos = Position(line=10, character=15)
-            completions = lsp.completions("/sandbox/project/src/index.ts", pos)
+            completions = lsp.completions("/workspace/project/src/index.ts", pos)
             for item in completions.items:
                 print(f"{item.label} ({item.kind}): {item.detail}")
             ```

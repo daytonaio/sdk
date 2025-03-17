@@ -12,24 +12,24 @@ This enables advanced language features like code completion, diagnostics, and m
 sandbox = daytona.create()
 
 # Create and start LSP server
-lsp = sandbox.create_lsp_server("typescript", "/sandbox/project")
+lsp = sandbox.create_lsp_server("typescript", "/workspace/project")
 lsp.start()
 
 # Open a file for editing
-lsp.did_open("/sandbox/project/src/index.ts")
+lsp.did_open("/workspace/project/src/index.ts")
 
 # Get completions at a position
 pos = Position(line=10, character=15)
-completions = lsp.completions("/sandbox/project/src/index.ts", pos)
+completions = lsp.completions("/workspace/project/src/index.ts", pos)
 print(f"Completions: {completions}")
 
 # Get document symbols
-symbols = lsp.document_symbols("/sandbox/project/src/index.ts")
+symbols = lsp.document_symbols("/workspace/project/src/index.ts")
 for symbol in symbols:
     print(f"{symbol.name}: {symbol.kind}")
 
 # Clean up
-lsp.did_close("/sandbox/project/src/index.ts")
+lsp.did_close("/workspace/project/src/index.ts")
 lsp.stop()
 ```
   
@@ -46,7 +46,7 @@ lsp.stop()
 class LspServer()
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/789c1b1952d9d69cc2ea8ef7a0f0e9c9f2d6ae2e/packages/python/src/daytona_sdk/lsp_server.py#L87)
+[[view_source]](https://github.com/daytonaio/sdk/blob/aac1f63c998eea2b3868fa6d5a8689fa71f75b0d/packages/python/src/daytona_sdk/lsp_server.py#L87)
 
 Provides Language Server Protocol functionality for code intelligence.
 
@@ -67,7 +67,7 @@ def __init__(language_id: LspLanguageId, path_to_project: str,
              toolbox_api: ToolboxApi, instance: SandboxInstance)
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/789c1b1952d9d69cc2ea8ef7a0f0e9c9f2d6ae2e/packages/python/src/daytona_sdk/lsp_server.py#L99)
+[[view_source]](https://github.com/daytonaio/sdk/blob/aac1f63c998eea2b3868fa6d5a8689fa71f75b0d/packages/python/src/daytona_sdk/lsp_server.py#L99)
 
 Initializes a new LSP server instance.
 
@@ -86,7 +86,7 @@ Initializes a new LSP server instance.
 def start() -> None
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/789c1b1952d9d69cc2ea8ef7a0f0e9c9f2d6ae2e/packages/python/src/daytona_sdk/lsp_server.py#L120)
+[[view_source]](https://github.com/daytonaio/sdk/blob/aac1f63c998eea2b3868fa6d5a8689fa71f75b0d/packages/python/src/daytona_sdk/lsp_server.py#L120)
 
 Starts the language server.
 
@@ -96,7 +96,7 @@ It initializes the language server for the specified language and project.
 **Example**:
 
 ```python
-lsp = sandbox.create_lsp_server("typescript", "/sandbox/project")
+lsp = sandbox.create_lsp_server("typescript", "/workspace/project")
 lsp.start()  # Initialize the server
 # Now ready for LSP operations
 ```
@@ -109,7 +109,7 @@ lsp.start()  # Initialize the server
 def stop() -> None
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/789c1b1952d9d69cc2ea8ef7a0f0e9c9f2d6ae2e/packages/python/src/daytona_sdk/lsp_server.py#L142)
+[[view_source]](https://github.com/daytonaio/sdk/blob/aac1f63c998eea2b3868fa6d5a8689fa71f75b0d/packages/python/src/daytona_sdk/lsp_server.py#L142)
 
 Stops the language server.
 
@@ -131,7 +131,7 @@ lsp.stop()  # Clean up resources
 def did_open(path: str) -> None
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/789c1b1952d9d69cc2ea8ef7a0f0e9c9f2d6ae2e/packages/python/src/daytona_sdk/lsp_server.py#L163)
+[[view_source]](https://github.com/daytonaio/sdk/blob/aac1f63c998eea2b3868fa6d5a8689fa71f75b0d/packages/python/src/daytona_sdk/lsp_server.py#L163)
 
 Notifies the language server that a file has been opened.
 
@@ -148,7 +148,7 @@ will begin tracking the file's contents and providing language features.
 
 ```python
 # When opening a file for editing
-lsp.did_open("/sandbox/project/src/index.ts")
+lsp.did_open("/workspace/project/src/index.ts")
 # Now can get completions, symbols, etc. for this file
 ```
 
@@ -160,7 +160,7 @@ lsp.did_open("/sandbox/project/src/index.ts")
 def did_close(path: str) -> None
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/789c1b1952d9d69cc2ea8ef7a0f0e9c9f2d6ae2e/packages/python/src/daytona_sdk/lsp_server.py#L190)
+[[view_source]](https://github.com/daytonaio/sdk/blob/aac1f63c998eea2b3868fa6d5a8689fa71f75b0d/packages/python/src/daytona_sdk/lsp_server.py#L190)
 
 Notify the language server that a file has been closed.
 
@@ -176,7 +176,7 @@ the language server to clean up any resources associated with that file.
 
 ```python
 # When done editing a file
-lsp.did_close("/sandbox/project/src/index.ts")
+lsp.did_close("/workspace/project/src/index.ts")
 ```
 
 
@@ -187,7 +187,7 @@ lsp.did_close("/sandbox/project/src/index.ts")
 def document_symbols(path: str) -> List[LspSymbol]
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/789c1b1952d9d69cc2ea8ef7a0f0e9c9f2d6ae2e/packages/python/src/daytona_sdk/lsp_server.py#L214)
+[[view_source]](https://github.com/daytonaio/sdk/blob/aac1f63c998eea2b3868fa6d5a8689fa71f75b0d/packages/python/src/daytona_sdk/lsp_server.py#L214)
 
 Gets symbol information from a document.
 
@@ -211,7 +211,7 @@ variables, etc.) defined in the specified document.
 
 ```python
 # Get all symbols in a file
-symbols = lsp.document_symbols("/sandbox/project/src/index.ts")
+symbols = lsp.document_symbols("/workspace/project/src/index.ts")
 for symbol in symbols:
     print(f"{symbol.kind} {symbol.name}: {symbol.location}")
 ```
@@ -227,7 +227,7 @@ for symbol in symbols:
 def workspace_symbols(query: str) -> List[LspSymbol]
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/789c1b1952d9d69cc2ea8ef7a0f0e9c9f2d6ae2e/packages/python/src/daytona_sdk/lsp_server.py#L245)
+[[view_source]](https://github.com/daytonaio/sdk/blob/aac1f63c998eea2b3868fa6d5a8689fa71f75b0d/packages/python/src/daytona_sdk/lsp_server.py#L245)
 
 Searches for symbols across the entire Sandbox.
 
@@ -252,7 +252,7 @@ without knowing which file they're in.
 def sandbox_symbols(query: str) -> List[LspSymbol]
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/789c1b1952d9d69cc2ea8ef7a0f0e9c9f2d6ae2e/packages/python/src/daytona_sdk/lsp_server.py#L261)
+[[view_source]](https://github.com/daytonaio/sdk/blob/aac1f63c998eea2b3868fa6d5a8689fa71f75b0d/packages/python/src/daytona_sdk/lsp_server.py#L261)
 
 Searches for symbols across the entire Sandbox.
 
@@ -291,7 +291,7 @@ for symbol in symbols:
 def completions(path: str, position: Position) -> CompletionList
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/789c1b1952d9d69cc2ea8ef7a0f0e9c9f2d6ae2e/packages/python/src/daytona_sdk/lsp_server.py#L294)
+[[view_source]](https://github.com/daytonaio/sdk/blob/aac1f63c998eea2b3868fa6d5a8689fa71f75b0d/packages/python/src/daytona_sdk/lsp_server.py#L294)
 
 Gets completion suggestions at a position in a file.
 
@@ -320,7 +320,7 @@ Gets completion suggestions at a position in a file.
 ```python
 # Get completions at a specific position
 pos = Position(line=10, character=15)
-completions = lsp.completions("/sandbox/project/src/index.ts", pos)
+completions = lsp.completions("/workspace/project/src/index.ts", pos)
 for item in completions.items:
     print(f"{item.label} ({item.kind}): {item.detail}")
 ```
@@ -336,24 +336,24 @@ This enables advanced language features like code completion, diagnostics, and m
 sandbox = daytona.create()
 
 # Create and start LSP server
-lsp = sandbox.create_lsp_server("typescript", "/sandbox/project")
+lsp = sandbox.create_lsp_server("typescript", "/workspace/project")
 lsp.start()
 
 # Open a file for editing
-lsp.did_open("/sandbox/project/src/index.ts")
+lsp.did_open("/workspace/project/src/index.ts")
 
 # Get completions at a position
 pos = Position(line=10, character=15)
-completions = lsp.completions("/sandbox/project/src/index.ts", pos)
+completions = lsp.completions("/workspace/project/src/index.ts", pos)
 print(f"Completions: {completions}")
 
 # Get document symbols
-symbols = lsp.document_symbols("/sandbox/project/src/index.ts")
+symbols = lsp.document_symbols("/workspace/project/src/index.ts")
 for symbol in symbols:
     print(f"{symbol.name}: {symbol.kind}")
 
 # Clean up
-lsp.did_close("/sandbox/project/src/index.ts")
+lsp.did_close("/workspace/project/src/index.ts")
 lsp.stop()
 ```
   
@@ -371,7 +371,7 @@ lsp.stop()
 class Position()
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/789c1b1952d9d69cc2ea8ef7a0f0e9c9f2d6ae2e/packages/python/src/daytona_sdk/lsp_server.py#L65)
+[[view_source]](https://github.com/daytonaio/sdk/blob/aac1f63c998eea2b3868fa6d5a8689fa71f75b0d/packages/python/src/daytona_sdk/lsp_server.py#L65)
 
 Represents a position in a text document.
 
@@ -390,7 +390,7 @@ specified by line number and character offset.
 def __init__(line: int, character: int)
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/789c1b1952d9d69cc2ea8ef7a0f0e9c9f2d6ae2e/packages/python/src/daytona_sdk/lsp_server.py#L76)
+[[view_source]](https://github.com/daytonaio/sdk/blob/aac1f63c998eea2b3868fa6d5a8689fa71f75b0d/packages/python/src/daytona_sdk/lsp_server.py#L76)
 
 Initialize a new Position instance.
 

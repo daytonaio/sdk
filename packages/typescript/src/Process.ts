@@ -22,13 +22,13 @@
  * 
  * // Execute commands in the session
  * const response = await sandbox.process.executeSessionCommand(sessionId, {
- *   command: 'cd /sandbox'
+ *   command: 'cd /workspace'
  * });
  * 
  * const response2 = await sandbox.process.executeSessionCommand(sessionId, {
  *   command: 'pwd'
  * });
- * console.log(response2.result);  // Should print "/sandbox"
+ * console.log(response2.result);  // Should print "/workspace"
  * 
  * // Clean up
  * await sandbox.process.deleteSession(sessionId);
@@ -83,7 +83,7 @@ export class Process {
    * 
    * @example
    * // Command with working directory
-   * const result = await process.executeCommand('ls', '/sandbox/src');
+   * const result = await process.executeCommand('ls', '/workspace/src');
    * 
    * @example
    * // Command with timeout
@@ -212,14 +212,14 @@ export class Process {
    * 
    * // Change directory
    * await process.executeSessionCommand(sessionId, {
-   *   command: 'cd /sandbox'
+   *   command: 'cd /workspace'
    * });
    * 
    * // Run command in new directory
    * const result = await process.executeSessionCommand(sessionId, {
    *   command: 'pwd'
    * });
-   * console.log(result.output);  // Prints: /sandbox
+   * console.log(result.output);  // Prints: /workspace
    */
   public async executeSessionCommand(sessionId: string, req: SessionExecuteRequest, timeout?: number): Promise<SessionExecuteResponse> {
     const response = await this.toolboxApi.executeSessionCommand(

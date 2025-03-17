@@ -24,12 +24,12 @@ Example:
     sandbox.process.create_session(session_id)
     
     # Execute commands in the session
-    req = SessionExecuteRequest(command="cd /sandbox", var_async=False)
+    req = SessionExecuteRequest(command="cd /workspace", var_async=False)
     sandbox.process.execute_session_command(session_id, req)
     
     req = SessionExecuteRequest(command="pwd", var_async=False)
     response = sandbox.process.execute_session_command(session_id, req)
-    print(response.result)  # Should print "/sandbox"
+    print(response.result)  # Should print "/workspace"
     
     # Clean up
     sandbox.process.delete_session(session_id)
@@ -106,7 +106,7 @@ class Process:
             print(response.result)  # Prints: Hello
 
             # Command with working directory
-            result = sandbox.process.exec("ls", cwd="/sandbox/src")
+            result = sandbox.process.exec("ls", cwd="/workspace/src")
 
             # Command with timeout
             result = sandbox.process.exec("sleep 10", timeout=5)
@@ -251,7 +251,7 @@ class Process:
             session_id = "my-session"
 
             # Change directory
-            req = SessionExecuteRequest(command="cd /sandbox")
+            req = SessionExecuteRequest(command="cd /workspace")
             sandbox.process.execute_session_command(session_id, req)
 
             # Create a file

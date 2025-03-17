@@ -11,14 +11,14 @@
  * const sandbox = await daytona.create();
  * 
  * // Create a directory
- * await sandbox.fs.createFolder('/sandbox/data', '755');
+ * await sandbox.fs.createFolder('/workspace/data', '755');
  * 
  * // Upload a file
  * const fileContent = new File(['content'], 'local_file.txt');
- * await sandbox.fs.uploadFile('/sandbox/data/file.txt', fileContent);
+ * await sandbox.fs.uploadFile('/workspace/data/file.txt', fileContent);
  * 
  * // List directory contents
- * const files = await sandbox.fs.listFiles('/sandbox');
+ * const files = await sandbox.fs.listFiles('/workspace');
  * files.forEach(file => {
  *   console.log(`Name: ${file.name}`);
  *   console.log(`Is directory: ${file.isDir}`);
@@ -28,7 +28,7 @@
  * 
  * // Search file contents
  * const matches = await sandbox.fs.findFiles(
- *   '/sandbox/src',
+ *   '/workspace/src',
  *   'text-of-interest'
  * );
  * matches.forEach(match => {
@@ -41,20 +41,20 @@
  * // File manipulation
  * // Move files
  * await sandbox.fs.moveFiles(
- *   '/sandbox/data/old.txt',
- *   '/sandbox/data/new.txt'
+ *   '/workspace/data/old.txt',
+ *   '/workspace/data/new.txt'
  * );
  * 
  * // Replace text in files
  * const results = await sandbox.fs.replaceInFiles(
- *   ['/sandbox/data/new.txt'],
+ *   ['/workspace/data/new.txt'],
  *   'old_version',
  *   'new_version'
  * );
  * 
  * // Set permissions
  * await sandbox.fs.setFilePermissions(
- *   '/sandbox/data/script.sh',
+ *   '/workspace/data/script.sh',
  *   {
  *     mode: '755',
  *     owner: 'daytona'

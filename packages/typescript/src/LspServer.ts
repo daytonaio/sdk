@@ -13,27 +13,27 @@
  * const sandbox = await daytona.create();
  * 
  * // Create and start LSP server
- * const lsp = sandbox.createLspServer('typescript', '/sandbox/project');
+ * const lsp = sandbox.createLspServer('typescript', '/workspace/project');
  * await lsp.start();
  * 
  * // Open a file for editing
- * await lsp.didOpen('/sandbox/project/src/index.ts');
+ * await lsp.didOpen('/workspace/project/src/index.ts');
  * 
  * // Get completions at a position
  * const completions = await lsp.completions(
- *   '/sandbox/project/src/index.ts',
+ *   '/workspace/project/src/index.ts',
  *   { line: 10, character: 15 }
  * );
  * console.log('Completions:', completions);
  * 
  * // Get document symbols
- * const symbols = await lsp.documentSymbols('/sandbox/project/src/index.ts');
+ * const symbols = await lsp.documentSymbols('/workspace/project/src/index.ts');
  * symbols.forEach(symbol => {
  *   console.log(`${symbol.name}: ${symbol.kind}`);
  * });
  * 
  * // Clean up
- * await lsp.didClose('/sandbox/project/src/index.ts');
+ * await lsp.didClose('/workspace/project/src/index.ts');
  * await lsp.stop();
  * 
  */
@@ -111,7 +111,7 @@ export class LspServer {
    * @returns {Promise<void>}
    * 
    * @example
-   * const lsp = sandbox.createLspServer('typescript', '/sandbox/project');
+   * const lsp = sandbox.createLspServer('typescript', '/workspace/project');
    * await lsp.start();  // Initialize the server
    * // Now ready for LSP operations
    */
@@ -158,7 +158,7 @@ export class LspServer {
    * 
    * @example
    * // When opening a file for editing
-   * await lsp.didOpen('/sandbox/project/src/index.ts');
+   * await lsp.didOpen('/workspace/project/src/index.ts');
    * // Now can get completions, symbols, etc. for this file
    */
   public async didOpen(path: string): Promise<void> {
@@ -183,7 +183,7 @@ export class LspServer {
    * 
    * @example
    * // When done editing a file
-   * await lsp.didClose('/sandbox/project/src/index.ts');
+   * await lsp.didClose('/workspace/project/src/index.ts');
    */
   public async didClose(path: string): Promise<void> {
     await this.toolboxApi.lspDidClose(
@@ -210,7 +210,7 @@ export class LspServer {
    * 
    * @example
    * // Get all symbols in a file
-   * const symbols = await lsp.documentSymbols('/sandbox/project/src/index.ts');
+   * const symbols = await lsp.documentSymbols('/workspace/project/src/index.ts');
    * symbols.forEach(symbol => {
    *   console.log(`${symbol.kind} ${symbol.name}: ${symbol.location}`);
    * });
@@ -292,7 +292,7 @@ export class LspServer {
    * 
    * @example
    * // Get completions at a specific position
-   * const completions = await lsp.completions('/sandbox/project/src/index.ts', {
+   * const completions = await lsp.completions('/workspace/project/src/index.ts', {
    *   line: 10,
    *   character: 15
    * });

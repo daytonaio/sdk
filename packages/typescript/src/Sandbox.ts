@@ -29,9 +29,9 @@
  * console.log(response.result);
  * 
  * // LSP functionality
- * const lsp = sandbox.createLspServer('typescript', '/sandbox/project');
- * await lsp.didOpen('/sandbox/project/src/index.ts');
- * const completions = await lsp.completions('/sandbox/project/src/index.ts', {
+ * const lsp = sandbox.createLspServer('typescript', '/workspace/project');
+ * await lsp.didOpen('/workspace/project/src/index.ts');
+ * const completions = await lsp.completions('/workspace/project/src/index.ts', {
  *   line: 10,
  *   character: 15
  * });
@@ -243,7 +243,7 @@ export class Sandbox {
    * @returns {LspServer} A new LSP server instance configured for the specified language
    * 
    * @example
-   * const lsp = sandbox.createLspServer('typescript', '/sandbox/project');
+   * const lsp = sandbox.createLspServer('typescript', '/workspace/project');
    */
   public createLspServer(
     languageId: LspLanguageId | string,

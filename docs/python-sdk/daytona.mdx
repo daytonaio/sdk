@@ -68,7 +68,7 @@ sandbox.process.execute_command("python -m pytest")
 class Daytona()
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/789c1b1952d9d69cc2ea8ef7a0f0e9c9f2d6ae2e/packages/python/src/daytona_sdk/daytona.py#L199)
+[[view_source]](https://github.com/daytonaio/sdk/blob/aac1f63c998eea2b3868fa6d5a8689fa71f75b0d/packages/python/src/daytona_sdk/daytona.py#L198)
 
 Main class for interacting with Daytona Server API.
 
@@ -106,7 +106,7 @@ daytona = Daytona(config)
 def __init__(config: Optional[DaytonaConfig] = None)
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/789c1b1952d9d69cc2ea8ef7a0f0e9c9f2d6ae2e/packages/python/src/daytona_sdk/daytona.py#L227)
+[[view_source]](https://github.com/daytonaio/sdk/blob/aac1f63c998eea2b3868fa6d5a8689fa71f75b0d/packages/python/src/daytona_sdk/daytona.py#L226)
 
 Initializes Daytona instance with optional configuration.
 
@@ -149,7 +149,7 @@ def create(params: Optional[CreateSandboxParams] = None,
            timeout: Optional[float] = 60) -> Sandbox
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/789c1b1952d9d69cc2ea8ef7a0f0e9c9f2d6ae2e/packages/python/src/daytona_sdk/daytona.py#L289)
+[[view_source]](https://github.com/daytonaio/sdk/blob/aac1f63c998eea2b3868fa6d5a8689fa71f75b0d/packages/python/src/daytona_sdk/daytona.py#L288)
 
 Creates Sandboxes with default or custom configurations. You can specify various parameters,
 including language, image, resources, environment variables, and volumes for the Sandbox.
@@ -199,7 +199,7 @@ sandbox = daytona.create(params, 40)
 def remove(sandbox: Sandbox, timeout: Optional[float] = 60) -> None
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/789c1b1952d9d69cc2ea8ef7a0f0e9c9f2d6ae2e/packages/python/src/daytona_sdk/daytona.py#L436)
+[[view_source]](https://github.com/daytonaio/sdk/blob/aac1f63c998eea2b3868fa6d5a8689fa71f75b0d/packages/python/src/daytona_sdk/daytona.py#L433)
 
 Removes a Sandbox.
 
@@ -233,7 +233,7 @@ daytona.remove(sandbox)  # Clean up when done
 def get_current_workspace(workspace_id: str) -> Workspace
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/789c1b1952d9d69cc2ea8ef7a0f0e9c9f2d6ae2e/packages/python/src/daytona_sdk/daytona.py#L456)
+[[view_source]](https://github.com/daytonaio/sdk/blob/aac1f63c998eea2b3868fa6d5a8689fa71f75b0d/packages/python/src/daytona_sdk/daytona.py#L453)
 
 Get a Sandbox by its ID.
 
@@ -254,7 +254,7 @@ Get a Sandbox by its ID.
 def get_current_sandbox(sandbox_id: str) -> Sandbox
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/789c1b1952d9d69cc2ea8ef7a0f0e9c9f2d6ae2e/packages/python/src/daytona_sdk/daytona.py#L468)
+[[view_source]](https://github.com/daytonaio/sdk/blob/aac1f63c998eea2b3868fa6d5a8689fa71f75b0d/packages/python/src/daytona_sdk/daytona.py#L465)
 
 Get a Sandbox by its ID.
 
@@ -288,7 +288,7 @@ print(sandbox.status)
 def list() -> List[Sandbox]
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/789c1b1952d9d69cc2ea8ef7a0f0e9c9f2d6ae2e/packages/python/src/daytona_sdk/daytona.py#L505)
+[[view_source]](https://github.com/daytonaio/sdk/blob/aac1f63c998eea2b3868fa6d5a8689fa71f75b0d/packages/python/src/daytona_sdk/daytona.py#L502)
 
 Lists all Sandboxes.
 
@@ -312,7 +312,7 @@ for sandbox in sandboxes:
 def start(sandbox: Sandbox, timeout: Optional[float] = 60) -> None
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/789c1b1952d9d69cc2ea8ef7a0f0e9c9f2d6ae2e/packages/python/src/daytona_sdk/daytona.py#L570)
+[[view_source]](https://github.com/daytonaio/sdk/blob/aac1f63c998eea2b3868fa6d5a8689fa71f75b0d/packages/python/src/daytona_sdk/daytona.py#L567)
 
 Starts a Sandbox and waits for it to be ready.
 
@@ -333,7 +333,7 @@ Starts a Sandbox and waits for it to be ready.
 def stop(sandbox: Sandbox, timeout: Optional[float] = 60) -> None
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/789c1b1952d9d69cc2ea8ef7a0f0e9c9f2d6ae2e/packages/python/src/daytona_sdk/daytona.py#L582)
+[[view_source]](https://github.com/daytonaio/sdk/blob/aac1f63c998eea2b3868fa6d5a8689fa71f75b0d/packages/python/src/daytona_sdk/daytona.py#L579)
 
 Stops a Sandbox and waits for it to be stopped.
 
@@ -416,7 +416,7 @@ sandbox.process.execute_command("python -m pytest")
 class CodeLanguage(Enum)
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/789c1b1952d9d69cc2ea8ef7a0f0e9c9f2d6ae2e/packages/python/src/daytona_sdk/daytona.py#L86)
+[[view_source]](https://github.com/daytonaio/sdk/blob/aac1f63c998eea2b3868fa6d5a8689fa71f75b0d/packages/python/src/daytona_sdk/daytona.py#L85)
 
 Programming languages supported by Daytona
 
@@ -429,7 +429,7 @@ Programming languages supported by Daytona
 class DaytonaConfig()
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/789c1b1952d9d69cc2ea8ef7a0f0e9c9f2d6ae2e/packages/python/src/daytona_sdk/daytona.py#L102)
+[[view_source]](https://github.com/daytonaio/sdk/blob/aac1f63c998eea2b3868fa6d5a8689fa71f75b0d/packages/python/src/daytona_sdk/daytona.py#L101)
 
 Configuration options for initializing the Daytona client.
 
@@ -460,7 +460,7 @@ daytona = Daytona(config)
 class SandboxResources()
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/789c1b1952d9d69cc2ea8ef7a0f0e9c9f2d6ae2e/packages/python/src/daytona_sdk/daytona.py#L126)
+[[view_source]](https://github.com/daytonaio/sdk/blob/aac1f63c998eea2b3868fa6d5a8689fa71f75b0d/packages/python/src/daytona_sdk/daytona.py#L125)
 
 Resources configuration for Sandbox.
 
@@ -495,7 +495,7 @@ params = CreateSandboxParams(
 class CreateSandboxParams(BaseModel)
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/789c1b1952d9d69cc2ea8ef7a0f0e9c9f2d6ae2e/packages/python/src/daytona_sdk/daytona.py#L155)
+[[view_source]](https://github.com/daytonaio/sdk/blob/aac1f63c998eea2b3868fa6d5a8689fa71f75b0d/packages/python/src/daytona_sdk/daytona.py#L154)
 
 Parameters for creating a new Sandbox.
 
@@ -505,7 +505,7 @@ Parameters for creating a new Sandbox.
 - `id` _Optional[str]_ - Custom identifier for the Sandbox. If not provided, a random ID will be generated.
 - `name` _Optional[str]_ - Display name for the Sandbox. Defaults to Sandbox ID if not provided.
 - `image` _Optional[str]_ - Custom Docker image to use for the Sandbox.
-- `os_user` _Optional[str]_ - OS user for the Sandbox. Defaults to "daytona".
+- `os_user` _Optional[str]_ - OS user for the Sandbox.
 - `env_vars` _Optional[Dict[str, str]]_ - Environment variables to set in the Sandbox.
 - `labels` _Optional[Dict[str, str]]_ - Custom labels for the Sandbox.
 - `public` _Optional[bool]_ - Whether the Sandbox should be public.
