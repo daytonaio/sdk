@@ -45,7 +45,8 @@ from daytona_api_client import (
     ToolboxApi,
     WorkspaceApi as SandboxApi,
     Workspace as ApiSandbox,
-    WorkspaceInfo as ApiSandboxInfo
+    WorkspaceInfo as ApiSandboxInfo,
+    WorkspaceState as SandboxState
 )
 from .filesystem import FileSystem
 from .git import Git
@@ -102,31 +103,6 @@ class SandboxResources:
     memory: str
     disk: str
     gpu: Optional[str] = None
-
-
-@dataclass
-class SandboxState(Enum):
-    """States of a Sandbox."""
-    CREATING = "creating"
-    RESTORING = "restoring"
-    DESTROYED = "destroyed"
-    DESTROYING = "destroying"
-    STARTED = "started"
-    STOPPED = "stopped"
-    STARTING = "starting"
-    STOPPING = "stopping"
-    RESIZING = "resizing"
-    ERROR = "error"
-    UNKNOWN = "unknown"
-    PULLING_IMAGE = "pulling_image"
-
-    def __str__(self):
-        return self.value
-
-    def __eq__(self, other):
-        if isinstance(other, str):
-            return self.value == other
-        return super().__eq__(other)
 
 
 class SandboxInfo(ApiSandboxInfo):
