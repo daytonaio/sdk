@@ -78,9 +78,9 @@ export interface DaytonaConfig {
   /** API key for authentication with Daytona server */
   apiKey: string
   /** URL of the Daytona server */
-  serverUrl: string
+  serverUrl?: string
   /** Target environment for sandboxes */
-  target: SandboxTargetRegion
+  target?: SandboxTargetRegion
 }
 
 /**
