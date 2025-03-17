@@ -1,5 +1,6 @@
-from daytona_sdk import Daytona
 import os
+
+from daytona_sdk import Daytona
 
 
 def main():
@@ -13,7 +14,9 @@ def main():
 
         # Clone the repository
         sandbox.git.clone(
-            "https://github.com/panaverse/learn-typescript", project_dir, "master"
+            "https://github.com/panaverse/learn-typescript",
+            project_dir,
+            "master",
         )
 
         sandbox.git.pull(project_dir)
@@ -34,17 +37,14 @@ def main():
         print("Symbols:", symbols)
 
         # Fix the error in the document
-        sandbox.fs.replace_in_files(
-            [matches[0].file], "var obj1 = new Base();", "var obj1 = new E();"
-        )
+        sandbox.fs.replace_in_files([matches[0].file], "var obj1 = new Base();", "var obj1 = new E();")
 
         # Notify the language server of the document change
         lsp.did_close(matches[0].file)
         lsp.did_open(matches[0].file)
 
         # Get completions at a specific position
-        completions = lsp.completions(
-            matches[0].file, {"line": 12, "character": 18})
+        completions = lsp.completions(matches[0].file, {"line": 12, "character": 18})
         print("Completions:", completions)
 
     except Exception as error:

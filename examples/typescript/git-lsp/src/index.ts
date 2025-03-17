@@ -6,7 +6,7 @@ async function main() {
 
   //  first, create a sandbox
   const sandbox = await daytona.create({
-    language: 'typescript'
+    language: 'typescript',
   })
 
   try {
@@ -16,19 +16,12 @@ async function main() {
     }
 
     const projectDir = path.join(rootDir, 'learn-typescript')
-    
+
     //  clone the repository
-    await sandbox.git.clone(
-      'https://github.com/panaverse/learn-typescript',
-      projectDir,
-      'master',
-    )
+    await sandbox.git.clone('https://github.com/panaverse/learn-typescript', projectDir, 'master')
 
     //  search for the file we want to work on
-    const matches = await sandbox.fs.findFiles(
-      projectDir,
-      'var obj1 = new Base();',
-    )
+    const matches = await sandbox.fs.findFiles(projectDir, 'var obj1 = new Base();')
     console.log('Matches:', matches)
 
     //  start the language server
@@ -43,11 +36,7 @@ async function main() {
     console.log('Symbols:', symbols)
 
     //  fix the error in the document
-    await sandbox.fs.replaceInFiles(
-      [matches[0].file!],
-      'var obj1 = new Base();',
-      'var obj1 = new E();',
-    )
+    await sandbox.fs.replaceInFiles([matches[0].file!], 'var obj1 = new Base();', 'var obj1 = new E();')
 
     //  notify the language server of the document change
     await lsp.didClose(matches[0].file!)

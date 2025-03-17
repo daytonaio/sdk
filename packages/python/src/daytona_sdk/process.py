@@ -7,11 +7,11 @@ Example:
     Basic command execution:
     ```python
     sandbox = daytona.create()
-    
+
     # Execute a shell command
     response = sandbox.process.exec("ls -la")
     print(response.result)
-    
+
     # Run Python code
     response = sandbox.process.code_run("print('Hello, World!')")
     print(response.result)
@@ -22,36 +22,37 @@ Example:
     # Create a new session
     session_id = "my-session"
     sandbox.process.create_session(session_id)
-    
+
     # Execute commands in the session
     req = SessionExecuteRequest(command="cd /workspace", var_async=False)
     sandbox.process.execute_session_command(session_id, req)
-    
+
     req = SessionExecuteRequest(command="pwd", var_async=False)
     response = sandbox.process.execute_session_command(session_id, req)
     print(response.result)  # Should print "/workspace"
-    
+
     # Clean up
     sandbox.process.delete_session(session_id)
     ```
 """
 
-from typing import Optional, List, Dict
+from typing import List, Optional
+
 from daytona_api_client import (
-    ToolboxApi,
-    ExecuteResponse,
+    Command,
+    CreateSessionRequest,
     ExecuteRequest,
+    ExecuteResponse,
     Session,
     SessionExecuteRequest,
     SessionExecuteResponse,
-    CreateSessionRequest,
-    Command
+    ToolboxApi,
 )
-
 from daytona_sdk._utils.errors import intercept_errors
+
 from .code_toolbox.sandbox_python_code_toolbox import SandboxPythonCodeToolbox
-from .protocols import SandboxInstance
 from .common.code_run_params import CodeRunParams
+from .protocols import SandboxInstance
 
 
 class Process:
@@ -84,7 +85,12 @@ class Process:
         self.instance = instance
 
     @intercept_errors(message_prefix="Failed to execute command: ")
-    def exec(self, command: str, cwd: Optional[str] = None, timeout: Optional[int] = None) -> ExecuteResponse:
+    def exec(
+        self,
+        command: str,
+        cwd: Optional[str] = None,
+        timeout: Optional[int] = None,
+    ) -> ExecuteResponse:
         """Execute a shell command in the Sandbox.
 
         Args:
@@ -112,18 +118,16 @@ class Process:
             result = sandbox.process.exec("sleep 10", timeout=5)
             ```
         """
-        execute_request = ExecuteRequest(
-            command=command,
-            cwd=cwd,
-            timeout=timeout
-        )
+        execute_request = ExecuteRequest(command=command, cwd=cwd, timeout=timeout)
 
-        return self.toolbox_api.execute_command(
-            self.instance.id,
-            execute_request=execute_request
-        )
+        return self.toolbox_api.execute_command(self.instance.id, execute_request=execute_request)
 
-    def code_run(self, code: str, params: Optional[CodeRunParams] = None, timeout: Optional[int] = None) -> ExecuteResponse:
+    def code_run(
+        self,
+        code: str,
+        params: Optional[CodeRunParams] = None,
+        timeout: Optional[int] = None,
+    ) -> ExecuteResponse:
         """Executes code in the Sandbox using the appropriate language runtime.
 
         Args:
@@ -173,10 +177,7 @@ class Process:
             ```
         """
         request = CreateSessionRequest(sessionId=session_id)
-        self.toolbox_api.create_session(
-            self.instance.id,
-            create_session_request=request
-        )
+        self.toolbox_api.create_session(self.instance.id, create_session_request=request)
 
     @intercept_errors(message_prefix="Failed to get session: ")
     def get_session(self, session_id: str) -> Session:
@@ -197,10 +198,7 @@ class Process:
                 print(f"Command: {cmd.command}")
             ```
         """
-        return self.toolbox_api.get_session(
-            self.instance.id,
-            session_id=session_id
-        )
+        return self.toolbox_api.get_session(self.instance.id, session_id=session_id)
 
     @intercept_errors(message_prefix="Failed to get session command: ")
     def get_session_command(self, session_id: str, command_id: str) -> Command:
@@ -223,14 +221,15 @@ class Process:
                 print(f"Command {cmd.command} completed successfully")
             ```
         """
-        return self.toolbox_api.get_session_command(
-            self.instance.id,
-            session_id=session_id,
-            command_id=command_id
-        )
+        return self.toolbox_api.get_session_command(self.instance.id, session_id=session_id, command_id=command_id)
 
     @intercept_errors(message_prefix="Failed to execute session command: ")
-    def execute_session_command(self, session_id: str, req: SessionExecuteRequest, timeout: Optional[int] = None) -> SessionExecuteResponse:
+    def execute_session_command(
+        self,
+        session_id: str,
+        req: SessionExecuteRequest,
+        timeout: Optional[int] = None,
+    ) -> SessionExecuteResponse:
         """Executes a command in the session.
 
         Args:
@@ -268,7 +267,7 @@ class Process:
             self.instance.id,
             session_id=session_id,
             session_execute_request=req,
-            _request_timeout=timeout or None
+            _request_timeout=timeout or None,
         )
 
     @intercept_errors(message_prefix="Failed to get session command logs: ")
@@ -305,11 +304,7 @@ class Process:
             print(logs)  # Prints: Done
             ```
         """
-        return self.toolbox_api.get_session_command_logs(
-            self.instance.id,
-            session_id=session_id,
-            command_id=command_id
-        )
+        return self.toolbox_api.get_session_command_logs(self.instance.id, session_id=session_id, command_id=command_id)
 
     @intercept_errors(message_prefix="Failed to list sessions: ")
     def list_sessions(self) -> List[Session]:
@@ -326,9 +321,7 @@ class Process:
                 print(f"  Commands: {len(session.commands)}")
             ```
         """
-        return self.toolbox_api.list_sessions(
-            self.instance.id
-        )
+        return self.toolbox_api.list_sessions(self.instance.id)
 
     @intercept_errors(message_prefix="Failed to delete session: ")
     def delete_session(self, session_id: str) -> None:
@@ -350,7 +343,4 @@ class Process:
             sandbox.process.delete_session("temp-session")
             ```
         """
-        self.toolbox_api.delete_session(
-            self.instance.id,
-            session_id=session_id
-        )
+        self.toolbox_api.delete_session(self.instance.id, session_id=session_id)

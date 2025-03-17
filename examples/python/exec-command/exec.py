@@ -1,4 +1,4 @@
-from daytona_sdk import Daytona, CreateSandboxParams
+from daytona_sdk import CreateSandboxParams, Daytona
 
 daytona = Daytona()
 
@@ -15,8 +15,7 @@ else:
     print(response.result)
 
 # Execute an os command in the sandbox
-response = sandbox.process.exec(
-    'echo "Hello World from exec!"', cwd="/home/daytona", timeout=10)
+response = sandbox.process.exec('echo "Hello World from exec!"', cwd="/home/daytona", timeout=10)
 if response.exit_code != 0:
     print(f"Error: {response.exit_code} {response.result}")
 else:

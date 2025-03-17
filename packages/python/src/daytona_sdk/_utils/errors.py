@@ -1,21 +1,24 @@
-import json
 import functools
-from typing import Callable, Optional, TypeVar, Any, ParamSpec
+import json
+from typing import Callable, ParamSpec, TypeVar
+
 from daytona_api_client.exceptions import OpenApiException
 from daytona_sdk.common.errors import DaytonaError
 
+P = ParamSpec("P")
+T = TypeVar("T")
 
-P = ParamSpec('P')
-T = TypeVar('T')
 
-
-def intercept_errors(message_prefix: str = "") -> Callable[[Callable[P, T]], Callable[P, T]]:
+def intercept_errors(
+    message_prefix: str = "",
+) -> Callable[[Callable[P, T]], Callable[P, T]]:
     """Decorator to intercept errors, process them, and optionally add a message prefix.
     If the error is an OpenApiException, it will be processed to extract the most meaningful error message.
 
     Args:
         message_prefix (str): Custom message prefix for the error.
     """
+
     def decorator(func: Callable[P, T]) -> Callable[P, T]:
         @functools.wraps(func)
         def wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
@@ -28,10 +31,11 @@ def intercept_errors(message_prefix: str = "") -> Callable[[Callable[P, T]], Cal
             except Exception as e:
                 if message_prefix:
                     message = f"{message_prefix}{str(e)}"
-                    raise DaytonaError(message)
-                raise DaytonaError(str(e))
+                    raise DaytonaError(message)  # pylint: disable=raise-missing-from
+                raise DaytonaError(str(e))  # pylint: disable=raise-missing-from
 
         return wrapper
+
     return decorator
 
 
@@ -50,14 +54,13 @@ def _get_open_api_exception_message(exception: OpenApiException) -> str:
     Returns:
         Processed message
     """
-    if not hasattr(exception, 'body') or not exception.body:
+    if not hasattr(exception, "body") or not exception.body:
         return str(exception)
 
     body_str = str(exception.body)
     try:
         data = json.loads(body_str)
-        message = data.get('message', body_str) if isinstance(
-            data, dict) else body_str
+        message = data.get("message", body_str) if isinstance(data, dict) else body_str
     except json.JSONDecodeError:
         message = body_str
 

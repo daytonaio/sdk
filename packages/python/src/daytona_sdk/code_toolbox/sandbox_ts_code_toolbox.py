@@ -1,5 +1,6 @@
 import base64
 from typing import Optional
+
 from ..common.code_run_params import CodeRunParams
 
 
@@ -11,12 +12,16 @@ class SandboxTsCodeToolbox:
         # Build environment variables string
         env_vars = ""
         if params and params.env:
-            env_vars = ' '.join(f"{key}='{value}'" for key, value in params.env.items())
+            env_vars = " ".join(f"{key}='{value}'" for key, value in params.env.items())
 
         # Build command-line arguments string
         argv = ""
         if params and params.argv:
-            argv = ' '.join(params.argv)
+            argv = " ".join(params.argv)
 
         # Combine everything into the final command for TypeScript
-        return f""" sh -c 'echo {base64_code} | base64 --decode | {env_vars} npx ts-node -O "{{\\\"module\\\":\\\"CommonJS\\\"}}" -e "$(cat)" x {argv} 2>&1 | grep -vE "npm notice|npm warn exec"' """
+        return (
+            f""" sh -c 'echo {base64_code} | base64 --decode | {env_vars} npx ts-node -O """
+            f""""{{\\\"module\\\":\\\"CommonJS\\\"}}" -e "$(cat)" x {argv} 2>&1 | grep -vE """
+            f""""npm notice|npm warn exec"' """
+        )
