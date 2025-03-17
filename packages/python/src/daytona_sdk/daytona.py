@@ -103,22 +103,18 @@ class DaytonaConfig:
 
     Attributes:
         api_key (str): API key for authentication with Daytona server.
-        server_url (str): URL of the Daytona server.
-        target (str): Target environment for Sandbox.
+        server_url (str, optional): URL of the Daytona server. Defaults to 'https://app.daytona.io/api' if not set.
+        target (str, optional): Target environment for Sandbox. Defaults to 'us' if not set.
 
     Example:
         ```python
-        config = DaytonaConfig(
-            api_key="your-api-key",
-            server_url="https://your-server.com",
-            target="us"
-        )
-        daytona = Daytona(config)
+        # Only API key is required
+        config = DaytonaConfig(api_key="your-api-key")
         ```
     """
     api_key: str
-    server_url: str
-    target: SandboxTargetRegion
+    server_url: str = None
+    target: SandboxTargetRegion = None
 
 
 @dataclass
@@ -251,6 +247,10 @@ class Daytona:
             daytona2 = Daytona(config)
             ```
         """
+
+        default_server_url = "https://app.daytona.io/api"
+        default_target = SandboxTargetRegion.US
+
         if config is None:
             # Initialize env - it automatically reads from .env and .env.local
             env = Env()
@@ -259,21 +259,15 @@ class Daytona:
             env.read_env(".env.local", override=True)
 
             self.api_key = env.str("DAYTONA_API_KEY")
-            self.server_url = env.str("DAYTONA_SERVER_URL")
-            self.target = env.str("DAYTONA_TARGET", SandboxTargetRegion.US)
+            self.server_url = env.str("DAYTONA_SERVER_URL", default_server_url)
+            self.target = env.str("DAYTONA_TARGET", default_target)
         else:
             self.api_key = config.api_key
-            self.server_url = config.server_url
-            self.target = config.target
+            self.server_url = config.server_url if config.server_url is not None else default_server_url
+            self.target = config.target if config.target is not None else default_target
 
         if not self.api_key:
             raise DaytonaError("API key is required")
-
-        if not self.server_url:
-            raise DaytonaError("Server URL is required")
-
-        if not self.target:
-            self.target = SandboxTargetRegion.US
 
         # Create API configuration without api_key
         configuration = Configuration(host=self.server_url)

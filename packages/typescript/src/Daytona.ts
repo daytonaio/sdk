@@ -78,9 +78,9 @@ export interface DaytonaConfig {
   /** API key for authentication with Daytona server */
   apiKey: string
   /** URL of the Daytona server */
-  serverUrl: string
+  serverUrl?: string
   /** Target environment for sandboxes */
-  target: SandboxTargetRegion
+  target?: SandboxTargetRegion
 }
 
 /**
@@ -220,10 +220,7 @@ export class Daytona {
     if (!apiKey) {
       throw new DaytonaError('API key is required')
     }
-    const serverUrl = config?.serverUrl || process.env.DAYTONA_SERVER_URL
-    if (!serverUrl) {
-      throw new DaytonaError('Server URL is required')
-    }
+    const serverUrl = config?.serverUrl || process.env.DAYTONA_SERVER_URL || 'https://app.daytona.io/api'
     const envTarget = process.env.DAYTONA_TARGET as SandboxTargetRegion
     const target = config?.target || envTarget || SandboxTargetRegion.US
 
