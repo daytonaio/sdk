@@ -1,4 +1,4 @@
-from setuptools import setup, find_packages
+from setuptools import find_packages, setup
 
 setup(
     name="daytona_sdk",
@@ -9,7 +9,5 @@ setup(
         # Add dependencies here
     ],
     # Include both packages
-    package_data={
-        "daytona_sdk": ["*"]
-    },
+    package_data={"daytona_sdk": ["*"]},
 )

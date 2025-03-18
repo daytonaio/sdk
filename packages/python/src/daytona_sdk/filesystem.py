@@ -7,15 +7,15 @@ Examples:
     Basic file operations:
     ```python
     sandbox = daytona.create()
-    
+
     # Create a directory
     sandbox.fs.create_folder("/workspace/data", "755")
-    
+
     # Upload a file
     with open("local_file.txt", "rb") as f:
         content = f.read()
     sandbox.fs.upload_file("/workspace/data/file.txt", content)
-    
+
     # List directory contents
     files = sandbox.fs.list_files("/workspace")
     for file in files:
@@ -23,7 +23,7 @@ Examples:
         print(f"Is directory: {file.is_dir}")
         print(f"Size: {file.size}")
         print(f"Modified: {file.mod_time}")
-    
+
     # Search file contents
     matches = sandbox.fs.find_files(
         path="/workspace/src",
@@ -43,14 +43,14 @@ Examples:
         "/workspace/data/old.txt",
         "/workspace/data/new.txt"
     )
-    
+
     # Replace text in files
     results = sandbox.fs.replace_in_files(
         files=["/workspace/data/new.txt"],
         pattern="old_version",
         new_value="new_version"
     )
-    
+
     # Set permissions
     sandbox.fs.set_file_permissions(
         path="/workspace/data/script.sh",
@@ -65,15 +65,10 @@ Note:
 """
 
 from typing import List
-from daytona_api_client import (
-    FileInfo,
-    Match,
-    ReplaceRequest,
-    ReplaceResult,
-    SearchFilesResponse,
-    ToolboxApi,
-)
+
+from daytona_api_client import FileInfo, Match, ReplaceRequest, ReplaceResult, SearchFilesResponse, ToolboxApi
 from daytona_sdk._utils.errors import intercept_errors
+
 from .protocols import SandboxInstance
 
 
@@ -119,9 +114,7 @@ class FileSystem:
             sandbox.fs.create_folder("/workspace/secrets", "700")
             ```
         """
-        self.toolbox_api.create_folder(
-            self.instance.id, path=path, mode=mode
-        )
+        self.toolbox_api.create_folder(self.instance.id, path=path, mode=mode)
 
     @intercept_errors(message_prefix="Failed to delete file: ")
     def delete_file(self, path: str) -> None:
@@ -138,9 +131,7 @@ class FileSystem:
             sandbox.fs.delete_file("/workspace/data/old_file.txt")
             ```
         """
-        self.toolbox_api.delete_file(
-            self.instance.id, path=path
-        )
+        self.toolbox_api.delete_file(self.instance.id, path=path)
 
     @intercept_errors(message_prefix="Failed to download file: ")
     def download_file(self, path: str) -> bytes:
@@ -166,9 +157,7 @@ class FileSystem:
             config = json.loads(content.decode('utf-8'))
             ```
         """
-        return self.toolbox_api.download_file(
-            self.instance.id, path=path
-        )
+        return self.toolbox_api.download_file(self.instance.id, path=path)
 
     @intercept_errors(message_prefix="Failed to find files: ")
     def find_files(self, path: str, pattern: str) -> List[Match]:
@@ -178,7 +167,8 @@ class FileSystem:
         the grep command.
 
         Args:
-            path (str): Absolute path to the file or directory to search. If the path is a directory, the search will be performed recursively.
+            path (str): Absolute path to the file or directory to search. If the path is a directory,
+                the search will be performed recursively.
             pattern (str): Search pattern to match against file contents.
 
         Returns:
@@ -195,9 +185,7 @@ class FileSystem:
                 print(f"{match.file}:{match.line}: {match.content.strip()}")
             ```
         """
-        return self.toolbox_api.find_in_files(
-            self.instance.id, path=path, pattern=pattern
-        )
+        return self.toolbox_api.find_in_files(self.instance.id, path=path, pattern=pattern)
 
     @intercept_errors(message_prefix="Failed to get file info: ")
     def get_file_info(self, path: str) -> FileInfo:
@@ -234,9 +222,7 @@ class FileSystem:
                 print("Path is a directory")
             ```
         """
-        return self.toolbox_api.get_file_info(
-            self.instance.id, path=path
-        )
+        return self.toolbox_api.get_file_info(self.instance.id, path=path)
 
     @intercept_errors(message_prefix="Failed to list files: ")
     def list_files(self, path: str) -> List[FileInfo]:
@@ -267,9 +253,7 @@ class FileSystem:
             print("Subdirectories:", ", ".join(d.name for d in dirs))
             ```
         """
-        return self.toolbox_api.list_files(
-            self.instance.id, path=path
-        )
+        return self.toolbox_api.list_files(self.instance.id, path=path)
 
     @intercept_errors(message_prefix="Failed to move files: ")
     def move_files(self, source: str, destination: str) -> None:
@@ -310,9 +294,7 @@ class FileSystem:
         )
 
     @intercept_errors(message_prefix="Failed to replace in files: ")
-    def replace_in_files(
-        self, files: List[str], pattern: str, new_value: str
-    ) -> List[ReplaceResult]:
+    def replace_in_files(self, files: List[str], pattern: str, new_value: str) -> List[ReplaceResult]:
         """Replaces text in multiple files.
 
         This method performs search and replace operations across multiple files.
@@ -346,13 +328,9 @@ class FileSystem:
                     print(f"{result.file}: {result.error}")
             ```
         """
-        replace_request = ReplaceRequest(
-            files=files, new_value=new_value, pattern=pattern
-        )
+        replace_request = ReplaceRequest(files=files, new_value=new_value, pattern=pattern)
 
-        return self.toolbox_api.replace_in_files(
-            self.instance.id, replace_request=replace_request
-        )
+        return self.toolbox_api.replace_in_files(self.instance.id, replace_request=replace_request)
 
     @intercept_errors(message_prefix="Failed to search files: ")
     def search_files(self, path: str, pattern: str) -> SearchFilesResponse:
@@ -382,14 +360,10 @@ class FileSystem:
             print(f"Found {len(result.files)} test files")
             ```
         """
-        return self.toolbox_api.search_files(
-            self.instance.id, path=path, pattern=pattern
-        )
+        return self.toolbox_api.search_files(self.instance.id, path=path, pattern=pattern)
 
     @intercept_errors(message_prefix="Failed to set file permissions: ")
-    def set_file_permissions(
-        self, path: str, mode: str = None, owner: str = None, group: str = None
-    ) -> None:
+    def set_file_permissions(self, path: str, mode: str = None, owner: str = None, group: str = None) -> None:
         """Sets permissions and ownership for a file or directory.
 
         This method allows changing the permissions and ownership of a file or
@@ -457,6 +431,4 @@ class FileSystem:
             sandbox.fs.upload_file("/workspace/data/config.json", content)
             ```
         """
-        self.toolbox_api.upload_file(
-            self.instance.id, path=path, file=file
-        )
+        self.toolbox_api.upload_file(self.instance.id, path=path, file=file)

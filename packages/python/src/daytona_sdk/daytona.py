@@ -8,21 +8,21 @@ Examples:
     from daytona_sdk import Daytona
     # Initialize using environment variables
     daytona = Daytona()  # Uses env vars DAYTONA_API_KEY, DAYTONA_SERVER_URL, DAYTONA_TARGET
-    
+
     # Create a default Python sandbox with custom environment variables
     sandbox = daytona.create(CreateSandboxParams(
         language="python",
         env_vars={"PYTHON_ENV": "development"}
     ))
-    
+
     # Execute commands in the sandbox
     response = sandbox.process.execute_command('echo "Hello, World!"')
     print(response.result)
-    
+
     # Run Python code securely inside the sandbox
     response = sandbox.process.code_run('print("Hello from Python!")')
     print(response.result)
-    
+
     # Remove the sandbox after use
     daytona.remove(sandbox)
     ```
@@ -38,7 +38,7 @@ Examples:
         target="us"
     )
     daytona = Daytona(config)
-    
+
     # Create a custom sandbox with specific resources and settings
     sandbox = daytona.create(CreateSandboxParams(
         language="python",
@@ -51,39 +51,39 @@ Examples:
         env_vars={"PYTHON_ENV": "development"},
         auto_stop_interval=60  # Auto-stop after 1 hour of inactivity
     ))
-    
+
     # Use sandbox features
     sandbox.git.clone("https://github.com/user/repo.git")
     sandbox.process.execute_command("python -m pytest")
     ```
 """
 
-from enum import Enum
-from typing import Optional, Dict, List, Annotated
-from pydantic import BaseModel, Field
 from dataclasses import dataclass
+from enum import Enum
+from typing import Annotated, Dict, List, Optional
+
+from daytona_api_client import ApiClient, Configuration
+from daytona_api_client import CreateWorkspace as CreateSandbox
+from daytona_api_client import SessionExecuteRequest, SessionExecuteResponse, ToolboxApi
+from daytona_api_client import WorkspaceApi as SandboxApi
+from daytona_sdk._utils.errors import DaytonaError, intercept_errors
+from deprecated import deprecated
 from environs import Env
-from daytona_api_client import (
-    Configuration,
-    WorkspaceApi as SandboxApi,
-    ToolboxApi,
-    ApiClient,
-    CreateWorkspace as CreateSandbox,
-    SessionExecuteRequest,
-    SessionExecuteResponse
-)
-from daytona_sdk._utils.errors import intercept_errors, DaytonaError
+from pydantic import BaseModel, Field
+
+from ._utils.enum import to_enum
+from ._utils.timeout import with_timeout
 from .code_toolbox.sandbox_python_code_toolbox import SandboxPythonCodeToolbox
 from .code_toolbox.sandbox_ts_code_toolbox import SandboxTsCodeToolbox
-from ._utils.enum import to_enum
-from .sandbox import Sandbox, SandboxTargetRegion, Sandbox as Workspace
-from ._utils.timeout import with_timeout
-from deprecated import deprecated
+from .sandbox import Sandbox, SandboxTargetRegion
+
+Workspace = Sandbox
 
 
 @dataclass
 class CodeLanguage(Enum):
     """Programming languages supported by Daytona"""
+
     PYTHON = "python"
     TYPESCRIPT = "typescript"
     JAVASCRIPT = "javascript"
@@ -112,6 +112,7 @@ class DaytonaConfig:
         config = DaytonaConfig(api_key="your-api-key")
         ```
     """
+
     api_key: str
     server_url: str = None
     target: SandboxTargetRegion = None
@@ -141,6 +142,7 @@ class SandboxResources:
         )
         ```
     """
+
     cpu: Optional[int] = None
     memory: Optional[int] = None
     disk: Optional[int] = None
@@ -162,7 +164,9 @@ class CreateSandboxParams(BaseModel):
         target (Optional[str]): Target location for the Sandbox. Can be "us", "eu", or "asia".
         resources (Optional[SandboxResources]): Resource configuration for the Sandbox.
         timeout (Optional[float]): Timeout in seconds for Sandbox to be created and started.
-        auto_stop_interval (Optional[int]): Interval in minutes after which Sandbox will automatically stop if no Sandbox event occurs during that time. Default is 15 minutes. 0 means no auto-stop.
+        auto_stop_interval (Optional[int]): Interval in minutes after which Sandbox will
+            automatically stop if no Sandbox event occurs during that time. Default is 15 minutes.
+            0 means no auto-stop.
 
     Example:
         ```python
@@ -176,6 +180,7 @@ class CreateSandboxParams(BaseModel):
         sandbox = daytona.create(params, 50)
         ```
     """
+
     language: CodeLanguage
     id: Optional[str] = None
     name: Optional[str] = None
@@ -186,8 +191,16 @@ class CreateSandboxParams(BaseModel):
     public: Optional[bool] = None
     target: Optional[SandboxTargetRegion] = None
     resources: Optional[SandboxResources] = None
-    timeout: Annotated[Optional[float], Field(
-        default=None, deprecated='The `timeout` field is deprecated and will be removed in future versions. Use `timeout` argument in method calls instead.')]
+    timeout: Annotated[
+        Optional[float],
+        Field(
+            default=None,
+            deprecated=(
+                "The `timeout` field is deprecated and will be removed in future versions. "
+                "Use `timeout` argument in method calls instead."
+            ),
+        ),
+    ]
     auto_stop_interval: Optional[int] = None
 
 
@@ -279,14 +292,19 @@ class Daytona:
         self.toolbox_api = ToolboxApi(api_client)
 
     @intercept_errors(message_prefix="Failed to create sandbox: ")
-    def create(self, params: Optional[CreateSandboxParams] = None, timeout: Optional[float] = 60) -> Sandbox:
+    def create(
+        self,
+        params: Optional[CreateSandboxParams] = None,
+        timeout: Optional[float] = 60,
+    ) -> Sandbox:
         """Creates Sandboxes with default or custom configurations. You can specify various parameters,
         including language, image, resources, environment variables, and volumes for the Sandbox.
 
         Args:
             params (Optional[CreateSandboxParams]): Parameters for Sandbox creation. If not provided,
                    defaults to Python language.
-            timeout (Optional[float]): Timeout (in seconds) for sandbox creation. 0 means no timeout. Default is 60 seconds.
+            timeout (Optional[float]): Timeout (in seconds) for sandbox creation. 0 means no timeout.
+                Default is 60 seconds.
 
         Returns:
             Sandbox: The created Sandbox instance.
@@ -328,14 +346,23 @@ class Daytona:
                 pass
             raise e
 
-    @with_timeout(error_message=lambda self, timeout: f"Failed to create and start sandbox within {timeout} seconds timeout period.")
-    def _create(self, params: Optional[CreateSandboxParams] = None, timeout: Optional[float] = 60) -> Sandbox:
+    @with_timeout(
+        error_message=lambda self, timeout: (
+            f"Failed to create and start sandbox within {timeout} seconds timeout period."
+        )
+    )
+    def _create(
+        self,
+        params: Optional[CreateSandboxParams] = None,
+        timeout: Optional[float] = 60,
+    ) -> Sandbox:
         """Creates a new Sandbox and waits for it to start.
 
         Args:
             params (Optional[CreateSandboxParams]): Parameters for Sandbox creation. If not provided,
                    defaults to Python language.
-            timeout (Optional[float]): Timeout (in seconds) for sandbox creation. 0 means no timeout. Default is 60 seconds.
+            timeout (Optional[float]): Timeout (in seconds) for sandbox creation. 0 means no timeout.
+                Default is 60 seconds.
 
         Returns:
             Sandbox: The created Sandbox instance.
@@ -349,8 +376,7 @@ class Daytona:
             raise DaytonaError("Timeout must be a non-negative number")
 
         if params.auto_stop_interval is not None and params.auto_stop_interval < 0:
-            raise DaytonaError(
-                "auto_stop_interval must be a non-negative integer")
+            raise DaytonaError("auto_stop_interval must be a non-negative integer")
 
         target = params.target if params.target else self.target
 
@@ -364,7 +390,7 @@ class Daytona:
             labels=params.labels,
             public=params.public,
             target=str(target) if target else None,
-            auto_stop_interval=params.auto_stop_interval
+            auto_stop_interval=params.auto_stop_interval,
         )
 
         if params.resources:
@@ -374,7 +400,7 @@ class Daytona:
             sandbox_data.gpu = params.resources.gpu
 
         response = self.sandbox_api.create_workspace(sandbox_data, _request_timeout=timeout or None)
-        sandbox_info = Sandbox._to_sandbox_info(response)
+        sandbox_info = Sandbox.to_sandbox_info(response)
         response.info = sandbox_info
 
         sandbox = Sandbox(
@@ -382,7 +408,7 @@ class Daytona:
             response,
             self.sandbox_api,
             self.toolbox_api,
-            code_toolbox
+            code_toolbox,
         )
 
         # # Wait for sandbox to start
@@ -412,8 +438,7 @@ class Daytona:
         enum_language = to_enum(CodeLanguage, params.language)
         if enum_language is None:
             raise DaytonaError(f"Unsupported language: {params.language}")
-        else:
-            params.language = enum_language
+        params.language = enum_language
 
         match params.language:
             case CodeLanguage.JAVASCRIPT | CodeLanguage.TYPESCRIPT:
@@ -429,7 +454,8 @@ class Daytona:
 
         Args:
             sandbox (Sandbox): The Sandbox instance to remove.
-            timeout (Optional[float]): Timeout (in seconds) for sandbox removal. 0 means no timeout. Default is 60 seconds.
+            timeout (Optional[float]): Timeout (in seconds) for sandbox removal. 0 means no timeout.
+                Default is 60 seconds.
 
         Raises:
             DaytonaError: If sandbox fails to remove or times out
@@ -443,7 +469,11 @@ class Daytona:
         """
         return self.sandbox_api.delete_workspace(sandbox.id, force=True, _request_timeout=timeout or None)
 
-    @deprecated(reason="Method is deprecated. Use `get_current_sandbox` instead. This method will be removed in a future version.")
+    @deprecated(
+        reason=(
+            "Method is deprecated. Use `get_current_sandbox` instead. This method will be removed in a future version."
+        )
+    )
     def get_current_workspace(self, workspace_id: str) -> Workspace:
         """Get a Sandbox by its ID.
 
@@ -479,7 +509,7 @@ class Daytona:
 
         # Get the sandbox instance
         sandbox_instance = self.sandbox_api.get_workspace(sandbox_id)
-        sandbox_info = Sandbox._to_sandbox_info(sandbox_instance)
+        sandbox_info = Sandbox.to_sandbox_info(sandbox_instance)
         sandbox_instance.info = sandbox_info
 
         # Create and return sandbox with Python code toolbox as default
@@ -489,7 +519,7 @@ class Daytona:
             sandbox_instance,
             self.sandbox_api,
             self.toolbox_api,
-            code_toolbox
+            code_toolbox,
         )
 
     @intercept_errors(message_prefix="Failed to list sandboxes: ")
@@ -509,7 +539,7 @@ class Daytona:
         sandboxes = self.sandbox_api.list_workspaces()
 
         for sandbox in sandboxes:
-            sandbox_info = Sandbox._to_sandbox_info(sandbox)
+            sandbox_info = Sandbox.to_sandbox_info(sandbox)
             sandbox.info = sandbox_info
 
         return [
@@ -520,10 +550,9 @@ class Daytona:
                 self.toolbox_api,
                 self._get_code_toolbox(
                     CreateSandboxParams(
-                        language=self._validate_language_label(
-                            sandbox.labels.get("code-toolbox-language"))
+                        language=self._validate_language_label(sandbox.labels.get("code-toolbox-language"))
                     )
-                )
+                ),
             )
             for sandbox in sandboxes
         ]
@@ -546,8 +575,7 @@ class Daytona:
         enum_language = to_enum(CodeLanguage, language)
         if enum_language is None:
             raise DaytonaError(f"Invalid code-toolbox-language: {language}")
-        else:
-            return enum_language
+        return enum_language
 
     # def resize(self, sandbox: Sandbox, resources: SandboxResources) -> None:
     #     """Resizes a sandbox.
@@ -563,7 +591,8 @@ class Daytona:
 
         Args:
             sandbox (Sandbox): The Sandbox to start.
-            timeout (Optional[float]): Optional timeout in seconds to wait for the Sandbox to start. 0 means no timeout. Default is 60 seconds.
+            timeout (Optional[float]): Optional timeout in seconds to wait for the Sandbox to start.
+                0 means no timeout. Default is 60 seconds.
 
         Raises:
             DaytonaError: If timeout is negative; If Sandbox fails to start or times out
@@ -575,7 +604,8 @@ class Daytona:
 
         Args:
             sandbox (Sandbox): The sandbox to stop
-            timeout (Optional[float]): Optional timeout (in seconds) for sandbox stop. 0 means no timeout. Default is 60 seconds.
+            timeout (Optional[float]): Optional timeout (in seconds) for sandbox stop.
+                0 means no timeout. Default is 60 seconds.
 
         Raises:
             DaytonaError: If timeout is negative; If Sandbox fails to stop or times out
@@ -591,5 +621,5 @@ __all__ = [
     "CodeLanguage",
     "Sandbox",
     "SessionExecuteRequest",
-    "SessionExecuteResponse"
+    "SessionExecuteResponse",
 ]

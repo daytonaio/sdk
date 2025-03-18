@@ -68,7 +68,7 @@ sandbox.process.execute_command("python -m pytest")
 class Daytona()
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/dd9532596a339882e2272f36b7b78ee1903debe2/packages/python/src/daytona_sdk/daytona.py#L198)
+[[view_source]](https://github.com/daytonaio/sdk/blob/c6b0b5d7b319709ea171da2cb476692c62dd02b7/packages/python/src/daytona_sdk/daytona.py#L211)
 
 Main class for interacting with Daytona Server API.
 
@@ -106,7 +106,7 @@ daytona = Daytona(config)
 def __init__(config: Optional[DaytonaConfig] = None)
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/dd9532596a339882e2272f36b7b78ee1903debe2/packages/python/src/daytona_sdk/daytona.py#L226)
+[[view_source]](https://github.com/daytonaio/sdk/blob/c6b0b5d7b319709ea171da2cb476692c62dd02b7/packages/python/src/daytona_sdk/daytona.py#L239)
 
 Initializes Daytona instance with optional configuration.
 
@@ -149,7 +149,7 @@ def create(params: Optional[CreateSandboxParams] = None,
            timeout: Optional[float] = 60) -> Sandbox
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/dd9532596a339882e2272f36b7b78ee1903debe2/packages/python/src/daytona_sdk/daytona.py#L288)
+[[view_source]](https://github.com/daytonaio/sdk/blob/c6b0b5d7b319709ea171da2cb476692c62dd02b7/packages/python/src/daytona_sdk/daytona.py#L301)
 
 Creates Sandboxes with default or custom configurations. You can specify various parameters,
 including language, image, resources, environment variables, and volumes for the Sandbox.
@@ -158,7 +158,8 @@ including language, image, resources, environment variables, and volumes for the
 
 - `params` _Optional[CreateSandboxParams]_ - Parameters for Sandbox creation. If not provided,
   defaults to Python language.
-- `timeout` _Optional[float]_ - Timeout (in seconds) for sandbox creation. 0 means no timeout. Default is 60 seconds.
+- `timeout` _Optional[float]_ - Timeout (in seconds) for sandbox creation. 0 means no timeout.
+  Default is 60 seconds.
   
 
 **Returns**:
@@ -199,14 +200,15 @@ sandbox = daytona.create(params, 40)
 def remove(sandbox: Sandbox, timeout: Optional[float] = 60) -> None
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/dd9532596a339882e2272f36b7b78ee1903debe2/packages/python/src/daytona_sdk/daytona.py#L433)
+[[view_source]](https://github.com/daytonaio/sdk/blob/c6b0b5d7b319709ea171da2cb476692c62dd02b7/packages/python/src/daytona_sdk/daytona.py#L458)
 
 Removes a Sandbox.
 
 **Arguments**:
 
 - `sandbox` _Sandbox_ - The Sandbox instance to remove.
-- `timeout` _Optional[float]_ - Timeout (in seconds) for sandbox removal. 0 means no timeout. Default is 60 seconds.
+- `timeout` _Optional[float]_ - Timeout (in seconds) for sandbox removal. 0 means no timeout.
+  Default is 60 seconds.
   
 
 **Raises**:
@@ -226,14 +228,13 @@ daytona.remove(sandbox)  # Clean up when done
 #### Daytona.get\_current\_workspace
 
 ```python
-@deprecated(
-    reason=
+@deprecated(reason=(
     "Method is deprecated. Use `get_current_sandbox` instead. This method will be removed in a future version."
-)
+))
 def get_current_workspace(workspace_id: str) -> Workspace
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/dd9532596a339882e2272f36b7b78ee1903debe2/packages/python/src/daytona_sdk/daytona.py#L453)
+[[view_source]](https://github.com/daytonaio/sdk/blob/c6b0b5d7b319709ea171da2cb476692c62dd02b7/packages/python/src/daytona_sdk/daytona.py#L483)
 
 Get a Sandbox by its ID.
 
@@ -254,7 +255,7 @@ Get a Sandbox by its ID.
 def get_current_sandbox(sandbox_id: str) -> Sandbox
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/dd9532596a339882e2272f36b7b78ee1903debe2/packages/python/src/daytona_sdk/daytona.py#L465)
+[[view_source]](https://github.com/daytonaio/sdk/blob/c6b0b5d7b319709ea171da2cb476692c62dd02b7/packages/python/src/daytona_sdk/daytona.py#L495)
 
 Get a Sandbox by its ID.
 
@@ -288,7 +289,7 @@ print(sandbox.status)
 def list() -> List[Sandbox]
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/dd9532596a339882e2272f36b7b78ee1903debe2/packages/python/src/daytona_sdk/daytona.py#L502)
+[[view_source]](https://github.com/daytonaio/sdk/blob/c6b0b5d7b319709ea171da2cb476692c62dd02b7/packages/python/src/daytona_sdk/daytona.py#L532)
 
 Lists all Sandboxes.
 
@@ -312,14 +313,15 @@ for sandbox in sandboxes:
 def start(sandbox: Sandbox, timeout: Optional[float] = 60) -> None
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/dd9532596a339882e2272f36b7b78ee1903debe2/packages/python/src/daytona_sdk/daytona.py#L567)
+[[view_source]](https://github.com/daytonaio/sdk/blob/c6b0b5d7b319709ea171da2cb476692c62dd02b7/packages/python/src/daytona_sdk/daytona.py#L595)
 
 Starts a Sandbox and waits for it to be ready.
 
 **Arguments**:
 
 - `sandbox` _Sandbox_ - The Sandbox to start.
-- `timeout` _Optional[float]_ - Optional timeout in seconds to wait for the Sandbox to start. 0 means no timeout. Default is 60 seconds.
+- `timeout` _Optional[float]_ - Optional timeout in seconds to wait for the Sandbox to start.
+  0 means no timeout. Default is 60 seconds.
   
 
 **Raises**:
@@ -333,14 +335,15 @@ Starts a Sandbox and waits for it to be ready.
 def stop(sandbox: Sandbox, timeout: Optional[float] = 60) -> None
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/dd9532596a339882e2272f36b7b78ee1903debe2/packages/python/src/daytona_sdk/daytona.py#L579)
+[[view_source]](https://github.com/daytonaio/sdk/blob/c6b0b5d7b319709ea171da2cb476692c62dd02b7/packages/python/src/daytona_sdk/daytona.py#L608)
 
 Stops a Sandbox and waits for it to be stopped.
 
 **Arguments**:
 
 - `sandbox` _Sandbox_ - The sandbox to stop
-- `timeout` _Optional[float]_ - Optional timeout (in seconds) for sandbox stop. 0 means no timeout. Default is 60 seconds.
+- `timeout` _Optional[float]_ - Optional timeout (in seconds) for sandbox stop.
+  0 means no timeout. Default is 60 seconds.
   
 
 **Raises**:
@@ -416,7 +419,7 @@ sandbox.process.execute_command("python -m pytest")
 class CodeLanguage(Enum)
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/dd9532596a339882e2272f36b7b78ee1903debe2/packages/python/src/daytona_sdk/daytona.py#L85)
+[[view_source]](https://github.com/daytonaio/sdk/blob/c6b0b5d7b319709ea171da2cb476692c62dd02b7/packages/python/src/daytona_sdk/daytona.py#L84)
 
 Programming languages supported by Daytona
 
@@ -429,7 +432,7 @@ Programming languages supported by Daytona
 class DaytonaConfig()
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/dd9532596a339882e2272f36b7b78ee1903debe2/packages/python/src/daytona_sdk/daytona.py#L101)
+[[view_source]](https://github.com/daytonaio/sdk/blob/c6b0b5d7b319709ea171da2cb476692c62dd02b7/packages/python/src/daytona_sdk/daytona.py#L101)
 
 Configuration options for initializing the Daytona client.
 
@@ -460,7 +463,7 @@ daytona = Daytona(config)
 class SandboxResources()
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/dd9532596a339882e2272f36b7b78ee1903debe2/packages/python/src/daytona_sdk/daytona.py#L125)
+[[view_source]](https://github.com/daytonaio/sdk/blob/c6b0b5d7b319709ea171da2cb476692c62dd02b7/packages/python/src/daytona_sdk/daytona.py#L126)
 
 Resources configuration for Sandbox.
 
@@ -495,7 +498,7 @@ params = CreateSandboxParams(
 class CreateSandboxParams(BaseModel)
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/dd9532596a339882e2272f36b7b78ee1903debe2/packages/python/src/daytona_sdk/daytona.py#L154)
+[[view_source]](https://github.com/daytonaio/sdk/blob/c6b0b5d7b319709ea171da2cb476692c62dd02b7/packages/python/src/daytona_sdk/daytona.py#L156)
 
 Parameters for creating a new Sandbox.
 
@@ -512,7 +515,9 @@ Parameters for creating a new Sandbox.
 - `target` _Optional[str]_ - Target location for the Sandbox. Can be "us", "eu", or "asia".
 - `resources` _Optional[SandboxResources]_ - Resource configuration for the Sandbox.
 - `timeout` _Optional[float]_ - Timeout in seconds for Sandbox to be created and started.
-- `auto_stop_interval` _Optional[int]_ - Interval in minutes after which Sandbox will automatically stop if no Sandbox event occurs during that time. Default is 15 minutes. 0 means no auto-stop.
+- `auto_stop_interval` _Optional[int]_ - Interval in minutes after which Sandbox will
+  automatically stop if no Sandbox event occurs during that time. Default is 15 minutes.
+  0 means no auto-stop.
   
 
 **Example**:

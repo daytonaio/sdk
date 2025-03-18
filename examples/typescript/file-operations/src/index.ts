@@ -34,11 +34,7 @@ async function main() {
     console.log('Matches:', matches)
 
     //  replace the contents of the file
-    await sandbox.fs.replaceInFiles(
-      [filePath],
-      'Hello, World!',
-      'Goodbye, World!',
-    )
+    await sandbox.fs.replaceInFiles([filePath], 'Hello, World!', 'Goodbye, World!')
 
     //  read the file
     const downloadedFile = await sandbox.fs.downloadFile(filePath)
@@ -55,10 +51,7 @@ async function main() {
     await sandbox.fs.moveFiles(filePath, path.join(rootDir, 'moved-data.txt'))
 
     //  find the file in the new location
-    const searchResults = await sandbox.fs.searchFiles(
-      rootDir,
-      'moved-data.txt',
-    )
+    const searchResults = await sandbox.fs.searchFiles(rootDir, 'moved-data.txt')
     console.log('Search results:', searchResults)
 
     //  delete the file

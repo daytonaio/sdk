@@ -10,9 +10,7 @@ async function basicExec(sandbox: Sandbox) {
   }
 
   //  run os command
-  const cmdResult = await sandbox.process.executeCommand(
-    'echo "Hello World from CMD!"',
-  )
+  const cmdResult = await sandbox.process.executeCommand('echo "Hello World from CMD!"')
   if (cmdResult.exitCode !== 0) {
     console.error('Error running code:', cmdResult.exitCode)
   } else {
@@ -21,39 +19,39 @@ async function basicExec(sandbox: Sandbox) {
 }
 
 async function sessionExec(sandbox: Sandbox) {
-    //  exec session
-    //  session allows for multiple commands to be executed in the same context
-    await sandbox.process.createSession('exec-session-1')
+  //  exec session
+  //  session allows for multiple commands to be executed in the same context
+  await sandbox.process.createSession('exec-session-1')
 
-    //  get the session details any time
-    const session = await sandbox.process.getSession('exec-session-1')
-    console.log('session: ', session)
+  //  get the session details any time
+  const session = await sandbox.process.getSession('exec-session-1')
+  console.log('session: ', session)
 
-    //  execute a first command in the session
-    const command =await sandbox.process.executeSessionCommand('exec-session-1', {
-      command: 'export FOO=BAR',
-    })
+  //  execute a first command in the session
+  const command = await sandbox.process.executeSessionCommand('exec-session-1', {
+    command: 'export FOO=BAR',
+  })
 
-    //  get the session details again to see the command has been executed
-    const sessionUpdated = await sandbox.process.getSession('exec-session-1')
-    console.log('sessionUpdated: ', sessionUpdated)
+  //  get the session details again to see the command has been executed
+  const sessionUpdated = await sandbox.process.getSession('exec-session-1')
+  console.log('sessionUpdated: ', sessionUpdated)
 
-    //  get the command details
-    const sessionCommand = await sandbox.process.getSessionCommand('exec-session-1', command.cmdId!)
-    console.log('sessionCommand: ', sessionCommand)
+  //  get the command details
+  const sessionCommand = await sandbox.process.getSessionCommand('exec-session-1', command.cmdId!)
+  console.log('sessionCommand: ', sessionCommand)
 
-    //  execute a second command in the session and see that the environment variable is set
-    const response = await sandbox.process.executeSessionCommand('exec-session-1', {
-      command: 'echo $FOO',
-    })
-    console.log(`FOO=${response.output}`)
+  //  execute a second command in the session and see that the environment variable is set
+  const response = await sandbox.process.executeSessionCommand('exec-session-1', {
+    command: 'echo $FOO',
+  })
+  console.log(`FOO=${response.output}`)
 
-    //  we can also get the logs for the command any time after it is executed
-    const logs = await sandbox.process.getSessionCommandLogs('exec-session-1', response.cmdId!)
-    console.log('logs for command: ',logs)
+  //  we can also get the logs for the command any time after it is executed
+  const logs = await sandbox.process.getSessionCommandLogs('exec-session-1', response.cmdId!)
+  console.log('logs for command: ', logs)
 
-    //  we can also delete the session
-    await sandbox.process.deleteSession('exec-session-1')
+  //  we can also delete the session
+  await sandbox.process.deleteSession('exec-session-1')
 }
 
 async function main() {
@@ -62,13 +60,11 @@ async function main() {
   //  first, create a sandbox
   const sandbox = await daytona.create({
     language: 'typescript',
-
   })
 
   try {
     await basicExec(sandbox)
     await sessionExec(sandbox)
-  
   } catch (error) {
     console.error('Error creating sandbox:', error)
   } finally {

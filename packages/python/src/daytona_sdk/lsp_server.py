@@ -6,24 +6,24 @@ Example:
     Basic LSP server usage:
     ```python
     sandbox = daytona.create()
-    
+
     # Create and start LSP server
     lsp = sandbox.create_lsp_server("typescript", "/workspace/project")
     lsp.start()
-    
+
     # Open a file for editing
     lsp.did_open("/workspace/project/src/index.ts")
-    
+
     # Get completions at a position
     pos = Position(line=10, character=15)
     completions = lsp.completions("/workspace/project/src/index.ts", pos)
     print(f"Completions: {completions}")
-    
+
     # Get document symbols
     symbols = lsp.document_symbols("/workspace/project/src/index.ts")
     for symbol in symbols:
         print(f"{symbol.name}: {symbol.kind}")
-    
+
     # Clean up
     lsp.did_close("/workspace/project/src/index.ts")
     lsp.stop()
@@ -33,18 +33,21 @@ Note:
     The LSP server must be started with start() before using any other methods,
     and should be stopped with stop() when no longer needed to free resources.
 """
+
 from enum import Enum
 from typing import List
-from deprecated import deprecated
+
 from daytona_api_client import (
     CompletionList,
+    LspCompletionParams,
+    LspDocumentRequest,
+    LspServerRequest,
     LspSymbol,
     ToolboxApi,
-    LspServerRequest,
-    LspDocumentRequest,
-    LspCompletionParams
 )
 from daytona_sdk._utils.errors import intercept_errors
+from deprecated import deprecated
+
 from .protocols import SandboxInstance
 
 
@@ -241,7 +244,9 @@ class LspServer:
             uri=f"file://{path}",
         )
 
-    @deprecated(reason="Method is deprecated. Use `sandbox_symbols` instead. This method will be removed in a future version.")
+    @deprecated(
+        reason="Method is deprecated. Use `sandbox_symbols` instead. This method will be removed in a future version."
+    )
     def workspace_symbols(self, query: str) -> List[LspSymbol]:
         """Searches for symbols across the entire Sandbox.
 

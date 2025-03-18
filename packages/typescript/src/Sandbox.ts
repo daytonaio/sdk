@@ -1,33 +1,33 @@
 /**
  * The Daytona SDK core Sandbox functionality.
- * 
+ *
  * Provides the main Sandbox class representing a Daytona Sandbox that coordinates file system,
  * Git, process execution, and LSP functionality. It serves as the central point
  * for interacting with Daytona Sandboxes.
- * 
+ *
  * The Sandbox must be in a 'started' state before performing operations.
- * 
+ *
  * @module Sandbox
- * 
+ *
  * @example
  * // Create and initialize sandbox
  * const daytona = new Daytona();
  * const sandbox = await daytona.create();
- * 
+ *
  * // File operations
  * await sandbox.fs.uploadFile(
  *   '/app/config.json',
  *   new File(['{"setting": "value"}'], 'config.json')
  * );
  * const contentBlob = await sandbox.fs.downloadFile('/app/config.json');
- * 
+ *
  * // Git operations
  * await sandbox.git.clone('https://github.com/user/repo.git');
- * 
+ *
  * // Process execution
  * const response = await sandbox.process.executeCommand('ls -la');
  * console.log(response.result);
- * 
+ *
  * // LSP functionality
  * const lsp = sandbox.createLspServer('typescript', '/workspace/project');
  * await lsp.didOpen('/workspace/project/src/index.ts');
@@ -36,10 +36,10 @@
  *   character: 15
  * });
  * console.log(completions);
- * 
+ *
  */
 
-import { 
+import {
   ToolboxApi,
   WorkspaceState as SandboxState,
   WorkspaceApi as SandboxApi,
@@ -56,21 +56,21 @@ import { LspLanguageId, LspServer } from './LspServer'
 import { DaytonaError } from './errors/DaytonaError'
 
 /** @deprecated Use SandboxInfo instead. This type will be removed in a future version. */
-type WorkspaceInfo = SandboxInfo;
+type WorkspaceInfo = SandboxInfo
 
 export interface SandboxInstance extends Omit<ApiSandbox, 'info'> {
-  info?: SandboxInfo;
+  info?: SandboxInfo
 }
 
 /**
  * Resources allocated to a Sandbox
- * 
+ *
  * @interface SandboxResources
  * @property {string} cpu - Number of CPU cores allocated (e.g., "1", "2")
  * @property {string | null} gpu - Number of GPUs allocated (e.g., "1") or null if no GPU
  * @property {string} memory - Amount of memory allocated with unit (e.g., "2Gi", "4Gi")
  * @property {string} disk - Amount of disk space allocated with unit (e.g., "10Gi", "20Gi")
- * 
+ *
  * @example
  * const resources: SandboxResources = {
  *   cpu: "2",
@@ -81,21 +81,21 @@ export interface SandboxInstance extends Omit<ApiSandbox, 'info'> {
  */
 export interface SandboxResources {
   /** CPU allocation */
-  cpu: string;
+  cpu: string
   /** GPU allocation */
-  gpu: string | null;
+  gpu: string | null
   /** Memory allocation */
-  memory: string;
+  memory: string
   /** Disk allocation */
-  disk: string;
+  disk: string
 }
 
 /**
  * Structured information about a Sandbox
- * 
+ *
  * This interface provides detailed information about a Sandbox's configuration,
  * resources, and current state.
- * 
+ *
  * @interface SandboxInfo
  * @property {string} id - Unique identifier for the Sandbox
  * @property {string} name - Display name of the Sandbox
@@ -110,7 +110,7 @@ export interface SandboxResources {
  * @property {string | null} errorReason - Error message if Sandbox is in error state
  * @property {string | null} snapshotState - Current state of Sandbox snapshot
  * @property {Date | null} snapshotStateCreatedAt - When the snapshot state was created
- * 
+ *
  * @example
  * const sandbox = await daytona.create();
  * const info = await sandbox.info();
@@ -119,47 +119,47 @@ export interface SandboxResources {
  */
 export interface SandboxInfo extends ApiSandboxInfo {
   /** Unique identifier */
-  id: string;
+  id: string
   /** Sandbox name */
-  name: string;
+  name: string
   /** Docker image */
-  image: string;
+  image: string
   /** OS user */
-  user: string;
+  user: string
   /** Environment variables */
-  env: Record<string, string>;
+  env: Record<string, string>
   /** Sandbox labels */
-  labels: Record<string, string>;
+  labels: Record<string, string>
   /** Public access flag */
-  public: boolean;
+  public: boolean
   /** Target location */
-  target: SandboxTargetRegion | string;
+  target: SandboxTargetRegion | string
   /** Resource allocations */
-  resources: SandboxResources;
+  resources: SandboxResources
   /** Current state */
-  state: SandboxState;
+  state: SandboxState
   /** Error reason if any */
-  errorReason: string | null;
+  errorReason: string | null
   /** Snapshot state */
-  snapshotState: string | null;
+  snapshotState: string | null
   /** Snapshot state creation timestamp */
-  snapshotStateCreatedAt: Date | null;
+  snapshotStateCreatedAt: Date | null
   /** Node domain */
-  nodeDomain: string;
+  nodeDomain: string
   /** Region */
-  region: SandboxTargetRegion;
+  region: SandboxTargetRegion
   /** Class */
-  class: SandboxClass;
+  class: SandboxClass
   /** Updated at */
-  updatedAt: string;
+  updatedAt: string
   /** Last snapshot */
-  lastSnapshot: string | null;
+  lastSnapshot: string | null
   /** Auto-stop interval in minutes*/
-  autoStopInterval: number;
+  autoStopInterval: number
   /**
    * @deprecated Use `state`, `nodeDomain`, `region`, `class`, `updatedAt`, `lastSnapshot`, `resources`, `autoStopInterval` instead.
    */
-  providerMetadata?: string;
+  providerMetadata?: string
 }
 
 /**
@@ -173,11 +173,11 @@ export interface SandboxCodeToolbox {
 
 /**
  * Represents a Daytona Sandbox.
- * 
+ *
  * A Sandbox provides file system operations, Git operations, process execution,
  * and LSP functionality. It serves as the main interface for interacting with
  * a Daytona sandbox.
- * 
+ *
  * @property {string} id - Unique identifier for the Sandbox
  * @property {SandboxInstance} instance - The underlying Sandbox instance
  * @property {SandboxApi} sandboxApi - API client for Sandbox operations
@@ -197,7 +197,7 @@ export class Sandbox {
 
   /**
    * Creates a new Sandbox instance
-   * 
+   *
    * @param {string} id - Unique identifier for the Sandbox
    * @param {SandboxInstance} instance - The underlying Sandbox instance
    * @param {SandboxApi} sandboxApi - API client for Sandbox operations
@@ -209,7 +209,7 @@ export class Sandbox {
     public readonly instance: SandboxInstance,
     public readonly sandboxApi: SandboxApi,
     public readonly toolboxApi: ToolboxApi,
-    private readonly codeToolbox: SandboxCodeToolbox,
+    private readonly codeToolbox: SandboxCodeToolbox
   ) {
     this.fs = new FileSystem(instance, this.toolboxApi)
     this.git = new Git(this, this.toolboxApi, instance)
@@ -218,17 +218,15 @@ export class Sandbox {
 
   /**
    * Gets the root directory path for the logged in user inside the Sandbox.
-   * 
+   *
    * @returns {Promise<string | undefined>} The absolute path to the Sandbox root directory for the logged in user
-   * 
+   *
    * @example
    * const rootDir = await sandbox.getUserRootDir();
    * console.log(`Sandbox root: ${rootDir}`);
    */
   public async getUserRootDir(): Promise<string | undefined> {
-    const response = await this.toolboxApi.getProjectDir(
-      this.instance.id,
-    )
+    const response = await this.toolboxApi.getProjectDir(this.instance.id)
     return response.data.dir
   }
 
@@ -241,37 +239,29 @@ export class Sandbox {
 
   /**
    * Creates a new Language Server Protocol (LSP) server instance.
-   * 
+   *
    * The LSP server provides language-specific features like code completion,
    * diagnostics, and more.
-   * 
+   *
    * @param {LspLanguageId} languageId - The language server type (e.g., "typescript")
    * @param {string} pathToProject - Absolute path to the project root directory
    * @returns {LspServer} A new LSP server instance configured for the specified language
-   * 
+   *
    * @example
    * const lsp = sandbox.createLspServer('typescript', '/workspace/project');
    */
-  public createLspServer(
-    languageId: LspLanguageId | string,
-    pathToProject: string,
-  ): LspServer {
-    return new LspServer(
-      languageId as LspLanguageId,
-      pathToProject,
-      this.toolboxApi,
-      this.instance,
-    )
+  public createLspServer(languageId: LspLanguageId | string, pathToProject: string): LspServer {
+    return new LspServer(languageId as LspLanguageId, pathToProject, this.toolboxApi, this.instance)
   }
 
   /**
    * Sets labels for the Sandbox.
-   * 
+   *
    * Labels are key-value pairs that can be used to organize and identify Sandboxes.
-   * 
+   *
    * @param {Record<string, string>} labels - Dictionary of key-value pairs representing Sandbox labels
    * @returns {Promise<void>}
-   * 
+   *
    * @example
    * // Set sandbox labels
    * await sandbox.setLabels({
@@ -283,17 +273,17 @@ export class Sandbox {
   public async setLabels(labels: Record<string, string>): Promise<void> {
     await this.sandboxApi.replaceLabels(this.instance.id, { labels })
   }
-  
+
   /**
    * Start the Sandbox.
-   * 
+   *
    * This method starts the Sandbox and waits for it to be ready.
-   * 
+   *
    * @param {number} [timeout] - Maximum time to wait in seconds. 0 means no timeout.
    *                            Defaults to 60-second timeout.
    * @returns {Promise<void>}
    * @throws {DaytonaError} - `DaytonaError` - If Sandbox fails to start or times out
-   * 
+   *
    * @example
    * const sandbox = await daytona.getCurrentSandbox('my-sandbox');
    * await sandbox.start(40);  // Wait up to 40 seconds
@@ -301,23 +291,23 @@ export class Sandbox {
    */
   public async start(timeout: number = 60): Promise<void> {
     if (timeout < 0) {
-      throw new DaytonaError('Timeout must be a non-negative number');
+      throw new DaytonaError('Timeout must be a non-negative number')
     }
-    const startTime = Date.now();
+    const startTime = Date.now()
     await this.sandboxApi.startWorkspace(this.instance.id, { timeout: timeout * 1000 })
-    const timeElapsed = Date.now() - startTime;
-    await this.waitUntilStarted(timeout ? timeout - (timeElapsed / 1000) : 0)
+    const timeElapsed = Date.now() - startTime
+    await this.waitUntilStarted(timeout ? timeout - timeElapsed / 1000 : 0)
   }
 
   /**
    * Stops the Sandbox.
-   * 
+   *
    * This method stops the Sandbox and waits for it to be fully stopped.
-   * 
+   *
    * @param {number} [timeout] - Maximum time to wait in seconds. 0 means no timeout.
    *                            Defaults to 60-second timeout.
    * @returns {Promise<void>}
-   * 
+   *
    * @example
    * const sandbox = await daytona.getCurrentSandbox('my-sandbox');
    * await sandbox.stop();
@@ -325,12 +315,12 @@ export class Sandbox {
    */
   public async stop(timeout: number = 60): Promise<void> {
     if (timeout < 0) {
-      throw new DaytonaError('Timeout must be a non-negative number');
+      throw new DaytonaError('Timeout must be a non-negative number')
     }
-    const startTime = Date.now();
+    const startTime = Date.now()
     await this.sandboxApi.stopWorkspace(this.instance.id, { timeout: timeout * 1000 })
-    const timeElapsed = Date.now() - startTime;
-    await this.waitUntilStopped(timeout ? timeout - (timeElapsed / 1000) : 0)
+    const timeElapsed = Date.now() - startTime
+    await this.waitUntilStopped(timeout ? timeout - timeElapsed / 1000 : 0)
   }
 
   /**
@@ -343,10 +333,10 @@ export class Sandbox {
 
   /**
    * Waits for the Sandbox to reach the 'started' state.
-   * 
+   *
    * This method polls the Sandbox status until it reaches the 'started' state
    * or encounters an error.
-   * 
+   *
    * @param {number} [timeout] - Maximum time to wait in seconds. 0 means no timeout.
    *                               Defaults to 60 seconds.
    * @returns {Promise<void>}
@@ -354,36 +344,38 @@ export class Sandbox {
    */
   public async waitUntilStarted(timeout: number = 60) {
     if (timeout < 0) {
-      throw new DaytonaError('Timeout must be a non-negative number');
+      throw new DaytonaError('Timeout must be a non-negative number')
     }
 
-    const checkInterval = 100; // Wait 100 ms between checks
-    const startTime = Date.now();
+    const checkInterval = 100 // Wait 100 ms between checks
+    const startTime = Date.now()
 
-    while (timeout === 0 || (Date.now() - startTime) < (timeout * 1000)) {
-      const response = await this.sandboxApi.getWorkspace(this.id);
-      const state = response.data.state;
+    while (timeout === 0 || Date.now() - startTime < timeout * 1000) {
+      const response = await this.sandboxApi.getWorkspace(this.id)
+      const state = response.data.state
 
       if (state === 'started') {
-        return;
+        return
       }
 
       if (state === 'error') {
-        throw new DaytonaError(`Sandbox failed to start with status: ${state}, error reason: ${response.data.errorReason}`);
+        throw new DaytonaError(
+          `Sandbox failed to start with status: ${state}, error reason: ${response.data.errorReason}`
+        )
       }
 
-      await new Promise(resolve => setTimeout(resolve, checkInterval));
+      await new Promise((resolve) => setTimeout(resolve, checkInterval))
     }
 
-    throw new DaytonaError(`Sandbox failed to become ready within the timeout period`);
+    throw new DaytonaError('Sandbox failed to become ready within the timeout period')
   }
 
   /**
    * Wait for Sandbox to reach 'stopped' state.
-   * 
+   *
    * This method polls the Sandbox status until it reaches the 'stopped' state
    * or encounters an error.
-   * 
+   *
    * @param {number} [timeout] - Maximum time to wait in seconds. 0 means no timeout.
    *                               Defaults to 60 seconds.
    * @returns {Promise<void>}
@@ -391,36 +383,38 @@ export class Sandbox {
    */
   public async waitUntilStopped(timeout: number = 60) {
     if (timeout < 0) {
-      throw new DaytonaError('Timeout must be a non-negative number');
+      throw new DaytonaError('Timeout must be a non-negative number')
     }
 
-    const checkInterval = 100; // Wait 100 ms between checks
-    const startTime = Date.now();
+    const checkInterval = 100 // Wait 100 ms between checks
+    const startTime = Date.now()
 
-    while (timeout === 0 || (Date.now() - startTime) < (timeout * 1000)) {
-      const response = await this.sandboxApi.getWorkspace(this.id);
-      const state = response.data.state;
+    while (timeout === 0 || Date.now() - startTime < timeout * 1000) {
+      const response = await this.sandboxApi.getWorkspace(this.id)
+      const state = response.data.state
 
       if (state === 'stopped') {
-        return;
+        return
       }
 
       if (state === 'error') {
-        throw new DaytonaError(`Sandbox failed to stop with status: ${state}, error reason: ${response.data.errorReason}`);
+        throw new DaytonaError(
+          `Sandbox failed to stop with status: ${state}, error reason: ${response.data.errorReason}`
+        )
       }
 
-      await new Promise(resolve => setTimeout(resolve, checkInterval));
+      await new Promise((resolve) => setTimeout(resolve, checkInterval))
     }
 
-    throw new DaytonaError('Sandbox failed to become stopped within the timeout period');
+    throw new DaytonaError('Sandbox failed to become stopped within the timeout period')
   }
 
   /**
    * Gets structured information about the Sandbox.
-   * 
+   *
    * @returns {Promise<SandboxInfo>} Detailed information about the Sandbox including its
    *                                   configuration, resources, and current state
-   * 
+   *
    * @example
    * const info = await sandbox.info();
    * console.log(`Sandbox ${info.name}:`);
@@ -435,10 +429,10 @@ export class Sandbox {
 
   /**
    * Converts an API workspace instance to a WorkspaceInfo object.
-   * 
+   *
    * @param {ApiWorkspace} instance - The API workspace instance to convert
    * @returns {WorkspaceInfo} The converted WorkspaceInfo object
-   * 
+   *
    * @deprecated Use `toSandboxInfo` instead. This method will be removed in a future version.
    */
   public static toWorkspaceInfo(instance: ApiWorkspace): WorkspaceInfo {
@@ -446,20 +440,20 @@ export class Sandbox {
   }
   /**
    * Converts an API sandbox instance to a SandboxInfo object.
-   * 
+   *
    * @param {ApiSandbox} instance - The API sandbox instance to convert
    * @returns {SandboxInfo} The converted SandboxInfo object
    */
   public static toSandboxInfo(instance: ApiSandbox): SandboxInfo {
     const providerMetadata = JSON.parse(instance.info?.providerMetadata || '{}')
-    var resourcesData = providerMetadata.resources || providerMetadata
+    const resourcesData = providerMetadata.resources || providerMetadata
 
     // Extract resources with defaults
     const resources: SandboxResources = {
       cpu: String(resourcesData.cpu || '1'),
       gpu: resourcesData.gpu ? String(resourcesData.gpu) : null,
       memory: `${resourcesData.memory ?? 2}Gi`,
-      disk: `${resourcesData.disk ?? 10}Gi`
+      disk: `${resourcesData.disk ?? 10}Gi`,
     }
 
     return {
@@ -475,7 +469,7 @@ export class Sandbox {
       state: providerMetadata.state || '',
       errorReason: providerMetadata.errorReason || null,
       snapshotState: providerMetadata.snapshotState || null,
-      snapshotStateCreatedAt: providerMetadata.snapshotStateCreatedAt 
+      snapshotStateCreatedAt: providerMetadata.snapshotStateCreatedAt
         ? new Date(providerMetadata.snapshotStateCreatedAt)
         : null,
       nodeDomain: providerMetadata.nodeDomain || '',
@@ -491,16 +485,16 @@ export class Sandbox {
 
   /**
    * Set the auto-stop interval for the Sandbox.
-   * 
+   *
    * The Sandbox will automatically stop after being idle (no new events) for the specified interval.
    * Events include any state changes or interactions with the Sandbox through the sdk.
    * Interactions using Sandbox Previews are not included.
-   * 
+   *
    * @param {number} interval - Number of minutes of inactivity before auto-stopping.
    *                           Set to 0 to disable auto-stop. Default is 15 minutes.
    * @returns {Promise<void>}
    * @throws {DaytonaError} - `DaytonaError` - If interval is not a non-negative integer
-   * 
+   *
    * @example
    * // Auto-stop after 1 hour
    * await sandbox.setAutostopInterval(60);
@@ -509,9 +503,9 @@ export class Sandbox {
    */
   public async setAutostopInterval(interval: number): Promise<void> {
     if (!Number.isInteger(interval) || interval < 0) {
-      throw new DaytonaError('autoStopInterval must be a non-negative integer');
+      throw new DaytonaError('autoStopInterval must be a non-negative integer')
     }
-    
+
     await this.sandboxApi.setAutostopInterval(this.id, interval)
     this.instance.autoStopInterval = interval
   }
@@ -526,7 +520,9 @@ export class Sandbox {
     const providerMetadata = JSON.parse(this.instance.info?.providerMetadata || '{}')
     const nodeDomain = providerMetadata.nodeDomain || ''
     if (!nodeDomain) {
-      throw new DaytonaError("Cannot get preview link. Node domain not found in provider metadata. Please contact support.")
+      throw new DaytonaError(
+        'Cannot get preview link. Node domain not found in provider metadata. Please contact support.'
+      )
     }
     return `https://${port}-${this.id}.${nodeDomain}`
   }

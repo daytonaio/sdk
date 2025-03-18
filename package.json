@@ -5,13 +5,22 @@
     "generate-api-clients": "sh ./hack/generate-api-clients.sh",
     "test": "echo \"Error: no test specified\" && exit 1",
     "postinstall": "(is-ci || husky) && ./hack/postinstall.sh",
-    "format:ts": "prettier --write ./**/*.{ts,tsx}",
-    "format:py": "black .",
-    "format:all": "npm run format:ts && npm run format:py",
-    "exec-command-example": "npx dotenvx run -f .env.local -- npx ts-node examples/ts/exec-command/src/",
     "docs": "npm run docs:python && npm run docs:typescript",
     "docs:python": "cd packages/python && npm run docs && cd ../..",
-    "docs:typescript": "cd packages/typescript && npm run docs && cd ../.."
+    "docs:typescript": "cd packages/typescript && npm run docs && cd ../..",
+    "lint": "npm run lint:ts && npm run lint:py && npm run lint:jupyter",
+    "lint:ts": "eslint 'packages/typescript/**/*.{ts,tsx}' 'examples/typescript/**/*.{ts,tsx}'",
+    "lint:py": "pylint packages/python examples/python --recursive=y -sn",
+    "lint:jupyter": "nbqa pylint examples/jupyter --recursive=y -sn",
+    "format": "npm run format:ts && npm run format:py && npm run format:jupyter",
+    "format:ts": "prettier --write 'packages/typescript/**/*.{ts,tsx}' 'examples/typescript/**/*.{ts,tsx}'",
+    "format:py": "isort packages/python examples/python && black packages/python examples/python",
+    "format:jupyter": "nbqa isort examples/jupyter && black examples/jupyter",
+    "format:check": "npm run format:check:ts && npm run format:check:py && npm run format:check:jupyter",
+    "format:check:ts": "prettier --check 'packages/typescript/**/*.{ts,tsx}' 'examples/typescript/**/*.{ts,tsx}'",
+    "format:check:py": "isort --check-only packages/python examples/python && black --check packages/python examples/python",
+    "format:check:jupyter": "nbqa isort --check-only examples/jupyter && black --check examples/jupyter",
+    "exec-command-example": "npx dotenvx run -f .env.local -- npx ts-node examples/ts/exec-command/src/"
   },
   "workspaces": [
     "packages/*",
@@ -25,19 +34,33 @@
   },
   "devDependencies": {
     "@openapitools/openapi-generator-cli": "^2.15.3",
+    "@typescript-eslint/eslint-plugin": "8.26.0",
+    "@typescript-eslint/parser": "8.26.0",
+    "eslint": "^8.56.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-prettier": "^4.2.1",
     "husky": "^9.1.6",
     "is-ci": "^3.0.1",
     "lint-staged": "^15.2.10",
     "prettier": "^2.4.1",
     "ts-node": "^10.9.2",
-    "tsconfig-paths": "^4.2.0"
+    "tsconfig-paths": "^4.2.0",
+    "typescript": "^5.8.2"
   },
   "lint-staged": {
     "*.{ts,tsx}": [
-      "prettier --write"
+      "prettier --write",
+      "eslint --cache --fix"
     ],
     "*.py": [
-      "black"
+      "isort",
+      "black",
+      "pylint -sn"
+    ],
+    "*.ipynb": [
+      "nbqa isort",
+      "black",
+      "nbqa pylint -sn"
     ]
   }
 }

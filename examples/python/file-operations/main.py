@@ -1,5 +1,6 @@
 import os
-from daytona_sdk import Daytona, CreateSandboxParams
+
+from daytona_sdk import CreateSandboxParams, Daytona
 
 daytona = Daytona()
 params = CreateSandboxParams(

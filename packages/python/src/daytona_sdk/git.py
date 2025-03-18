@@ -8,16 +8,16 @@ Example:
     Basic Git workflow:
     ```python
     sandbox = daytona.create()
-    
+
     # Clone a repository
     sandbox.git.clone(
         url="https://github.com/user/repo.git",
         path="/workspace/repo"
     )
-    
+
     # Make some changes
     sandbox.fs.upload_file("/workspace/repo/test.txt", "Hello, World!")
-    
+
     # Stage and commit changes
     sandbox.git.add("/workspace/repo", ["test.txt"])
     sandbox.git.commit(
@@ -26,7 +26,7 @@ Example:
         author="John Doe",
         email="john@example.com"
     )
-    
+
     # Push changes (with authentication)
     sandbox.git.push(
         path="/workspace/repo",
@@ -40,17 +40,19 @@ Note:
     stated otherwise.
 """
 
-from typing import List, Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING, List, Optional
+
 from daytona_api_client import (
-    GitStatus,
-    ListBranchResponse,
-    ToolboxApi,
     GitAddRequest,
     GitCloneRequest,
     GitCommitRequest,
     GitRepoRequest,
+    GitStatus,
+    ListBranchResponse,
+    ToolboxApi,
 )
 from daytona_sdk._utils.errors import intercept_errors
+
 from .protocols import SandboxInstance
 
 if TYPE_CHECKING:
@@ -135,10 +137,7 @@ class Git:
         """
         self.toolbox_api.git_add_files(
             self.instance.id,
-            git_add_request=GitAddRequest(
-                path=path,
-                files=files
-            ),
+            git_add_request=GitAddRequest(path=path, files=files),
         )
 
     @intercept_errors(message_prefix="Failed to list branches: ")
@@ -224,7 +223,7 @@ class Git:
                 username=username,
                 password=password,
                 commitId=commit_id,
-            )
+            ),
         )
 
     @intercept_errors(message_prefix="Failed to commit changes: ")
@@ -254,17 +253,15 @@ class Git:
         """
         self.toolbox_api.git_commit_changes(
             self.instance.id,
-            git_commit_request=GitCommitRequest(
-                path=path,
-                message=message,
-                author=author,
-                email=email
-            ),
+            git_commit_request=GitCommitRequest(path=path, message=message, author=author, email=email),
         )
 
     @intercept_errors(message_prefix="Failed to push changes: ")
     def push(
-        self, path: str, username: Optional[str] = None, password: Optional[str] = None
+        self,
+        path: str,
+        username: Optional[str] = None,
+        password: Optional[str] = None,
     ) -> None:
         """Pushes local commits to the remote repository.
 
@@ -292,16 +289,15 @@ class Git:
         """
         self.toolbox_api.git_push_changes(
             self.instance.id,
-            git_repo_request=GitRepoRequest(
-                path=path,
-                username=username,
-                password=password
-            ),
+            git_repo_request=GitRepoRequest(path=path, username=username, password=password),
         )
 
     @intercept_errors(message_prefix="Failed to pull changes: ")
     def pull(
-        self, path: str, username: Optional[str] = None, password: Optional[str] = None
+        self,
+        path: str,
+        username: Optional[str] = None,
+        password: Optional[str] = None,
     ) -> None:
         """Pulls changes from the remote repository.
 
@@ -329,11 +325,7 @@ class Git:
         """
         self.toolbox_api.git_pull_changes(
             self.instance.id,
-            git_repo_request=GitRepoRequest(
-                path=path,
-                username=username,
-                password=password
-            ),
+            git_repo_request=GitRepoRequest(path=path, username=username, password=password),
         )
 
     @intercept_errors(message_prefix="Failed to get status: ")
