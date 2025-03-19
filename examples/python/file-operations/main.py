@@ -1,10 +1,15 @@
 import os
+from daytona_sdk import Daytona, CreateWorkspaceParams, DaytonaConfig
 
-from daytona_sdk import CreateSandboxParams, Daytona
+config = DaytonaConfig(
+    api_key="dtn_0d522da04d7e07c4da8693edce78b43d58b20822bf6a98eb478615065aa445ac",
+    server_url="https://stage.daytona.work/api",
+    target="eu"
+)
 
-daytona = Daytona()
-params = CreateSandboxParams(
-    language="python",
+daytona = Daytona(config)
+params = CreateWorkspaceParams(
+  language="python",
 )
 
 # First, create a sandbox

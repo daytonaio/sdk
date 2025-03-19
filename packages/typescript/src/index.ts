@@ -10,6 +10,14 @@ export { LspLanguageId } from './LspServer'
 export { DaytonaError } from './errors/DaytonaError'
 export { Sandbox } from './Sandbox'
 export type { SandboxCodeToolbox } from './Sandbox'
+
+// Chart and artifact types
+export { ChartType } from './types/Chart'
+export type { Chart } from './types/Chart'
+
+export type { ExecutionArtifacts, ExecuteResponse as EnhancedExecuteResponse } from './types/ExecuteResponse'
+
+// Re-export necessary types from client
 export type {
   FileInfo,
   Match,
@@ -17,7 +25,6 @@ export type {
   SearchFilesResponse,
   GitStatus,
   ListBranchResponse,
-  ExecuteResponse,
 } from '@daytonaio/api-client'
 export { WorkspaceState as SandboxState, CreateWorkspaceTargetEnum as SandboxTargetRegion } from '@daytonaio/api-client'
 

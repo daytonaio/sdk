@@ -42,7 +42,6 @@ from daytona_api_client import (
     Command,
     CreateSessionRequest,
     ExecuteRequest,
-    ExecuteResponse,
     Session,
     SessionExecuteRequest,
     SessionExecuteResponse,
@@ -53,6 +52,9 @@ from daytona_sdk._utils.errors import intercept_errors
 from .code_toolbox.sandbox_python_code_toolbox import SandboxPythonCodeToolbox
 from .common.code_run_params import CodeRunParams
 from .protocols import SandboxInstance
+from .charts import Chart
+import json
+from .common.execute_response import ExecuteResponse, ExecutionArtifacts
 
 
 class Process:
@@ -84,6 +86,35 @@ class Process:
         self.toolbox_api = toolbox_api
         self.instance = instance
 
+    @staticmethod
+    def _parse_output(lines: List[str]) -> Optional[ExecutionArtifacts]:
+        """
+        Parse the output of a command to extract ExecutionArtifacts.
+
+        Args:
+            lines: A list of lines of output from a command
+
+        Returns:
+            ExecutionArtifacts: The artifacts from the command execution
+        """
+        artifacts = ExecutionArtifacts("", [])
+        for line in lines:
+            if not line.startswith("dtn_artifact:"):
+                artifacts.stdout += line
+                artifacts.stdout += "\n"
+            else:
+                # Remove the prefix and parse JSON
+                json_str = line.replace("dtn_artifact:", "", 1).strip()
+                data = json.loads(json_str)
+                data_type = data.pop("type")
+
+                # Check if this is chart data
+                if data_type == "chart":
+                    chart_data = data.get("value", {})
+                    artifacts.charts.append(Chart(**chart_data))
+
+        return artifacts
+
     @intercept_errors(message_prefix="Failed to execute command: ")
     def exec(
         self,
@@ -104,6 +135,7 @@ class Process:
             ExecuteResponse: Command execution results containing:
                 - exit_code: The command's exit status
                 - result: Standard output from the command
+                - charts: List of Chart objects if any charts were generated
 
         Example:
             ```python
@@ -120,14 +152,23 @@ class Process:
         """
         execute_request = ExecuteRequest(command=command, cwd=cwd, timeout=timeout)
 
-        return self.toolbox_api.execute_command(self.instance.id, execute_request=execute_request)
+        response = self.toolbox_api.execute_command(
+            workspace_id=self.instance.id,
+            execute_request=execute_request
+        )
 
-    def code_run(
-        self,
-        code: str,
-        params: Optional[CodeRunParams] = None,
-        timeout: Optional[int] = None,
-    ) -> ExecuteResponse:
+        # Post-process the output to extract ExecutionArtifacts
+        artifacts = Process._parse_output(response.result.splitlines())
+
+        # Create new response with processed output and charts
+        return ExecuteResponse(
+            exit_code=response.exit_code,
+            result=artifacts.stdout,
+            artifacts=artifacts,
+            additional_properties=response.additional_properties
+        )
+
+    def code_run(self, code: str, params: Optional[CodeRunParams] = None, timeout: Optional[int] = None) -> ExecuteResponse:
         """Executes code in the Sandbox using the appropriate language runtime.
 
         Args:
@@ -140,6 +181,7 @@ class Process:
             ExecuteResponse: Code execution result containing:
                 - exit_code: The execution's exit status
                 - result: Standard output from the code
+                - charts: List of Chart objects if any charts were generated
 
         Example:
             ```python

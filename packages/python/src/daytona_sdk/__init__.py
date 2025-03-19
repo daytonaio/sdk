@@ -15,6 +15,7 @@ from .daytona import (
 )
 from .lsp_server import LspLanguageId
 from .sandbox import Sandbox, SandboxState, SandboxTargetRegion
+from .charts import Chart, ChartType
 
 CreateWorkspaceParams = deprecated_alias("CreateWorkspaceParams", "CreateSandboxParams")(CreateSandboxParams)
 Workspace = deprecated_alias("Workspace", "Sandbox")(Sandbox)
@@ -42,4 +43,6 @@ __all__ = [
     "WorkspaceTargetRegion",
     "WorkspaceResources",
     "WorkspaceState",
+    "ChartType",
+    "Chart"
 ]
