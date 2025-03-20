@@ -21,7 +21,8 @@ def deprecated_alias(old_name: str, new_name: str) -> Callable[[Type[T]], Type[T
     def decorator(cls: Type[T]) -> Type[T]:
         # Create warning message once
         warning_message = (
-            f"`{old_name}` is deprecated. Please use `{new_name}` instead. This will be removed in a future version."
+            f"`{old_name}` is deprecated. Please use `{new_name}` instead. "
+            + "This will be removed in a future version."
         )
 
         if isinstance(cls, type) and issubclass(cls, Enum):
@@ -60,7 +61,7 @@ def deprecated_alias(old_name: str, new_name: str) -> Callable[[Type[T]], Type[T
         class WrappedClass(cls):  # type: ignore
             def __new__(cls, *args: P.args, **kwargs: P.kwargs) -> T:
                 warnings.warn(warning_message, DeprecationWarning, stacklevel=2)
-                return super().__new__(cls, *args, **kwargs)
+                return super().__new__(cls)  # pylint: disable=no-value-for-parameter
 
             def __init__(self, *args: P.args, **kwargs: P.kwargs) -> None:
                 warnings.warn(warning_message, DeprecationWarning, stacklevel=2)
