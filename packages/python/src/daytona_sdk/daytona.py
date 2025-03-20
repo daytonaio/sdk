@@ -102,9 +102,10 @@ class DaytonaConfig:
     """Configuration options for initializing the Daytona client.
 
     Attributes:
-        api_key (str): API key for authentication with Daytona server.
-        server_url (str, optional): URL of the Daytona server. Defaults to 'https://app.daytona.io/api' if not set.
-        target (str, optional): Target environment for Sandbox. Defaults to 'us' if not set.
+        api_key (Optional[str]): API key for authentication with Daytona server. If not set, it must be provided
+        as environment variable DAYTONA_API_KEY.
+        server_url (Optional[str]): URL of the Daytona server. Defaults to 'https://app.daytona.io/api' if not set.
+        target (Optional[SandboxTargetRegion]): Target environment for Sandbox. Defaults to 'us' if not set.
 
     Example:
         ```python
@@ -113,9 +114,9 @@ class DaytonaConfig:
         ```
     """
 
-    api_key: str
-    server_url: str = None
-    target: SandboxTargetRegion = None
+    api_key: Optional[str] = None
+    server_url: Optional[str] = None
+    target: Optional[SandboxTargetRegion] = None
 
 
 @dataclass
@@ -153,7 +154,8 @@ class CreateSandboxParams(BaseModel):
     """Parameters for creating a new Sandbox.
 
     Attributes:
-        language (CodeLanguage): Programming language for the Sandbox ("python", "javascript", "typescript").
+        language (Optional[CodeLanguage]): Programming language for the Sandbox ("python", "javascript", "typescript").
+        Defaults to "python".
         id (Optional[str]): Custom identifier for the Sandbox. If not provided, a random ID will be generated.
         name (Optional[str]): Display name for the Sandbox. Defaults to Sandbox ID if not provided.
         image (Optional[str]): Custom Docker image to use for the Sandbox.
@@ -181,7 +183,7 @@ class CreateSandboxParams(BaseModel):
         ```
     """
 
-    language: CodeLanguage
+    language: Optional[CodeLanguage] = None
     id: Optional[str] = None
     name: Optional[str] = None
     image: Optional[str] = None
@@ -263,21 +265,24 @@ class Daytona:
 
         default_server_url = "https://app.daytona.io/api"
         default_target = SandboxTargetRegion.US
+        self.default_language = CodeLanguage.PYTHON
 
-        if config is None:
+        if config is None or None in [config.api_key, config.server_url, config.target]:
             # Initialize env - it automatically reads from .env and .env.local
             env = Env()
             env.read_env()  # reads .env
             # reads .env.local and overrides values
             env.read_env(".env.local", override=True)
 
-            self.api_key = env.str("DAYTONA_API_KEY")
+            self.api_key = env.str("DAYTONA_API_KEY", None)
             self.server_url = env.str("DAYTONA_SERVER_URL", default_server_url)
             self.target = env.str("DAYTONA_TARGET", default_target)
-        else:
-            self.api_key = config.api_key
-            self.server_url = config.server_url if config.server_url is not None else default_server_url
-            self.target = config.target if config.target is not None else default_target
+
+        self.api_key = config.api_key if config.api_key is not None else self.api_key
+        self.server_url = (
+            config.server_url if config.server_url is not None else self.server_url
+        )
+        self.target = config.target if config.target is not None else self.target
 
         if not self.api_key:
             raise DaytonaError("API key is required")
@@ -333,7 +338,9 @@ class Daytona:
         """
         # If no params provided, create default params for Python
         if params is None:
-            params = CreateSandboxParams(language="python")
+            params = CreateSandboxParams(language=self.default_language)
+        if params.language is None:
+            params.language = self.default_language
 
         effective_timeout = params.timeout if params.timeout else timeout
 
@@ -399,7 +406,9 @@ class Daytona:
             sandbox_data.disk = params.resources.disk
             sandbox_data.gpu = params.resources.gpu
 
-        response = self.sandbox_api.create_workspace(sandbox_data, _request_timeout=timeout or None)
+        response = self.sandbox_api.create_workspace(
+            sandbox_data, _request_timeout=timeout or None
+        )
         sandbox_info = Sandbox.to_sandbox_info(response)
         response.info = sandbox_info
 
@@ -467,7 +476,9 @@ class Daytona:
             daytona.remove(sandbox)  # Clean up when done
             ```
         """
-        return self.sandbox_api.delete_workspace(sandbox.id, force=True, _request_timeout=timeout or None)
+        return self.sandbox_api.delete_workspace(
+            sandbox.id, force=True, _request_timeout=timeout or None
+        )
 
     @deprecated(
         reason=(
@@ -550,7 +561,9 @@ class Daytona:
                 self.toolbox_api,
                 self._get_code_toolbox(
                     CreateSandboxParams(
-                        language=self._validate_language_label(sandbox.labels.get("code-toolbox-language"))
+                        language=self._validate_language_label(
+                            sandbox.labels.get("code-toolbox-language")
+                        )
                     )
                 ),
             )

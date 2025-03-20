@@ -76,7 +76,7 @@ import { DaytonaError } from './errors/DaytonaError'
  */
 export interface DaytonaConfig {
   /** API key for authentication with Daytona server */
-  apiKey: string
+  apiKey?: string
   /** URL of the Daytona server */
   serverUrl?: string
   /** Target environment for sandboxes */
