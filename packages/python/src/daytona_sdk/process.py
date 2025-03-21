@@ -36,8 +36,10 @@ Example:
     ```
 """
 
-from typing import List, Optional
+import asyncio
+from typing import Callable, List, Optional
 
+import httpx
 from daytona_api_client import (
     Command,
     CreateSessionRequest,
@@ -305,6 +307,48 @@ class Process:
             ```
         """
         return self.toolbox_api.get_session_command_logs(self.instance.id, session_id=session_id, command_id=command_id)
+
+    @intercept_errors(message_prefix="Failed to get session command logs: ")
+    async def get_session_command_logs_stream(
+        self, session_id: str, command_id: str, on_logs: Callable[[str], None]
+    ) -> str:
+        url = (
+            f"{self.toolbox_api.api_client.configuration.host}/toolbox/{self.instance.id}"
+            + f"/toolbox/process/session/{session_id}/command/{command_id}/logs?follow=true"
+        )
+        headers = {"Authorization": self.toolbox_api.api_client.default_headers["Authorization"]}
+
+        async with httpx.AsyncClient(timeout=None) as client:
+            async with client.stream("GET", url, headers=headers) as response:
+                stream = response.aiter_bytes()
+                next_chunk = None
+                exit_code_seen_count = 0
+
+                while True:
+                    if next_chunk is None:
+                        next_chunk = asyncio.create_task(anext(stream, None))
+                    timeout = asyncio.create_task(asyncio.sleep(3))
+
+                    done, pending = await asyncio.wait([next_chunk, timeout], return_when=asyncio.FIRST_COMPLETED)
+
+                    if next_chunk in done:
+                        timeout.cancel()
+                        chunk = next_chunk.result()
+                        next_chunk = None
+
+                        if chunk is None:
+                            break
+
+                        on_logs(chunk.decode("utf-8"))
+                    elif timeout in done:
+                        cmd_status = self.get_session_command(session_id, command_id)
+
+                        if cmd_status.exit_code is not None:
+                            exit_code_seen_count += 1
+                            if exit_code_seen_count > 1:
+                                if next_chunk in pending:
+                                    next_chunk.cancel()
+                                break
 
     @intercept_errors(message_prefix="Failed to list sessions: ")
     def list_sessions(self) -> List[Session]:

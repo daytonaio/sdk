@@ -1,6 +1,10 @@
 {
   "name": "Daytona SDK",
   "dockerFile": "Dockerfile",
+  "mounts": [
+    "source=${localEnv:HOME}/Documents/daytona/daytona-ai-saas,target=/home/daytona/daytona-ai-saas,type=bind"
+  ],
+
   // Configure tool-specific properties.
   "customizations": {
     // Configure properties specific to VS Code.
@@ -41,7 +45,7 @@
   // Add this to automatically source the venv in new terminals
   "onCreateCommand": {
     "install-deps": "git config --global --add safe.directory ${containerWorkspaceFolder} && yarn",
-    "copy-env": "cp -n .env .env.local"
+    // "copy-env": "cp -n .env .env.local"
   },
   // Comment out to connect as root instead. More info: https://aka.ms/vscode-remote/containers/non-root.
   "remoteUser": "daytona",

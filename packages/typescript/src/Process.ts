@@ -241,9 +241,61 @@ export class Process {
    * const logs = await process.getSessionCommandLogs('my-session', 'cmd-123');
    * console.log('Command output:', logs);
    */
-  public async getSessionCommandLogs(sessionId: string, commandId: string): Promise<string> {
-    const response = await this.toolboxApi.getSessionCommandLogs(this.instance.id, sessionId, commandId)
-    return response.data
+  public async getSessionCommandLogs(sessionId: string, commandId: string): Promise<string>
+  /**
+   * Get the logs for a command executed in a session.
+   *
+   * @param {string} sessionId - Unique identifier of the session
+   * @param {string} commandId - Unique identifier of the command
+   * @param {function} onLogs - Callback function to handle each log chunk
+   * @returns {Promise<void>}
+   */
+  public async getSessionCommandLogs(
+    sessionId: string,
+    commandId: string,
+    onLogs: (chunk: string) => void
+  ): Promise<void>
+  public async getSessionCommandLogs(
+    sessionId: string,
+    commandId: string,
+    onLogs?: (chunk: string) => void
+  ): Promise<string | void> {
+    if (!onLogs) {
+      const response = await this.toolboxApi.getSessionCommandLogs(this.instance.id, sessionId, commandId)
+      return response.data
+    }
+
+    await new Promise((resolve, reject) => {
+      this.toolboxApi
+        .getSessionCommandLogs(this.instance.id, sessionId, commandId, true, {
+          responseType: 'stream',
+        })
+        .then((res) => {
+          const stream = res.data as any
+
+          stream.on('data', (data: Buffer) => {
+            const chunk = data.toString('utf-8')
+            onLogs(chunk)
+          })
+
+          stream.on('close', () => {
+            resolve(void 0)
+          })
+
+          // TODO: end event is not working
+          // stream.on('end', () => {
+          //   console.log('stream done - end event')
+          //   resolve(void 0)
+          // })
+
+          // TODO: error event is triggered at the end of the stream, 'connection aborted'
+          // stream.on('error', (err: Error) => {
+          //   console.error('Stream error:', err)
+          //   reject(err)
+          // })
+        })
+        .catch(reject)
+    })
   }
 
   /**
