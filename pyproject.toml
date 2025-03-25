@@ -18,7 +18,9 @@ disable = [
     "R0913",  # too-many-arguments
     "R0917",  # too-many-positional-arguments
     "R0801",  # duplicate-code
-    "R0914"   # too-many-locals
+    "R0911",  # too-many-return-statements
+    "R0915",  # too-many-statements
+    "R0914",  # too-many-locals
 ]
 const-rgx = "(([A-Z_][A-Z0-9_]*)|([a-z_][a-z0-9_]*))"
 allowed-redefined-builtins = ["id"]
