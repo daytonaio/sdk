@@ -9,7 +9,7 @@ title: Process and Code Execution
 class Process()
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/c6b0b5d7b319709ea171da2cb476692c62dd02b7/packages/python/src/daytona_sdk/process.py#L58)
+[[view_source]](https://github.com/daytonaio/sdk/blob/13fd6d248daa993fd4530606218ee71120f21d82/packages/python/src/daytona_sdk/process.py#L61)
 
 Handles process and code execution within a Sandbox.
 
@@ -30,7 +30,7 @@ def __init__(code_toolbox: SandboxPythonCodeToolbox, toolbox_api: ToolboxApi,
              instance: SandboxInstance)
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/c6b0b5d7b319709ea171da2cb476692c62dd02b7/packages/python/src/daytona_sdk/process.py#L70)
+[[view_source]](https://github.com/daytonaio/sdk/blob/13fd6d248daa993fd4530606218ee71120f21d82/packages/python/src/daytona_sdk/process.py#L73)
 
 Initialize a new Process instance.
 
@@ -50,7 +50,7 @@ def exec(command: str,
          timeout: Optional[int] = None) -> ExecuteResponse
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/c6b0b5d7b319709ea171da2cb476692c62dd02b7/packages/python/src/daytona_sdk/process.py#L88)
+[[view_source]](https://github.com/daytonaio/sdk/blob/13fd6d248daa993fd4530606218ee71120f21d82/packages/python/src/daytona_sdk/process.py#L91)
 
 Execute a shell command in the Sandbox.
 
@@ -93,7 +93,7 @@ def code_run(code: str,
              timeout: Optional[int] = None) -> ExecuteResponse
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/c6b0b5d7b319709ea171da2cb476692c62dd02b7/packages/python/src/daytona_sdk/process.py#L125)
+[[view_source]](https://github.com/daytonaio/sdk/blob/13fd6d248daa993fd4530606218ee71120f21d82/packages/python/src/daytona_sdk/process.py#L128)
 
 Executes code in the Sandbox using the appropriate language runtime.
 
@@ -132,7 +132,7 @@ print(response.result)  # Prints: Sum: 30
 def create_session(session_id: str) -> None
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/c6b0b5d7b319709ea171da2cb476692c62dd02b7/packages/python/src/daytona_sdk/process.py#L159)
+[[view_source]](https://github.com/daytonaio/sdk/blob/13fd6d248daa993fd4530606218ee71120f21d82/packages/python/src/daytona_sdk/process.py#L162)
 
 Create a new long-running background session in the Sandbox.
 
@@ -164,7 +164,7 @@ sandbox.process.delete_session(session_id)
 def get_session(session_id: str) -> Session
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/c6b0b5d7b319709ea171da2cb476692c62dd02b7/packages/python/src/daytona_sdk/process.py#L183)
+[[view_source]](https://github.com/daytonaio/sdk/blob/13fd6d248daa993fd4530606218ee71120f21d82/packages/python/src/daytona_sdk/process.py#L186)
 
 Get a session in the Sandbox.
 
@@ -196,7 +196,7 @@ for cmd in session.commands:
 def get_session_command(session_id: str, command_id: str) -> Command
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/c6b0b5d7b319709ea171da2cb476692c62dd02b7/packages/python/src/daytona_sdk/process.py#L204)
+[[view_source]](https://github.com/daytonaio/sdk/blob/13fd6d248daa993fd4530606218ee71120f21d82/packages/python/src/daytona_sdk/process.py#L207)
 
 Get information about a specific command executed in a session.
 
@@ -233,7 +233,7 @@ def execute_session_command(
         timeout: Optional[int] = None) -> SessionExecuteResponse
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/c6b0b5d7b319709ea171da2cb476692c62dd02b7/packages/python/src/daytona_sdk/process.py#L227)
+[[view_source]](https://github.com/daytonaio/sdk/blob/13fd6d248daa993fd4530606218ee71120f21d82/packages/python/src/daytona_sdk/process.py#L230)
 
 Executes a command in the session.
 
@@ -281,7 +281,7 @@ print(result.output)  # Prints: Hello
 def get_session_command_logs(session_id: str, command_id: str) -> str
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/c6b0b5d7b319709ea171da2cb476692c62dd02b7/packages/python/src/daytona_sdk/process.py#L274)
+[[view_source]](https://github.com/daytonaio/sdk/blob/13fd6d248daa993fd4530606218ee71120f21d82/packages/python/src/daytona_sdk/process.py#L290)
 
 Get the logs for a command executed in a session.
 
@@ -303,21 +303,42 @@ the output of asynchronous commands.
 **Example**:
 
 ```python
-# Execute a long-running command asynchronously
-req = SessionExecuteRequest(
-    command="sleep 5; echo 'Done'",
-    var_async=True
-)
-response = sandbox.process.execute_session_command("my-session", req)
-
-# Wait a bit, then get the logs
-import time
-time.sleep(6)
 logs = sandbox.process.get_session_command_logs(
     "my-session",
-    response.command_id
+    "cmd-123"
 )
-print(logs)  # Prints: Done
+print(f"Command output: {logs}")
+```
+
+
+#### Process.get\_session\_command\_logs\_async
+
+```python
+@intercept_errors(message_prefix="Failed to get session command logs: ")
+async def get_session_command_logs_async(
+        session_id: str, command_id: str, on_logs: Callable[[str],
+                                                            None]) -> None
+```
+
+[[view_source]](https://github.com/daytonaio/sdk/blob/13fd6d248daa993fd4530606218ee71120f21d82/packages/python/src/daytona_sdk/process.py#L316)
+
+Asynchronously retrieve and process the logs for a command executed in a session as they become available.
+
+**Arguments**:
+
+- `session_id` _str_ - Unique identifier of the session.
+- `command_id` _str_ - Unique identifier of the command.
+- `on_logs` _Callable[[str], None]_ - Callback function to handle log chunks.
+  
+
+**Example**:
+
+```python
+await sandbox.process.get_session_command_logs_async(
+    "my-session",
+    "cmd-123",
+    lambda chunk: print(f"Log chunk: {chunk}")
+)
 ```
 
 
@@ -328,7 +349,7 @@ print(logs)  # Prints: Done
 def list_sessions() -> List[Session]
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/c6b0b5d7b319709ea171da2cb476692c62dd02b7/packages/python/src/daytona_sdk/process.py#L310)
+[[view_source]](https://github.com/daytonaio/sdk/blob/13fd6d248daa993fd4530606218ee71120f21d82/packages/python/src/daytona_sdk/process.py#L374)
 
 List all sessions in the Sandbox.
 
@@ -354,7 +375,7 @@ for session in sessions:
 def delete_session(session_id: str) -> None
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/c6b0b5d7b319709ea171da2cb476692c62dd02b7/packages/python/src/daytona_sdk/process.py#L327)
+[[view_source]](https://github.com/daytonaio/sdk/blob/13fd6d248daa993fd4530606218ee71120f21d82/packages/python/src/daytona_sdk/process.py#L391)
 
 Delete an interactive session from the Sandbox.
 
@@ -387,7 +408,7 @@ sandbox.process.delete_session("temp-session")
 class CodeRunParams()
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/c6b0b5d7b319709ea171da2cb476692c62dd02b7/packages/python/src/daytona_sdk/common/code_run_params.py#L6)
+[[view_source]](https://github.com/daytonaio/sdk/blob/13fd6d248daa993fd4530606218ee71120f21d82/packages/python/src/daytona_sdk/common/code_run_params.py#L6)
 
 Parameters for code execution.
 

@@ -1,0 +1,644 @@
+---
+title: Sandbox
+---
+
+The Daytona SDK core Sandbox functionality.
+
+Provides the main Sandbox class representing a Daytona Sandbox that coordinates file system,
+Git, process execution, and LSP functionality. It serves as the central point
+for interacting with Daytona Sandboxes.
+
+The Sandbox must be in a 'started' state before performing operations.
+
+### Example
+
+```ts
+// Create and initialize sandbox
+const daytona = new Daytona();
+const sandbox = await daytona.create();
+
+// File operations
+await sandbox.fs.uploadFile(
+  '/app/config.json',
+  new File(['{"setting": "value"}'], 'config.json')
+);
+const contentBlob = await sandbox.fs.downloadFile('/app/config.json');
+
+// Git operations
+await sandbox.git.clone('https://github.com/user/repo.git');
+
+// Process execution
+const response = await sandbox.process.executeCommand('ls -la');
+console.log(response.result);
+
+// LSP functionality
+const lsp = sandbox.createLspServer('typescript', '/workspace/project');
+await lsp.didOpen('/workspace/project/src/index.ts');
+const completions = await lsp.completions('/workspace/project/src/index.ts', {
+  line: 10,
+  character: 15
+});
+console.log(completions);
+```
+
+## Sandbox
+
+[[view_source]](https://github.com/daytonaio/sdk/blob/13fd6d248daa993fd4530606218ee71120f21d82/packages/typescript/src/Sandbox.ts#L190)
+
+Represents a Daytona Sandbox.
+
+A Sandbox provides file system operations, Git operations, process execution,
+and LSP functionality. It serves as the main interface for interacting with
+a Daytona sandbox.
+
+### Constructors
+
+#### new Sandbox()
+
+```ts
+new Sandbox(
+   id: string, 
+   instance: SandboxInstance, 
+   sandboxApi: WorkspaceApi, 
+   toolboxApi: ToolboxApi, 
+   codeToolbox: SandboxCodeToolbox): Sandbox
+```
+
+[[view_source]](https://github.com/daytonaio/sdk/blob/13fd6d248daa993fd4530606218ee71120f21d82/packages/typescript/src/Sandbox.ts#L207)
+
+Creates a new Sandbox instance
+
+##### Parameters
+
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
+| `id` | `string` | Unique identifier for the Sandbox |
+| `instance` | `SandboxInstance` | The underlying Sandbox instance |
+| `sandboxApi` | `WorkspaceApi` | API client for Sandbox operations |
+| `toolboxApi` | `ToolboxApi` | API client for toolbox operations |
+| `codeToolbox` | `SandboxCodeToolbox` | Language-specific toolbox implementation |
+
+##### Returns
+
+`Sandbox`
+
+### Properties
+
+| Property | Modifier | Type | Description |
+| ------ | ------ | ------ | ------ |
+| `fs` | `readonly` | `FileSystem` | File system operations interface |
+| `git` | `readonly` | `Git` | Git operations interface |
+| `id` | `readonly` | `string` | Unique identifier for the Sandbox |
+| `instance` | `readonly` | `SandboxInstance` | The underlying Sandbox instance |
+| `process` | `readonly` | `Process` | Process execution interface |
+| `sandboxApi` | `readonly` | `WorkspaceApi` | API client for Sandbox operations |
+| `toolboxApi` | `readonly` | `ToolboxApi` | API client for toolbox operations |
+
+### Methods
+
+#### toSandboxInfo()
+
+```ts
+static toSandboxInfo(instance: Workspace): SandboxInfo
+```
+
+[[view_source]](https://github.com/daytonaio/sdk/blob/13fd6d248daa993fd4530606218ee71120f21d82/packages/typescript/src/Sandbox.ts#L447)
+
+Converts an API sandbox instance to a SandboxInfo object.
+
+##### Parameters
+
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
+| `instance` | `Workspace` | The API sandbox instance to convert |
+
+##### Returns
+
+`SandboxInfo`
+
+The converted SandboxInfo object
+
+***
+
+#### ~~toWorkspaceInfo()~~
+
+```ts
+static toWorkspaceInfo(instance: Workspace): SandboxInfo
+```
+
+[[view_source]](https://github.com/daytonaio/sdk/blob/13fd6d248daa993fd4530606218ee71120f21d82/packages/typescript/src/Sandbox.ts#L438)
+
+Converts an API workspace instance to a WorkspaceInfo object.
+
+##### Parameters
+
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
+| `instance` | `Workspace` | The API workspace instance to convert |
+
+##### Returns
+
+`SandboxInfo`
+
+The converted WorkspaceInfo object
+
+##### Deprecated
+
+Use `toSandboxInfo` instead. This method will be removed in a future version.
+
+***
+
+#### archive()
+
+```ts
+archive(): Promise<void>
+```
+
+[[view_source]](https://github.com/daytonaio/sdk/blob/13fd6d248daa993fd4530606218ee71120f21d82/packages/typescript/src/Sandbox.ts#L536)
+
+Archives the sandbox, making it inactive and preserving its state. When sandboxes are archived, the entire filesystem
+state is moved to cost-effective object storage, making it possible to keep sandboxes available for an extended period.
+The tradeoff between archived and stopped states is that starting an archived sandbox takes more time, depending on its size.
+Sandbox must be stopped before archiving.
+
+##### Returns
+
+`Promise<void>`
+
+***
+
+#### createLspServer()
+
+```ts
+createLspServer(languageId: string, pathToProject: string): LspServer
+```
+
+[[view_source]](https://github.com/daytonaio/sdk/blob/13fd6d248daa993fd4530606218ee71120f21d82/packages/typescript/src/Sandbox.ts#L253)
+
+Creates a new Language Server Protocol (LSP) server instance.
+
+The LSP server provides language-specific features like code completion,
+diagnostics, and more.
+
+##### Parameters
+
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
+| `languageId` | `string` | The language server type (e.g., "typescript") |
+| `pathToProject` | `string` | Absolute path to the project root directory |
+
+##### Returns
+
+`LspServer`
+
+A new LSP server instance configured for the specified language
+
+##### Example
+
+```ts
+const lsp = sandbox.createLspServer('typescript', '/workspace/project');
+```
+
+***
+
+#### delete()
+
+```ts
+delete(): Promise<void>
+```
+
+[[view_source]](https://github.com/daytonaio/sdk/blob/13fd6d248daa993fd4530606218ee71120f21d82/packages/typescript/src/Sandbox.ts#L330)
+
+Deletes the Sandbox.
+
+##### Returns
+
+`Promise<void>`
+
+***
+
+#### getPreviewLink()
+
+```ts
+getPreviewLink(port: number): string
+```
+
+[[view_source]](https://github.com/daytonaio/sdk/blob/13fd6d248daa993fd4530606218ee71120f21d82/packages/typescript/src/Sandbox.ts#L519)
+
+Gets the preview link for the sandbox at a specific port. If the port is not open, it will open it and return the link.
+
+##### Parameters
+
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
+| `port` | `number` | The port to open the preview link on |
+
+##### Returns
+
+`string`
+
+The preview link for the sandbox at the specified port
+
+##### Throws
+
+If the node domain is not found in the provider metadata
+
+***
+
+#### getUserRootDir()
+
+```ts
+getUserRootDir(): Promise<undefined | string>
+```
+
+[[view_source]](https://github.com/daytonaio/sdk/blob/13fd6d248daa993fd4530606218ee71120f21d82/packages/typescript/src/Sandbox.ts#L228)
+
+Gets the root directory path for the logged in user inside the Sandbox.
+
+##### Returns
+
+`Promise<undefined | string>`
+
+The absolute path to the Sandbox root directory for the logged in user
+
+##### Example
+
+ts
+const rootDir = await sandbox.getUserRootDir();
+console.log(Sandbox root: ${rootDir});
+
+
+***
+
+#### ~~getWorkspaceRootDir()~~
+
+ts
+getWorkspaceRootDir(): Promise<undefined` | string>
+```
+
+[[view_source]](https://github.com/daytonaio/sdk/blob/13fd6d248daa993fd4530606218ee71120f21d82/packages/typescript/src/Sandbox.ts#L236)
+
+##### Returns
+
+`Promise<undefined | string>`
+
+##### Deprecated
+
+Use `getUserRootDir` instead. This method will be removed in a future version.
+
+***
+
+#### info()
+
+```ts
+info(): Promise<SandboxInfo>
+```
+
+[[view_source]](https://github.com/daytonaio/sdk/blob/13fd6d248daa993fd4530606218ee71120f21d82/packages/typescript/src/Sandbox.ts#L424)
+
+Gets structured information about the Sandbox.
+
+##### Returns
+
+`Promise<SandboxInfo>`
+
+Detailed information about the Sandbox including its
+                                  configuration, resources, and current state
+
+##### Example
+
+```ts
+const info = await sandbox.info();
+console.log(`Sandbox ${info.name}:`);
+console.log(`State: ${info.state}`);
+console.log(`Resources: ${info.resources.cpu} CPU, ${info.resources.memory} RAM`);
+```
+
+***
+
+#### setAutostopInterval()
+
+```ts
+setAutostopInterval(interval: number): Promise<void>
+```
+
+[[view_source]](https://github.com/daytonaio/sdk/blob/13fd6d248daa993fd4530606218ee71120f21d82/packages/typescript/src/Sandbox.ts#L504)
+
+Set the auto-stop interval for the Sandbox.
+
+The Sandbox will automatically stop after being idle (no new events) for the specified interval.
+Events include any state changes or interactions with the Sandbox through the sdk.
+Interactions using Sandbox Previews are not included.
+
+##### Parameters
+
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
+| `interval` | `number` | Number of minutes of inactivity before auto-stopping. Set to 0 to disable auto-stop. Default is 15 minutes. |
+
+##### Returns
+
+`Promise<void>`
+
+##### Throws
+
+- `DaytonaError` - If interval is not a non-negative integer
+
+##### Example
+
+```ts
+// Auto-stop after 1 hour
+await sandbox.setAutostopInterval(60);
+// Or disable auto-stop
+await sandbox.setAutostopInterval(0);
+```
+
+***
+
+#### setLabels()
+
+```ts
+setLabels(labels: Record<string, string>): Promise<void>
+```
+
+[[view_source]](https://github.com/daytonaio/sdk/blob/13fd6d248daa993fd4530606218ee71120f21d82/packages/typescript/src/Sandbox.ts#L273)
+
+Sets labels for the Sandbox.
+
+Labels are key-value pairs that can be used to organize and identify Sandboxes.
+
+##### Parameters
+
+| Parameter | Type | Description |
+| ------ | ------ | ------ |
+| `labels` | `Record<string, string>` | Dictionary of key-value pairs representing Sandbox labels |
+
+##### Returns
+
+`Promise<void>`
+
+##### Example
+
+```ts
+// Set sandbox labels
+await sandbox.setLabels({
+  project: 'my-project',
+  environment: 'development',
+  team: 'backend'
+});
+```
+
+***
+
+#### start()
+
+```ts
+start(timeout?: number): Promise<void>
+```
+
+[[view_source]](https://github.com/daytonaio/sdk/blob/13fd6d248daa993fd4530606218ee71120f21d82/packages/typescript/src/Sandbox.ts#L292)
+
+Start the Sandbox.
+
+This method starts the Sandbox and waits for it to be ready.
+
+##### Parameters
+
+| Parameter | Type | Default value | Description |
+| ------ | ------ | ------ | ------ |
+| `timeout?` | `number` | `60` | Maximum time to wait in seconds. 0 means no timeout. Defaults to 60-second timeout. |
+
+##### Returns
+
+`Promise<void>`
+
+##### Throws
+
+- `DaytonaError` - If Sandbox fails to start or times out
+
+##### Example
+
+```ts
+const sandbox = await daytona.getCurrentSandbox('my-sandbox');
+await sandbox.start(40);  // Wait up to 40 seconds
+console.log('Sandbox started successfully');
+```
+
+***
+
+#### stop()
+
+```ts
+stop(timeout?: number): Promise<void>
+```
+
+[[view_source]](https://github.com/daytonaio/sdk/blob/13fd6d248daa993fd4530606218ee71120f21d82/packages/typescript/src/Sandbox.ts#L316)
+
+Stops the Sandbox.
+
+This method stops the Sandbox and waits for it to be fully stopped.
+
+##### Parameters
+
+| Parameter | Type | Default value | Description |
+| ------ | ------ | ------ | ------ |
+| `timeout?` | `number` | `60` | Maximum time to wait in seconds. 0 means no timeout. Defaults to 60-second timeout. |
+
+##### Returns
+
+`Promise<void>`
+
+##### Example
+
+```ts
+const sandbox = await daytona.getCurrentSandbox('my-sandbox');
+await sandbox.stop();
+console.log('Sandbox stopped successfully');
+```
+
+***
+
+#### waitUntilStarted()
+
+```ts
+waitUntilStarted(timeout?: number): Promise<void>
+```
+
+[[view_source]](https://github.com/daytonaio/sdk/blob/13fd6d248daa993fd4530606218ee71120f21d82/packages/typescript/src/Sandbox.ts#L345)
+
+Waits for the Sandbox to reach the 'started' state.
+
+This method polls the Sandbox status until it reaches the 'started' state
+or encounters an error.
+
+##### Parameters
+
+| Parameter | Type | Default value | Description |
+| ------ | ------ | ------ | ------ |
+| `timeout?` | `number` | `60` | Maximum time to wait in seconds. 0 means no timeout. Defaults to 60 seconds. |
+
+##### Returns
+
+`Promise<void>`
+
+##### Throws
+
+- `DaytonaError` - If the sandbox ends up in an error state or fails to start within the timeout period.
+
+***
+
+#### waitUntilStopped()
+
+```ts
+waitUntilStopped(timeout?: number): Promise<void>
+```
+
+[[view_source]](https://github.com/daytonaio/sdk/blob/13fd6d248daa993fd4530606218ee71120f21d82/packages/typescript/src/Sandbox.ts#L384)
+
+Wait for Sandbox to reach 'stopped' state.
+
+This method polls the Sandbox status until it reaches the 'stopped' state
+or encounters an error.
+
+##### Parameters
+
+| Parameter | Type | Default value | Description |
+| ------ | ------ | ------ | ------ |
+| `timeout?` | `number` | `60` | Maximum time to wait in seconds. 0 means no timeout. Defaults to 60 seconds. |
+
+##### Returns
+
+`Promise<void>`
+
+##### Throws
+
+- `DaytonaError` - If the sandbox fails to stop within the timeout period.
+
+***
+
+## SandboxCodeToolbox
+
+[[view_source]](https://github.com/daytonaio/sdk/blob/13fd6d248daa993fd4530606218ee71120f21d82/packages/typescript/src/Sandbox.ts#L169)
+
+Interface defining methods that a code toolbox must implement
+ SandboxCodeToolbox
+
+### Methods
+
+#### getRunCommand()
+
+```ts
+getRunCommand(code: string, params?: CodeRunParams): string
+```
+
+[[view_source]](https://github.com/daytonaio/sdk/blob/13fd6d248daa993fd4530606218ee71120f21d82/packages/typescript/src/Sandbox.ts#L171)
+
+Generates a command to run the provided code
+
+##### Parameters
+
+| Parameter | Type |
+| ------ | ------ |
+| `code` | `string` |
+| `params?` | `CodeRunParams` |
+
+##### Returns
+
+`string`
+
+***
+
+## SandboxInfo
+
+[[view_source]](https://github.com/daytonaio/sdk/blob/13fd6d248daa993fd4530606218ee71120f21d82/packages/typescript/src/Sandbox.ts#L120)
+
+Structured information about a Sandbox
+
+This interface provides detailed information about a Sandbox's configuration,
+resources, and current state.
+
+ SandboxInfo
+
+### Example
+
+```ts
+const sandbox = await daytona.create();
+const info = await sandbox.info();
+console.log(`Sandbox ${info.name} is ${info.state}`);
+console.log(`Resources: ${info.resources.cpu} CPU, ${info.resources.memory} RAM`);
+```
+
+### Extends
+
+- `WorkspaceInfo`
+
+### Properties
+
+| Property | Type | Description | Overrides |
+| ------ | ------ | ------ | ------ |
+| `autoStopInterval` | `number` | Auto-stop interval in minutes | - |
+| `class` | `CreateNodeClassEnum` | Class | - |
+| `env` | `Record<string, string>` | Environment variables set in the Sandbox | - |
+| `errorReason` | `null \| string` | Error message if Sandbox is in error state | - |
+| `id` | `string` | Unique identifier for the Sandbox | - |
+| `image` | `string` | Docker image used for the Sandbox | - |
+| `labels` | `Record<string, string>` | Custom labels attached to the Sandbox | - |
+| `lastSnapshot` | `null \| string` | Last snapshot | - |
+| `name` | `string` | Display name of the Sandbox | `ApiSandboxInfo.name` |
+| `nodeDomain` | `string` | Node domain | - |
+| `~~providerMetadata?~~` | `string` | `**Deprecated** Use state, nodeDomain, region, class, updatedAt, lastSnapshot, resources, autoStopInterval instead.` | `ApiSandboxInfo.providerMetadata` |
+| `public` | `boolean` | Whether the Sandbox is publicly accessible | - |
+| `region` | `CreateNodeRegionEnum` | Region | - |
+| `resources` | `SandboxResources` | Resource allocations for the Sandbox | - |
+| `snapshotState` | `null \| string` | Current state of Sandbox snapshot | - |
+| `snapshotStateCreatedAt` | `null \| Date` | When the snapshot state was created | - |
+| `state` | `WorkspaceState` | Current state of the Sandbox (e.g., "started", "stopped") | - |
+| `target` | `string` | Target environment where the Sandbox runs | - |
+| `updatedAt` | `string` | Updated at | - |
+| `user` | `string` | OS user running in the Sandbox | - |
+
+***
+
+## SandboxInstance
+
+[[view_source]](https://github.com/daytonaio/sdk/blob/13fd6d248daa993fd4530606218ee71120f21d82/packages/typescript/src/Sandbox.ts#L61)
+
+### Extends
+
+- `Omit`\<`ApiSandbox`, `"info"`\>
+
+### Properties
+
+| Property | Type |
+| ------ | ------ |
+| `info?` | `SandboxInfo` |
+
+***
+
+## SandboxResources
+
+[[view_source]](https://github.com/daytonaio/sdk/blob/13fd6d248daa993fd4530606218ee71120f21d82/packages/typescript/src/Sandbox.ts#L82)
+
+Resources allocated to a Sandbox
+
+ SandboxResources
+
+### Example
+
+```ts
+const resources: SandboxResources = {
+  cpu: "2",
+  gpu: "1",
+  memory: "4Gi",
+  disk: "20Gi"
+};
+```
+
+### Properties
+
+| Property | Type | Description |
+| ------ | ------ | ------ |
+| `cpu` | `string` | Number of CPU cores allocated (e.g., "1", "2") |
+| `disk` | `string` | Amount of disk space allocated with unit (e.g., "10Gi", "20Gi") |
+| `gpu` | `null \| string` | Number of GPUs allocated (e.g., "1") or null if no GPU |
+| `memory` | `string` | Amount of memory allocated with unit (e.g., "2Gi", "4Gi") |

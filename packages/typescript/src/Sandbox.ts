@@ -294,7 +294,7 @@ export class Sandbox {
       throw new DaytonaError('Timeout must be a non-negative number')
     }
     const startTime = Date.now()
-    await this.sandboxApi.startWorkspace(this.instance.id, { timeout: timeout * 1000 })
+    await this.sandboxApi.startWorkspace(this.instance.id, undefined, { timeout: timeout * 1000 })
     const timeElapsed = Date.now() - startTime
     await this.waitUntilStarted(timeout ? timeout - timeElapsed / 1000 : 0)
   }
@@ -318,7 +318,7 @@ export class Sandbox {
       throw new DaytonaError('Timeout must be a non-negative number')
     }
     const startTime = Date.now()
-    await this.sandboxApi.stopWorkspace(this.instance.id, { timeout: timeout * 1000 })
+    await this.sandboxApi.stopWorkspace(this.instance.id, undefined, { timeout: timeout * 1000 })
     const timeElapsed = Date.now() - startTime
     await this.waitUntilStopped(timeout ? timeout - timeElapsed / 1000 : 0)
   }

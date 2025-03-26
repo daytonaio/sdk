@@ -405,9 +405,7 @@ class Daytona:
             sandbox_data.disk = params.resources.disk
             sandbox_data.gpu = params.resources.gpu
 
-        response = self.sandbox_api.create_workspace(
-            sandbox_data, _request_timeout=timeout or None
-        )
+        response = self.sandbox_api.create_workspace(sandbox_data, _request_timeout=timeout or None)
         sandbox_info = Sandbox.to_sandbox_info(response)
         response.info = sandbox_info
 
@@ -475,9 +473,7 @@ class Daytona:
             daytona.remove(sandbox)  # Clean up when done
             ```
         """
-        return self.sandbox_api.delete_workspace(
-            sandbox.id, force=True, _request_timeout=timeout or None
-        )
+        return self.sandbox_api.delete_workspace(sandbox.id, force=True, _request_timeout=timeout or None)
 
     @deprecated(
         reason=(
@@ -560,9 +556,7 @@ class Daytona:
                 self.toolbox_api,
                 self._get_code_toolbox(
                     CreateSandboxParams(
-                        language=self._validate_language_label(
-                            sandbox.labels.get("code-toolbox-language")
-                        )
+                        language=self._validate_language_label(sandbox.labels.get("code-toolbox-language"))
                     )
                 ),
             )
