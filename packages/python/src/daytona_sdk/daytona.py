@@ -278,11 +278,10 @@ class Daytona:
             self.server_url = env.str("DAYTONA_SERVER_URL", default_server_url)
             self.target = env.str("DAYTONA_TARGET", default_target)
 
-        self.api_key = config.api_key if config.api_key is not None else self.api_key
-        self.server_url = (
-            config.server_url if config.server_url is not None else self.server_url
-        )
-        self.target = config.target if config.target is not None else self.target
+        if config:
+            self.api_key = config.api_key or self.api_key
+            self.server_url = config.server_url or self.server_url
+            self.target = config.target or self.target
 
         if not self.api_key:
             raise DaytonaError("API key is required")
