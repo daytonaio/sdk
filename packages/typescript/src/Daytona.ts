@@ -332,6 +332,7 @@ export class Daytona {
           disk: params.resources?.disk,
           autoStopInterval: params.autoStopInterval,
         },
+        undefined,
         {
           timeout: effectiveTimeout * 1000,
         }
@@ -457,7 +458,7 @@ export class Daytona {
    * await daytona.remove(sandbox);
    */
   public async remove(sandbox: Sandbox, timeout: number = 60) {
-    await this.sandboxApi.deleteWorkspace(sandbox.id, true, { timeout: timeout * 1000 })
+    await this.sandboxApi.deleteWorkspace(sandbox.id, true, undefined, { timeout: timeout * 1000 })
   }
 
   /**

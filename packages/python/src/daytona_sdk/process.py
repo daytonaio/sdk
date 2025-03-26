@@ -36,8 +36,11 @@ Example:
     ```
 """
 
-from typing import List, Optional
+import asyncio
+import time
+from typing import Callable, List, Optional
 
+import httpx
 from daytona_api_client import (
     Command,
     CreateSessionRequest,
@@ -263,12 +266,25 @@ class Process:
             print(result.output)  # Prints: Hello
             ```
         """
-        return self.toolbox_api.execute_session_command(
+        response = self.toolbox_api.execute_session_command(
             self.instance.id,
             session_id=session_id,
             session_execute_request=req,
             _request_timeout=timeout or None,
         )
+
+        if req.var_async and response is None:
+            time.sleep(0.1)
+            session = self.get_session(session_id)
+            for cmd in reversed(session.commands):
+                if cmd.command == req.command:
+                    response = SessionExecuteResponse(
+                        cmd_id=cmd.id,
+                        exit_code=cmd.exit_code,
+                    )
+                    break
+
+        return response
 
     @intercept_errors(message_prefix="Failed to get session command logs: ")
     def get_session_command_logs(self, session_id: str, command_id: str) -> str:
@@ -287,24 +303,72 @@ class Process:
 
         Example:
             ```python
-            # Execute a long-running command asynchronously
-            req = SessionExecuteRequest(
-                command="sleep 5; echo 'Done'",
-                var_async=True
-            )
-            response = sandbox.process.execute_session_command("my-session", req)
-
-            # Wait a bit, then get the logs
-            import time
-            time.sleep(6)
             logs = sandbox.process.get_session_command_logs(
                 "my-session",
-                response.command_id
+                "cmd-123"
             )
-            print(logs)  # Prints: Done
+            print(f"Command output: {logs}")
             ```
         """
         return self.toolbox_api.get_session_command_logs(self.instance.id, session_id=session_id, command_id=command_id)
+
+    @intercept_errors(message_prefix="Failed to get session command logs: ")
+    async def get_session_command_logs_async(
+        self, session_id: str, command_id: str, on_logs: Callable[[str], None]
+    ) -> None:
+        """Asynchronously retrieve and process the logs for a command executed in a session as they become available.
+
+        Args:
+            session_id (str): Unique identifier of the session.
+            command_id (str): Unique identifier of the command.
+            on_logs (Callable[[str], None]): Callback function to handle log chunks.
+
+        Example:
+            ```python
+            await sandbox.process.get_session_command_logs_async(
+                "my-session",
+                "cmd-123",
+                lambda chunk: print(f"Log chunk: {chunk}")
+            )
+            ```
+        """
+        url = (
+            f"{self.toolbox_api.api_client.configuration.host}/toolbox/{self.instance.id}"
+            + f"/toolbox/process/session/{session_id}/command/{command_id}/logs?follow=true"
+        )
+        headers = {"Authorization": self.toolbox_api.api_client.default_headers["Authorization"]}
+
+        async with httpx.AsyncClient(timeout=None) as client:
+            async with client.stream("GET", url, headers=headers) as response:
+                stream = response.aiter_bytes()
+                next_chunk = None
+                exit_code_seen_count = 0
+
+                while True:
+                    if next_chunk is None:
+                        next_chunk = asyncio.create_task(anext(stream, None))
+                    timeout = asyncio.create_task(asyncio.sleep(2))
+
+                    done, pending = await asyncio.wait([next_chunk, timeout], return_when=asyncio.FIRST_COMPLETED)
+
+                    if next_chunk in done:
+                        timeout.cancel()
+                        chunk = next_chunk.result()
+                        next_chunk = None
+
+                        if chunk is None:
+                            break
+
+                        on_logs(chunk.decode("utf-8"))
+                    elif timeout in done:
+                        cmd_status = self.get_session_command(session_id, command_id)
+
+                        if cmd_status.exit_code is not None:
+                            exit_code_seen_count += 1
+                            if exit_code_seen_count > 1:
+                                if next_chunk in pending:
+                                    next_chunk.cancel()
+                                break
 
     @intercept_errors(message_prefix="Failed to list sessions: ")
     def list_sessions(self) -> List[Session]:

@@ -299,7 +299,7 @@ export class FileSystem {
    * await fs.uploadFile('/app/config.json', configFile);
    */
   public async uploadFile(path: string, file: File): Promise<void> {
-    const response = await this.toolboxApi.uploadFile(this.instance.id, path, file)
+    const response = await this.toolboxApi.uploadFile(this.instance.id, path, undefined, file)
     return response.data
   }
 }

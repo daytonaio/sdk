@@ -54,6 +54,22 @@ async function sessionExec(sandbox: Sandbox) {
   await sandbox.process.deleteSession('exec-session-1')
 }
 
+async function sessionExecLogsAsync(sandbox: Sandbox) {
+  console.log('Executing command long running command in session and streaming logs asynchronously...')
+
+  const sessionId = 'exec-session-async-logs'
+  await sandbox.process.createSession(sessionId)
+
+  const command = await sandbox.process.executeSessionCommand(sessionId, {
+    command: 'counter=1; while (( counter <= 3 )); do echo "Count: $counter"; ((counter++)); sleep 2; done',
+    async: true,
+  })
+
+  await sandbox.process.getSessionCommandLogs(sessionId, command.cmdId!, (chunk) => {
+    console.log('Log chunk:', chunk)
+  })
+}
+
 async function main() {
   const daytona = new Daytona()
 
@@ -65,8 +81,9 @@ async function main() {
   try {
     await basicExec(sandbox)
     await sessionExec(sandbox)
+    await sessionExecLogsAsync(sandbox)
   } catch (error) {
-    console.error('Error creating sandbox:', error)
+    console.error('Error executing commands:', error)
   } finally {
     //  cleanup
     await daytona.remove(sandbox)
