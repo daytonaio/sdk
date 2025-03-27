@@ -102,7 +102,7 @@ class DaytonaConfig(BaseModel):
     """Configuration options for initializing the Daytona client.
 
     Attributes:
-        api_key (Optional[str]): API key for authentication with Daytona Server API. If not set, it must be provided
+        api_key (Optional[str]): API key for authentication with the Daytona API. If not set, it must be provided
         as environment variable DAYTONA_API_KEY.
         api_url (Optional[str]): URL of the Daytona API. Defaults to 'https://app.daytona.io/api' if not set
         here and not set in environment variable DAYTONA_API_URL.
@@ -246,7 +246,7 @@ class CreateSandboxParams(BaseModel):
 
 
 class Daytona:
-    """Main class for interacting with Daytona Server API.
+    """Main class for interacting with the Daytona API.
 
     This class provides methods to create, manage, and interact with Daytona Sandboxes.
     It can be initialized either with explicit configuration or using environment variables.

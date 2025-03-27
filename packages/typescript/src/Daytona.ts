@@ -63,7 +63,7 @@ import dotenv from 'dotenv'
  * Configuration options for initializing the Daytona client.
  *
  * @interface
- * @property {string} apiKey - API key for authentication with Daytona Server API
+ * @property {string} apiKey - API key for authentication with the Daytona API
  * @property {string} apiUrl - URL of the Daytona API. Defaults to 'https://app.daytona.io/api'
  * if not set here and not set in environment variable DAYTONA_API_URL.
  * @property {CreateSandboxTargetEnum} target - Target location for Sandboxes
@@ -77,7 +77,7 @@ import dotenv from 'dotenv'
  * const daytona = new Daytona(config);
  */
 export interface DaytonaConfig {
-  /** API key for authentication with Daytona Server API */
+  /** API key for authentication with the Daytona API */
   apiKey?: string
   /** URL of the Daytona API.
    */
@@ -186,7 +186,7 @@ export type CreateSandboxParams = {
 }
 
 /**
- * Main class for interacting with Daytona Server API.
+ * Main class for interacting with the Daytona API.
  *
  * Provides methods for creating, managing, and interacting with Daytona Sandboxes.
  * Can be initialized either with explicit configuration or using environment variables.

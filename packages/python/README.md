@@ -1,6 +1,6 @@
 # Daytona SDK for Python
 
-A Python SDK for interacting with Daytona Server API, providing a simple interface for Daytona Sandbox management, Git operations, file system operations, and language server protocol support.
+A Python SDK for interacting with the Daytona API, providing a simple interface for Daytona Sandbox management, Git operations, file system operations, and language server protocol support.
 
 ## Installation
 
