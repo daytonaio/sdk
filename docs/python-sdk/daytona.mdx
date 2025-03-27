@@ -11,7 +11,7 @@ This guide covers how to create, manage, and remove Sandboxes using the SDK.
 ```python
 from daytona_sdk import Daytona
 # Initialize using environment variables
-daytona = Daytona()  # Uses env vars DAYTONA_API_KEY, DAYTONA_SERVER_URL, DAYTONA_TARGET
+daytona = Daytona()  # Uses env vars DAYTONA_API_KEY, DAYTONA_API_URL, DAYTONA_TARGET
 
 # Create a default Python sandbox with custom environment variables
 sandbox = daytona.create(CreateSandboxParams(
@@ -38,7 +38,7 @@ from daytona_sdk import Daytona, DaytonaConfig, CreateSandboxParams, SandboxReso
 # Initialize with explicit configuration
 config = DaytonaConfig(
     api_key="your-api-key",
-    server_url="https://your-server.com",
+    api_url="https://your-api.com",
     target="us"
 )
 daytona = Daytona(config)
@@ -68,9 +68,9 @@ sandbox.process.execute_command("python -m pytest")
 class Daytona()
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/13fd6d248daa993fd4530606218ee71120f21d82/packages/python/src/daytona_sdk/daytona.py#L209)
+[[view_source]](https://github.com/daytonaio/sdk/blob/cd66ff57d6ea1c7e8338ae56f7f538395c33533c/packages/python/src/daytona_sdk/daytona.py#L248)
 
-Main class for interacting with Daytona Server API.
+Main class for interacting with the Daytona API.
 
 This class provides methods to create, manage, and interact with Daytona Sandboxes.
 It can be initialized either with explicit configuration or using environment variables.
@@ -78,7 +78,7 @@ It can be initialized either with explicit configuration or using environment va
 **Attributes**:
 
 - `api_key` _str_ - API key for authentication.
-- `server_url` _str_ - URL of the Daytona server.
+- `api_url` _str_ - URL of the Daytona API.
 - `target` _str_ - Default target location for Sandboxes.
   
 
@@ -86,14 +86,14 @@ It can be initialized either with explicit configuration or using environment va
 
   Using environment variables:
 ```python
-daytona = Daytona()  # Uses DAYTONA_API_KEY, DAYTONA_SERVER_URL
+daytona = Daytona()  # Uses DAYTONA_API_KEY, DAYTONA_API_URL
 ```
   
   Using explicit configuration:
 ```python
 config = DaytonaConfig(
     api_key="your-api-key",
-    server_url="https://your-server.com",
+    api_url="https://your-api.com",
     target="us"
 )
 daytona = Daytona(config)
@@ -106,23 +106,23 @@ daytona = Daytona(config)
 def __init__(config: Optional[DaytonaConfig] = None)
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/13fd6d248daa993fd4530606218ee71120f21d82/packages/python/src/daytona_sdk/daytona.py#L237)
+[[view_source]](https://github.com/daytonaio/sdk/blob/cd66ff57d6ea1c7e8338ae56f7f538395c33533c/packages/python/src/daytona_sdk/daytona.py#L276)
 
 Initializes Daytona instance with optional configuration.
 
 If no config is provided, reads from environment variables:
 - `DAYTONA_API_KEY`: Required API key for authentication
-- `DAYTONA_SERVER_URL`: Required server URL
+- `DAYTONA_API_URL`: Required api URL
 - `DAYTONA_TARGET`: Optional target environment (defaults to SandboxTargetRegion.US)
 
 **Arguments**:
 
-- `config` _Optional[DaytonaConfig]_ - Object containing api_key, server_url, and target.
+- `config` _Optional[DaytonaConfig]_ - Object containing api_key, api_url, and target.
   
 
 **Raises**:
 
-- `DaytonaError` - If API key or Server URL is not provided either through config or environment variables
+- `DaytonaError` - If API key is not provided either through config or environment variables
   
 
 **Example**:
@@ -134,7 +134,7 @@ daytona1 = Daytona()
 # Using explicit configuration
 config = DaytonaConfig(
     api_key="your-api-key",
-    server_url="https://your-server.com",
+    api_url="https://your-api.com",
     target="us"
 )
 daytona2 = Daytona(config)
@@ -149,7 +149,7 @@ def create(params: Optional[CreateSandboxParams] = None,
            timeout: Optional[float] = 60) -> Sandbox
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/13fd6d248daa993fd4530606218ee71120f21d82/packages/python/src/daytona_sdk/daytona.py#L299)
+[[view_source]](https://github.com/daytonaio/sdk/blob/cd66ff57d6ea1c7e8338ae56f7f538395c33533c/packages/python/src/daytona_sdk/daytona.py#L350)
 
 Creates Sandboxes with default or custom configurations. You can specify various parameters,
 including language, image, resources, environment variables, and volumes for the Sandbox.
@@ -200,7 +200,7 @@ sandbox = daytona.create(params, 40)
 def remove(sandbox: Sandbox, timeout: Optional[float] = 60) -> None
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/13fd6d248daa993fd4530606218ee71120f21d82/packages/python/src/daytona_sdk/daytona.py#L458)
+[[view_source]](https://github.com/daytonaio/sdk/blob/cd66ff57d6ea1c7e8338ae56f7f538395c33533c/packages/python/src/daytona_sdk/daytona.py#L511)
 
 Removes a Sandbox.
 
@@ -234,7 +234,7 @@ daytona.remove(sandbox)  # Clean up when done
 def get_current_workspace(workspace_id: str) -> Workspace
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/13fd6d248daa993fd4530606218ee71120f21d82/packages/python/src/daytona_sdk/daytona.py#L483)
+[[view_source]](https://github.com/daytonaio/sdk/blob/cd66ff57d6ea1c7e8338ae56f7f538395c33533c/packages/python/src/daytona_sdk/daytona.py#L538)
 
 Get a Sandbox by its ID.
 
@@ -255,7 +255,7 @@ Get a Sandbox by its ID.
 def get_current_sandbox(sandbox_id: str) -> Sandbox
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/13fd6d248daa993fd4530606218ee71120f21d82/packages/python/src/daytona_sdk/daytona.py#L495)
+[[view_source]](https://github.com/daytonaio/sdk/blob/cd66ff57d6ea1c7e8338ae56f7f538395c33533c/packages/python/src/daytona_sdk/daytona.py#L550)
 
 Get a Sandbox by its ID.
 
@@ -289,7 +289,7 @@ print(sandbox.status)
 def list() -> List[Sandbox]
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/13fd6d248daa993fd4530606218ee71120f21d82/packages/python/src/daytona_sdk/daytona.py#L532)
+[[view_source]](https://github.com/daytonaio/sdk/blob/cd66ff57d6ea1c7e8338ae56f7f538395c33533c/packages/python/src/daytona_sdk/daytona.py#L587)
 
 Lists all Sandboxes.
 
@@ -313,7 +313,7 @@ for sandbox in sandboxes:
 def start(sandbox: Sandbox, timeout: Optional[float] = 60) -> None
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/13fd6d248daa993fd4530606218ee71120f21d82/packages/python/src/daytona_sdk/daytona.py#L595)
+[[view_source]](https://github.com/daytonaio/sdk/blob/cd66ff57d6ea1c7e8338ae56f7f538395c33533c/packages/python/src/daytona_sdk/daytona.py#L652)
 
 Starts a Sandbox and waits for it to be ready.
 
@@ -335,7 +335,7 @@ Starts a Sandbox and waits for it to be ready.
 def stop(sandbox: Sandbox, timeout: Optional[float] = 60) -> None
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/13fd6d248daa993fd4530606218ee71120f21d82/packages/python/src/daytona_sdk/daytona.py#L608)
+[[view_source]](https://github.com/daytonaio/sdk/blob/cd66ff57d6ea1c7e8338ae56f7f538395c33533c/packages/python/src/daytona_sdk/daytona.py#L665)
 
 Stops a Sandbox and waits for it to be stopped.
 
@@ -360,7 +360,7 @@ This guide covers how to create, manage, and remove Sandboxes using the SDK.
 ```python
 from daytona_sdk import Daytona
 # Initialize using environment variables
-daytona = Daytona()  # Uses env vars DAYTONA_API_KEY, DAYTONA_SERVER_URL, DAYTONA_TARGET
+daytona = Daytona()  # Uses env vars DAYTONA_API_KEY, DAYTONA_API_URL, DAYTONA_TARGET
 
 # Create a default Python sandbox with custom environment variables
 sandbox = daytona.create(CreateSandboxParams(
@@ -387,7 +387,7 @@ from daytona_sdk import Daytona, DaytonaConfig, CreateSandboxParams, SandboxReso
 # Initialize with explicit configuration
 config = DaytonaConfig(
     api_key="your-api-key",
-    server_url="https://your-server.com",
+    api_url="https://your-api.com",
     target="us"
 )
 daytona = Daytona(config)
@@ -419,7 +419,7 @@ sandbox.process.execute_command("python -m pytest")
 class CodeLanguage(Enum)
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/13fd6d248daa993fd4530606218ee71120f21d82/packages/python/src/daytona_sdk/daytona.py#L84)
+[[view_source]](https://github.com/daytonaio/sdk/blob/cd66ff57d6ea1c7e8338ae56f7f538395c33533c/packages/python/src/daytona_sdk/daytona.py#L85)
 
 Programming languages supported by Daytona
 
@@ -428,20 +428,22 @@ Programming languages supported by Daytona
 ## DaytonaConfig
 
 ```python
-@dataclass
-class DaytonaConfig()
+class DaytonaConfig(BaseModel)
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/13fd6d248daa993fd4530606218ee71120f21d82/packages/python/src/daytona_sdk/daytona.py#L101)
+[[view_source]](https://github.com/daytonaio/sdk/blob/cd66ff57d6ea1c7e8338ae56f7f538395c33533c/packages/python/src/daytona_sdk/daytona.py#L101)
 
 Configuration options for initializing the Daytona client.
 
 **Attributes**:
 
-- `api_key` _Optional[str]_ - API key for authentication with Daytona server. If not set, it must be provided
+- `api_key` _Optional[str]_ - API key for authentication with the Daytona API. If not set, it must be provided
   as environment variable DAYTONA_API_KEY.
-- `server_url` _Optional[str]_ - URL of the Daytona server. Defaults to 'https://app.daytona.io/api' if not set.
-- `target` _Optional[SandboxTargetRegion]_ - Target environment for Sandbox. Defaults to 'us' if not set.
+- `api_url` _Optional[str]_ - URL of the Daytona API. Defaults to 'https://app.daytona.io/api' if not set
+  here and not set in environment variable DAYTONA_API_URL.
+- `server_url` _Optional[str]_ - Deprecated. Use `api_url` instead. This property will be removed in future versions.
+- `target` _Optional[SandboxTargetRegion]_ - Target environment for Sandbox. Defaults to 'us' if not set here
+  and not set in environment variable DAYTONA_TARGET.
   
 
 **Example**:
@@ -460,7 +462,7 @@ config = DaytonaConfig(api_key="your-api-key")
 class SandboxResources()
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/13fd6d248daa993fd4530606218ee71120f21d82/packages/python/src/daytona_sdk/daytona.py#L123)
+[[view_source]](https://github.com/daytonaio/sdk/blob/cd66ff57d6ea1c7e8338ae56f7f538395c33533c/packages/python/src/daytona_sdk/daytona.py#L148)
 
 Resources configuration for Sandbox.
 
@@ -495,7 +497,7 @@ params = CreateSandboxParams(
 class CreateSandboxParams(BaseModel)
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/13fd6d248daa993fd4530606218ee71120f21d82/packages/python/src/daytona_sdk/daytona.py#L153)
+[[view_source]](https://github.com/daytonaio/sdk/blob/cd66ff57d6ea1c7e8338ae56f7f538395c33533c/packages/python/src/daytona_sdk/daytona.py#L178)
 
 Parameters for creating a new Sandbox.
 

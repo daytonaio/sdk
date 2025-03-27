@@ -1,6 +1,6 @@
 # Daytona SDK for Python
 
-A Python SDK for interacting with Daytona Server API, providing a simple interface for Daytona Sandbox management, Git operations, file system operations, and language server protocol support.
+A Python SDK for interacting with the Daytona API, providing a simple interface for Daytona Sandbox management, Git operations, file system operations, and language server protocol support.
 
 ## Installation
 
@@ -41,7 +41,7 @@ from daytona_sdk import Daytona, DaytonaConfig
 # Initialize with configuration
 config = DaytonaConfig(
     api_key="your-api-key",
-    server_url="your-server-url",
+    api_url="your-api-url",
     target="us"
 )
 daytona = Daytona(config)
@@ -50,7 +50,7 @@ daytona = Daytona(config)
 Or using environment variables:
 
 - `DAYTONA_API_KEY`: Your Daytona API key
-- `DAYTONA_SERVER_URL`: The Daytona server URL
+- `DAYTONA_API_URL`: The Daytona API URL
 - `DAYTONA_TARGET`: Your target environment
 
 You can also customize sandbox creation:

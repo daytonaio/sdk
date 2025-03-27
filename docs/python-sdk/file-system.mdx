@@ -77,7 +77,7 @@ sandbox.fs.set_file_permissions(
 class FileSystem()
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/13fd6d248daa993fd4530606218ee71120f21d82/packages/python/src/daytona_sdk/filesystem.py#L75)
+[[view_source]](https://github.com/daytonaio/sdk/blob/cd66ff57d6ea1c7e8338ae56f7f538395c33533c/packages/python/src/daytona_sdk/filesystem.py#L75)
 
 Provides file system operations within a Sandbox.
 
@@ -97,7 +97,7 @@ managing permissions.
 def __init__(instance: SandboxInstance, toolbox_api: ToolboxApi)
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/13fd6d248daa993fd4530606218ee71120f21d82/packages/python/src/daytona_sdk/filesystem.py#L87)
+[[view_source]](https://github.com/daytonaio/sdk/blob/cd66ff57d6ea1c7e8338ae56f7f538395c33533c/packages/python/src/daytona_sdk/filesystem.py#L87)
 
 Initializes a new FileSystem instance.
 
@@ -114,7 +114,7 @@ Initializes a new FileSystem instance.
 def create_folder(path: str, mode: str) -> None
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/13fd6d248daa993fd4530606218ee71120f21d82/packages/python/src/daytona_sdk/filesystem.py#L98)
+[[view_source]](https://github.com/daytonaio/sdk/blob/cd66ff57d6ea1c7e8338ae56f7f538395c33533c/packages/python/src/daytona_sdk/filesystem.py#L98)
 
 Creates a new directory in the Sandbox.
 
@@ -145,7 +145,7 @@ sandbox.fs.create_folder("/workspace/secrets", "700")
 def delete_file(path: str) -> None
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/13fd6d248daa993fd4530606218ee71120f21d82/packages/python/src/daytona_sdk/filesystem.py#L120)
+[[view_source]](https://github.com/daytonaio/sdk/blob/cd66ff57d6ea1c7e8338ae56f7f538395c33533c/packages/python/src/daytona_sdk/filesystem.py#L120)
 
 Deletes a file from the Sandbox.
 
@@ -171,7 +171,7 @@ sandbox.fs.delete_file("/workspace/data/old_file.txt")
 def download_file(path: str) -> bytes
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/13fd6d248daa993fd4530606218ee71120f21d82/packages/python/src/daytona_sdk/filesystem.py#L137)
+[[view_source]](https://github.com/daytonaio/sdk/blob/cd66ff57d6ea1c7e8338ae56f7f538395c33533c/packages/python/src/daytona_sdk/filesystem.py#L137)
 
 Downloads a file from the Sandbox.
 
@@ -208,7 +208,7 @@ config = json.loads(content.decode('utf-8'))
 def find_files(path: str, pattern: str) -> List[Match]
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/13fd6d248daa993fd4530606218ee71120f21d82/packages/python/src/daytona_sdk/filesystem.py#L163)
+[[view_source]](https://github.com/daytonaio/sdk/blob/cd66ff57d6ea1c7e8338ae56f7f538395c33533c/packages/python/src/daytona_sdk/filesystem.py#L163)
 
 Searches for files containing a pattern.
 
@@ -247,7 +247,7 @@ for match in matches:
 def get_file_info(path: str) -> FileInfo
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/13fd6d248daa993fd4530606218ee71120f21d82/packages/python/src/daytona_sdk/filesystem.py#L191)
+[[view_source]](https://github.com/daytonaio/sdk/blob/cd66ff57d6ea1c7e8338ae56f7f538395c33533c/packages/python/src/daytona_sdk/filesystem.py#L191)
 
 Gets detailed information about a file.
 
@@ -295,7 +295,7 @@ if info.is_dir:
 def list_files(path: str) -> List[FileInfo]
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/13fd6d248daa993fd4530606218ee71120f21d82/packages/python/src/daytona_sdk/filesystem.py#L228)
+[[view_source]](https://github.com/daytonaio/sdk/blob/cd66ff57d6ea1c7e8338ae56f7f538395c33533c/packages/python/src/daytona_sdk/filesystem.py#L228)
 
 Lists files and directories in a given path.
 
@@ -337,7 +337,7 @@ print("Subdirectories:", ", ".join(d.name for d in dirs))
 def move_files(source: str, destination: str) -> None
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/13fd6d248daa993fd4530606218ee71120f21d82/packages/python/src/daytona_sdk/filesystem.py#L259)
+[[view_source]](https://github.com/daytonaio/sdk/blob/cd66ff57d6ea1c7e8338ae56f7f538395c33533c/packages/python/src/daytona_sdk/filesystem.py#L259)
 
 Moves files from one location to another.
 
@@ -381,7 +381,7 @@ def replace_in_files(files: List[str], pattern: str,
                      new_value: str) -> List[ReplaceResult]
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/13fd6d248daa993fd4530606218ee71120f21d82/packages/python/src/daytona_sdk/filesystem.py#L297)
+[[view_source]](https://github.com/daytonaio/sdk/blob/cd66ff57d6ea1c7e8338ae56f7f538395c33533c/packages/python/src/daytona_sdk/filesystem.py#L297)
 
 Replaces text in multiple files.
 
@@ -429,7 +429,7 @@ for result in results:
 def search_files(path: str, pattern: str) -> SearchFilesResponse
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/13fd6d248daa993fd4530606218ee71120f21d82/packages/python/src/daytona_sdk/filesystem.py#L336)
+[[view_source]](https://github.com/daytonaio/sdk/blob/cd66ff57d6ea1c7e8338ae56f7f538395c33533c/packages/python/src/daytona_sdk/filesystem.py#L336)
 
 Searches for files and directories matching a pattern in their names.
 
@@ -473,7 +473,7 @@ def set_file_permissions(path: str,
                          group: str = None) -> None
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/13fd6d248daa993fd4530606218ee71120f21d82/packages/python/src/daytona_sdk/filesystem.py#L366)
+[[view_source]](https://github.com/daytonaio/sdk/blob/cd66ff57d6ea1c7e8338ae56f7f538395c33533c/packages/python/src/daytona_sdk/filesystem.py#L366)
 
 Sets permissions and ownership for a file or directory.
 
@@ -515,7 +515,7 @@ sandbox.fs.set_file_permissions(
 def upload_file(path: str, file: bytes) -> None
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/13fd6d248daa993fd4530606218ee71120f21d82/packages/python/src/daytona_sdk/filesystem.py#L405)
+[[view_source]](https://github.com/daytonaio/sdk/blob/cd66ff57d6ea1c7e8338ae56f7f538395c33533c/packages/python/src/daytona_sdk/filesystem.py#L405)
 
 Uploads a file to the Sandbox.
 
