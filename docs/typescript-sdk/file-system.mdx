@@ -68,7 +68,7 @@ await sandbox.fs.setFilePermissions(
 
 ## FileSystem
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/13fd6d248daa993fd4530606218ee71120f21d82/packages/typescript/src/FileSystem.ts#L100)
+[[view_source]](https://github.com/daytonaio/sdk/blob/f89648b5356140fc193144bfd859dcfb21ca47cb/packages/typescript/src/FileSystem.ts#L100)
 
 Provides file system operations within a Sandbox.
 
@@ -85,7 +85,7 @@ managing permissions.
 new FileSystem(instance: SandboxInstance, toolboxApi: ToolboxApi): FileSystem
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/13fd6d248daa993fd4530606218ee71120f21d82/packages/typescript/src/FileSystem.ts#L101)
+[[view_source]](https://github.com/daytonaio/sdk/blob/f89648b5356140fc193144bfd859dcfb21ca47cb/packages/typescript/src/FileSystem.ts#L101)
 
 ##### Parameters
 
@@ -106,7 +106,7 @@ new FileSystem(instance: SandboxInstance, toolboxApi: ToolboxApi): FileSystem
 createFolder(path: string, mode: string): Promise<void>
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/13fd6d248daa993fd4530606218ee71120f21d82/packages/typescript/src/FileSystem.ts#L114)
+[[view_source]](https://github.com/daytonaio/sdk/blob/f89648b5356140fc193144bfd859dcfb21ca47cb/packages/typescript/src/FileSystem.ts#L114)
 
 Create a new directory in the Sandbox with specified permissions.
 
@@ -136,7 +136,7 @@ await fs.createFolder('/app/data', '755');
 deleteFile(path: string): Promise<void>
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/13fd6d248daa993fd4530606218ee71120f21d82/packages/typescript/src/FileSystem.ts#L129)
+[[view_source]](https://github.com/daytonaio/sdk/blob/f89648b5356140fc193144bfd859dcfb21ca47cb/packages/typescript/src/FileSystem.ts#L129)
 
 Deletes a file or directory from the Sandbox.
 
@@ -165,7 +165,7 @@ await fs.deleteFile('/app/temp.log');
 downloadFile(path: string): Promise<Blob>
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/13fd6d248daa993fd4530606218ee71120f21d82/packages/typescript/src/FileSystem.ts#L145)
+[[view_source]](https://github.com/daytonaio/sdk/blob/f89648b5356140fc193144bfd859dcfb21ca47cb/packages/typescript/src/FileSystem.ts#L145)
 
 Downloads a file from the Sandbox.
 
@@ -197,7 +197,7 @@ console.log('File content:', fileBlob.toString());
 findFiles(path: string, pattern: string): Promise<Match[]>
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/13fd6d248daa993fd4530606218ee71120f21d82/packages/typescript/src/FileSystem.ts#L164)
+[[view_source]](https://github.com/daytonaio/sdk/blob/f89648b5356140fc193144bfd859dcfb21ca47cb/packages/typescript/src/FileSystem.ts#L164)
 
 Searches for text patterns within files in the Sandbox.
 
@@ -232,7 +232,7 @@ matches.forEach(match => {
 getFileDetails(path: string): Promise<FileInfo>
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/13fd6d248daa993fd4530606218ee71120f21d82/packages/typescript/src/FileSystem.ts#L180)
+[[view_source]](https://github.com/daytonaio/sdk/blob/f89648b5356140fc193144bfd859dcfb21ca47cb/packages/typescript/src/FileSystem.ts#L180)
 
 Retrieves detailed information about a file or directory.
 
@@ -264,7 +264,7 @@ console.log(`Size: ${info.size}, Modified: ${info.modTime}`);
 listFiles(path: string): Promise<FileInfo[]>
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/13fd6d248daa993fd4530606218ee71120f21d82/packages/typescript/src/FileSystem.ts#L198)
+[[view_source]](https://github.com/daytonaio/sdk/blob/f89648b5356140fc193144bfd859dcfb21ca47cb/packages/typescript/src/FileSystem.ts#L198)
 
 Lists contents of a directory in the Sandbox.
 
@@ -298,7 +298,7 @@ files.forEach(file => {
 moveFiles(source: string, destination: string): Promise<void>
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/13fd6d248daa993fd4530606218ee71120f21d82/packages/typescript/src/FileSystem.ts#L214)
+[[view_source]](https://github.com/daytonaio/sdk/blob/f89648b5356140fc193144bfd859dcfb21ca47cb/packages/typescript/src/FileSystem.ts#L214)
 
 Moves or renames a file or directory.
 
@@ -331,7 +331,7 @@ replaceInFiles(
 newValue: string): Promise<ReplaceResult[]>
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/13fd6d248daa993fd4530606218ee71120f21d82/packages/typescript/src/FileSystem.ts#L235)
+[[view_source]](https://github.com/daytonaio/sdk/blob/f89648b5356140fc193144bfd859dcfb21ca47cb/packages/typescript/src/FileSystem.ts#L235)
 
 Replaces text content in multiple files.
 
@@ -368,7 +368,7 @@ const results = await fs.replaceInFiles(
 searchFiles(path: string, pattern: string): Promise<SearchFilesResponse>
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/13fd6d248daa993fd4530606218ee71120f21d82/packages/typescript/src/FileSystem.ts#L258)
+[[view_source]](https://github.com/daytonaio/sdk/blob/f89648b5356140fc193144bfd859dcfb21ca47cb/packages/typescript/src/FileSystem.ts#L258)
 
 Searches for files and directories by name pattern in the Sandbox.
 
@@ -401,7 +401,7 @@ result.files.forEach(file => console.log(file));
 setFilePermissions(path: string, permissions: FilePermissionsParams): Promise<void>
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/13fd6d248daa993fd4530606218ee71120f21d82/packages/typescript/src/FileSystem.ts#L278)
+[[view_source]](https://github.com/daytonaio/sdk/blob/f89648b5356140fc193144bfd859dcfb21ca47cb/packages/typescript/src/FileSystem.ts#L278)
 
 Sets permissions and ownership for a file or directory.
 
@@ -435,7 +435,7 @@ await fs.setFilePermissions('/app/script.sh', {
 uploadFile(path: string, file: File): Promise<void>
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/13fd6d248daa993fd4530606218ee71120f21d82/packages/typescript/src/FileSystem.ts#L301)
+[[view_source]](https://github.com/daytonaio/sdk/blob/f89648b5356140fc193144bfd859dcfb21ca47cb/packages/typescript/src/FileSystem.ts#L302)
 
 Uploads a file to the Sandbox.
 
@@ -462,7 +462,7 @@ await fs.uploadFile('/app/config.json', configFile);
 
 ## FilePermissionsParams
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/13fd6d248daa993fd4530606218ee71120f21d82/packages/typescript/src/FileSystem.ts#L83)
+[[view_source]](https://github.com/daytonaio/sdk/blob/f89648b5356140fc193144bfd859dcfb21ca47cb/packages/typescript/src/FileSystem.ts#L83)
 
 Parameters for setting file permissions in the Sandbox.
 

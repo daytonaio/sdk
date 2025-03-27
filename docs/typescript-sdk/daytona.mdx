@@ -8,7 +8,7 @@ This guide covers how to create, manage, and remove Sandboxes using the SDK.
 ### Examples
 
 ```ts
-// Initialize using environment variables (DAYTONA_API_KEY, DAYTONA_SERVER_URL, DAYTONA_TARGET)
+// Initialize using environment variables (DAYTONA_API_KEY, DAYTONA_API_URL, DAYTONA_TARGET)
 const daytona = new Daytona();
 
 // Create and use a sandbox
@@ -30,7 +30,7 @@ console.log(response.result);
 // Initialize with explicit configuration
 const daytona = new Daytona({
     apiKey: process.env.CUSTOM_API_KEY,
-    serverUrl: 'https://daytona.example.com',
+    apiUrl: 'https://daytona.example.com',
     target: 'us'
 });
 
@@ -52,7 +52,7 @@ await sandbox.process.executeCommand('npm test');
 
 ## CodeLanguage
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/13fd6d248daa993fd4530606218ee71120f21d82/packages/typescript/src/Daytona.ts#L89)
+[[view_source]](https://github.com/daytonaio/sdk/blob/f89648b5356140fc193144bfd859dcfb21ca47cb/packages/typescript/src/Daytona.ts#L96)
 
 Supported programming languages for code execution
 
@@ -68,7 +68,7 @@ Supported programming languages for code execution
 
 ## Daytona
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/13fd6d248daa993fd4530606218ee71120f21d82/packages/typescript/src/Daytona.ts#L205)
+[[view_source]](https://github.com/daytonaio/sdk/blob/f89648b5356140fc193144bfd859dcfb21ca47cb/packages/typescript/src/Daytona.ts#L212)
 
 Main class for interacting with Daytona Server API.
 
@@ -79,7 +79,7 @@ Can be initialized either with explicit configuration or using environment varia
 
 ```ts
 // Using environment variables
-// Uses DAYTONA_API_KEY, DAYTONA_SERVER_URL, DAYTONA_TARGET
+// Uses DAYTONA_API_KEY, DAYTONA_API_URL, DAYTONA_TARGET
 const daytona = new Daytona();
 const sandbox = await daytona.create();
 ```
@@ -88,7 +88,7 @@ const sandbox = await daytona.create();
 // Using explicit configuration
 const config: DaytonaConfig = {
     apiKey: "your-api-key",
-    serverUrl: "https://your-server.com",
+    apiUrl: "https://your-api.com",
     target: "us"
 };
 const daytona = new Daytona(config);
@@ -104,7 +104,7 @@ const daytona = new Daytona(config);
 new Daytona(config?: DaytonaConfig): Daytona
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/13fd6d248daa993fd4530606218ee71120f21d82/packages/typescript/src/Daytona.ts#L218)
+[[view_source]](https://github.com/daytonaio/sdk/blob/f89648b5356140fc193144bfd859dcfb21ca47cb/packages/typescript/src/Daytona.ts#L225)
 
 Creates a new Daytona client instance.
 
@@ -120,7 +120,7 @@ Creates a new Daytona client instance.
 
 ##### Throws
 
-- `DaytonaError` - When API key or server URL is missing
+- `DaytonaError` - When API key is missing
 
 ### Methods
 
@@ -130,7 +130,7 @@ Creates a new Daytona client instance.
 create(params?: CreateSandboxParams, timeout?: number): Promise<Sandbox>
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/13fd6d248daa993fd4530606218ee71120f21d82/packages/typescript/src/Daytona.ts#L291)
+[[view_source]](https://github.com/daytonaio/sdk/blob/f89648b5356140fc193144bfd859dcfb21ca47cb/packages/typescript/src/Daytona.ts#L311)
 
 Creates Sandboxes with default or custom configurations. You can specify various parameters,
 including language, image, resources, environment variables, and volumes for the Sandbox.
@@ -181,7 +181,7 @@ const sandbox = await daytona.create(params, 40);
 get(sandboxId: string): Promise<Sandbox>
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/13fd6d248daa993fd4530606218ee71120f21d82/packages/typescript/src/Daytona.ts#L380)
+[[view_source]](https://github.com/daytonaio/sdk/blob/f89648b5356140fc193144bfd859dcfb21ca47cb/packages/typescript/src/Daytona.ts#L400)
 
 Gets a Sandbox by its ID.
 
@@ -212,7 +212,7 @@ console.log(`Sandbox state: ${sandbox.instance.state}`);
 getCurrentSandbox(sandboxId: string): Promise<Sandbox>
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/13fd6d248daa993fd4530606218ee71120f21d82/packages/typescript/src/Daytona.ts#L486)
+[[view_source]](https://github.com/daytonaio/sdk/blob/f89648b5356140fc193144bfd859dcfb21ca47cb/packages/typescript/src/Daytona.ts#L506)
 
 Gets the Sandbox by ID.
 
@@ -243,7 +243,7 @@ console.log(`Current sandbox state: ${sandbox.instance.state}`);
 getCurrentWorkspace(workspaceId: string): Promise<Sandbox>
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/13fd6d248daa993fd4530606218ee71120f21d82/packages/typescript/src/Daytona.ts#L472)
+[[view_source]](https://github.com/daytonaio/sdk/blob/f89648b5356140fc193144bfd859dcfb21ca47cb/packages/typescript/src/Daytona.ts#L492)
 
 Gets the Sandbox by ID.
 
@@ -271,7 +271,7 @@ Use `getCurrentSandbox` instead. This method will be removed in a future version
 list(): Promise<Sandbox[]>
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/13fd6d248daa993fd4530606218ee71120f21d82/packages/typescript/src/Daytona.ts#L402)
+[[view_source]](https://github.com/daytonaio/sdk/blob/f89648b5356140fc193144bfd859dcfb21ca47cb/packages/typescript/src/Daytona.ts#L422)
 
 Lists all Sandboxes.
 
@@ -298,7 +298,7 @@ for (const sandbox of sandboxes) {
 remove(sandbox: Sandbox, timeout: number): Promise<void>
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/13fd6d248daa993fd4530606218ee71120f21d82/packages/typescript/src/Daytona.ts#L460)
+[[view_source]](https://github.com/daytonaio/sdk/blob/f89648b5356140fc193144bfd859dcfb21ca47cb/packages/typescript/src/Daytona.ts#L480)
 
 Removes a Sandbox.
 
@@ -328,7 +328,7 @@ await daytona.remove(sandbox);
 start(sandbox: Sandbox, timeout?: number): Promise<void>
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/13fd6d248daa993fd4530606218ee71120f21d82/packages/typescript/src/Daytona.ts#L431)
+[[view_source]](https://github.com/daytonaio/sdk/blob/f89648b5356140fc193144bfd859dcfb21ca47cb/packages/typescript/src/Daytona.ts#L451)
 
 Starts a Sandbox and waits for it to be ready.
 
@@ -359,7 +359,7 @@ await daytona.start(sandbox, 60);
 stop(sandbox: Sandbox): Promise<void>
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/13fd6d248daa993fd4530606218ee71120f21d82/packages/typescript/src/Daytona.ts#L445)
+[[view_source]](https://github.com/daytonaio/sdk/blob/f89648b5356140fc193144bfd859dcfb21ca47cb/packages/typescript/src/Daytona.ts#L465)
 
 Stops a Sandbox.
 
@@ -384,7 +384,7 @@ await daytona.stop(sandbox);
 
 ## CreateSandboxParams
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/13fd6d248daa993fd4530606218ee71120f21d82/packages/typescript/src/Daytona.ts#L151)
+[[view_source]](https://github.com/daytonaio/sdk/blob/f89648b5356140fc193144bfd859dcfb21ca47cb/packages/typescript/src/Daytona.ts#L158)
 
 Parameters for creating a new Sandbox.
 
@@ -424,7 +424,7 @@ const sandbox = await daytona.create(params, 50);
 
 ## DaytonaConfig
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/13fd6d248daa993fd4530606218ee71120f21d82/packages/typescript/src/Daytona.ts#L77)
+[[view_source]](https://github.com/daytonaio/sdk/blob/f89648b5356140fc193144bfd859dcfb21ca47cb/packages/typescript/src/Daytona.ts#L79)
 
 Configuration options for initializing the Daytona client.
 
@@ -433,7 +433,7 @@ Configuration options for initializing the Daytona client.
 ```ts
 const config: DaytonaConfig = {
     apiKey: "your-api-key",
-    serverUrl: "https://your-server.com",
+    apiUrl: "https://your-api.com",
     target: "us"
 };
 const daytona = new Daytona(config);
@@ -443,15 +443,16 @@ const daytona = new Daytona(config);
 
 | Property | Type | Description |
 | ------ | ------ | ------ |
-| `apiKey?` | `string` | API key for authentication with Daytona server |
-| `serverUrl?` | `string` | URL of the Daytona server |
+| `apiKey?` | `string` | API key for authentication with Daytona Server API |
+| `apiUrl?` | `string` | URL of the Daytona API. Defaults to 'https://app.daytona.io/api' if not set here and not set in environment variable DAYTONA_API_URL. |
+| `~~serverUrl?~~` | `string` | `**Deprecated** Use apiUrl instead. This property will be removed in future versions.` |
 | `target?` | `CreateWorkspaceTargetEnum` | Target location for Sandboxes |
 
 ***
 
 ## SandboxResources
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/13fd6d248daa993fd4530606218ee71120f21d82/packages/typescript/src/Daytona.ts#L111)
+[[view_source]](https://github.com/daytonaio/sdk/blob/f89648b5356140fc193144bfd859dcfb21ca47cb/packages/typescript/src/Daytona.ts#L118)
 
 Resource allocation for a Sandbox.
 
