@@ -14,6 +14,7 @@
   "plugin": ["typedoc-plugin-markdown", "./hooks/typedoc-custom.mjs", "typedoc-plugin-merge-modules"],
   "theme": "markdown",
   "sort": ["static-first", "alphabetical"],
+  "disableSources": true,
 
   "membersWithOwnFile": [],
   "flattenOutputFiles": true,

@@ -46,8 +46,6 @@ lsp.stop()
 class LspServer()
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/cd66ff57d6ea1c7e8338ae56f7f538395c33533c/packages/python/src/daytona_sdk/lsp_server.py#L90)
-
 Provides Language Server Protocol functionality for code intelligence.
 
 This class implements a subset of the Language Server Protocol (LSP) to provide
@@ -67,8 +65,6 @@ def __init__(language_id: LspLanguageId, path_to_project: str,
              toolbox_api: ToolboxApi, instance: SandboxInstance)
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/cd66ff57d6ea1c7e8338ae56f7f538395c33533c/packages/python/src/daytona_sdk/lsp_server.py#L102)
-
 Initializes a new LSP server instance.
 
 **Arguments**:
@@ -85,8 +81,6 @@ Initializes a new LSP server instance.
 @intercept_errors(message_prefix="Failed to start LSP server: ")
 def start() -> None
 ```
-
-[[view_source]](https://github.com/daytonaio/sdk/blob/cd66ff57d6ea1c7e8338ae56f7f538395c33533c/packages/python/src/daytona_sdk/lsp_server.py#L123)
 
 Starts the language server.
 
@@ -109,8 +103,6 @@ lsp.start()  # Initialize the server
 def stop() -> None
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/cd66ff57d6ea1c7e8338ae56f7f538395c33533c/packages/python/src/daytona_sdk/lsp_server.py#L145)
-
 Stops the language server.
 
 This method should be called when the LSP server is no longer needed to
@@ -130,8 +122,6 @@ lsp.stop()  # Clean up resources
 @intercept_errors(message_prefix="Failed to open file: ")
 def did_open(path: str) -> None
 ```
-
-[[view_source]](https://github.com/daytonaio/sdk/blob/cd66ff57d6ea1c7e8338ae56f7f538395c33533c/packages/python/src/daytona_sdk/lsp_server.py#L166)
 
 Notifies the language server that a file has been opened.
 
@@ -160,8 +150,6 @@ lsp.did_open("/workspace/project/src/index.ts")
 def did_close(path: str) -> None
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/cd66ff57d6ea1c7e8338ae56f7f538395c33533c/packages/python/src/daytona_sdk/lsp_server.py#L193)
-
 Notify the language server that a file has been closed.
 
 This method should be called when a file is closed in the editor to allow
@@ -186,8 +174,6 @@ lsp.did_close("/workspace/project/src/index.ts")
 @intercept_errors(message_prefix="Failed to get symbols from document: ")
 def document_symbols(path: str) -> List[LspSymbol]
 ```
-
-[[view_source]](https://github.com/daytonaio/sdk/blob/cd66ff57d6ea1c7e8338ae56f7f538395c33533c/packages/python/src/daytona_sdk/lsp_server.py#L217)
 
 Gets symbol information from a document.
 
@@ -227,8 +213,6 @@ for symbol in symbols:
 def workspace_symbols(query: str) -> List[LspSymbol]
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/cd66ff57d6ea1c7e8338ae56f7f538395c33533c/packages/python/src/daytona_sdk/lsp_server.py#L250)
-
 Searches for symbols across the entire Sandbox.
 
 This method searches for symbols matching the query string across all files
@@ -251,8 +235,6 @@ without knowing which file they're in.
 @intercept_errors(message_prefix="Failed to get symbols from sandbox: ")
 def sandbox_symbols(query: str) -> List[LspSymbol]
 ```
-
-[[view_source]](https://github.com/daytonaio/sdk/blob/cd66ff57d6ea1c7e8338ae56f7f538395c33533c/packages/python/src/daytona_sdk/lsp_server.py#L266)
 
 Searches for symbols across the entire Sandbox.
 
@@ -290,8 +272,6 @@ for symbol in symbols:
 @intercept_errors(message_prefix="Failed to get completions: ")
 def completions(path: str, position: Position) -> CompletionList
 ```
-
-[[view_source]](https://github.com/daytonaio/sdk/blob/cd66ff57d6ea1c7e8338ae56f7f538395c33533c/packages/python/src/daytona_sdk/lsp_server.py#L299)
 
 Gets completion suggestions at a position in a file.
 
@@ -371,8 +351,6 @@ lsp.stop()
 class Position()
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/cd66ff57d6ea1c7e8338ae56f7f538395c33533c/packages/python/src/daytona_sdk/lsp_server.py#L68)
-
 Represents a position in a text document.
 
 This class represents a zero-based position within a text document,
@@ -389,8 +367,6 @@ specified by line number and character offset.
 ```python
 def __init__(line: int, character: int)
 ```
-
-[[view_source]](https://github.com/daytonaio/sdk/blob/cd66ff57d6ea1c7e8338ae56f7f538395c33533c/packages/python/src/daytona_sdk/lsp_server.py#L79)
 
 Initialize a new Position instance.
 

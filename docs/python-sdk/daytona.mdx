@@ -68,8 +68,6 @@ sandbox.process.execute_command("python -m pytest")
 class Daytona()
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/cd66ff57d6ea1c7e8338ae56f7f538395c33533c/packages/python/src/daytona_sdk/daytona.py#L248)
-
 Main class for interacting with the Daytona API.
 
 This class provides methods to create, manage, and interact with Daytona Sandboxes.
@@ -105,8 +103,6 @@ daytona = Daytona(config)
 ```python
 def __init__(config: Optional[DaytonaConfig] = None)
 ```
-
-[[view_source]](https://github.com/daytonaio/sdk/blob/cd66ff57d6ea1c7e8338ae56f7f538395c33533c/packages/python/src/daytona_sdk/daytona.py#L276)
 
 Initializes Daytona instance with optional configuration.
 
@@ -148,8 +144,6 @@ daytona2 = Daytona(config)
 def create(params: Optional[CreateSandboxParams] = None,
            timeout: Optional[float] = 60) -> Sandbox
 ```
-
-[[view_source]](https://github.com/daytonaio/sdk/blob/cd66ff57d6ea1c7e8338ae56f7f538395c33533c/packages/python/src/daytona_sdk/daytona.py#L350)
 
 Creates Sandboxes with default or custom configurations. You can specify various parameters,
 including language, image, resources, environment variables, and volumes for the Sandbox.
@@ -200,8 +194,6 @@ sandbox = daytona.create(params, 40)
 def remove(sandbox: Sandbox, timeout: Optional[float] = 60) -> None
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/cd66ff57d6ea1c7e8338ae56f7f538395c33533c/packages/python/src/daytona_sdk/daytona.py#L511)
-
 Removes a Sandbox.
 
 **Arguments**:
@@ -234,8 +226,6 @@ daytona.remove(sandbox)  # Clean up when done
 def get_current_workspace(workspace_id: str) -> Workspace
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/cd66ff57d6ea1c7e8338ae56f7f538395c33533c/packages/python/src/daytona_sdk/daytona.py#L538)
-
 Get a Sandbox by its ID.
 
 **Arguments**:
@@ -254,8 +244,6 @@ Get a Sandbox by its ID.
 @intercept_errors(message_prefix="Failed to get sandbox: ")
 def get_current_sandbox(sandbox_id: str) -> Sandbox
 ```
-
-[[view_source]](https://github.com/daytonaio/sdk/blob/cd66ff57d6ea1c7e8338ae56f7f538395c33533c/packages/python/src/daytona_sdk/daytona.py#L550)
 
 Get a Sandbox by its ID.
 
@@ -289,8 +277,6 @@ print(sandbox.status)
 def list() -> List[Sandbox]
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/cd66ff57d6ea1c7e8338ae56f7f538395c33533c/packages/python/src/daytona_sdk/daytona.py#L587)
-
 Lists all Sandboxes.
 
 **Returns**:
@@ -313,8 +299,6 @@ for sandbox in sandboxes:
 def start(sandbox: Sandbox, timeout: Optional[float] = 60) -> None
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/cd66ff57d6ea1c7e8338ae56f7f538395c33533c/packages/python/src/daytona_sdk/daytona.py#L652)
-
 Starts a Sandbox and waits for it to be ready.
 
 **Arguments**:
@@ -334,8 +318,6 @@ Starts a Sandbox and waits for it to be ready.
 ```python
 def stop(sandbox: Sandbox, timeout: Optional[float] = 60) -> None
 ```
-
-[[view_source]](https://github.com/daytonaio/sdk/blob/cd66ff57d6ea1c7e8338ae56f7f538395c33533c/packages/python/src/daytona_sdk/daytona.py#L665)
 
 Stops a Sandbox and waits for it to be stopped.
 
@@ -419,8 +401,6 @@ sandbox.process.execute_command("python -m pytest")
 class CodeLanguage(Enum)
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/cd66ff57d6ea1c7e8338ae56f7f538395c33533c/packages/python/src/daytona_sdk/daytona.py#L85)
-
 Programming languages supported by Daytona
 
 
@@ -430,8 +410,6 @@ Programming languages supported by Daytona
 ```python
 class DaytonaConfig(BaseModel)
 ```
-
-[[view_source]](https://github.com/daytonaio/sdk/blob/cd66ff57d6ea1c7e8338ae56f7f538395c33533c/packages/python/src/daytona_sdk/daytona.py#L101)
 
 Configuration options for initializing the Daytona client.
 
@@ -461,8 +439,6 @@ config = DaytonaConfig(api_key="your-api-key")
 @dataclass
 class SandboxResources()
 ```
-
-[[view_source]](https://github.com/daytonaio/sdk/blob/cd66ff57d6ea1c7e8338ae56f7f538395c33533c/packages/python/src/daytona_sdk/daytona.py#L148)
 
 Resources configuration for Sandbox.
 
@@ -496,8 +472,6 @@ params = CreateSandboxParams(
 ```python
 class CreateSandboxParams(BaseModel)
 ```
-
-[[view_source]](https://github.com/daytonaio/sdk/blob/cd66ff57d6ea1c7e8338ae56f7f538395c33533c/packages/python/src/daytona_sdk/daytona.py#L178)
 
 Parameters for creating a new Sandbox.
 

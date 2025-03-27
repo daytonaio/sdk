@@ -28,6 +28,3 @@ renderer:
     Method: 4
     Function: 4
     Data: 5
-  source_linker:
-    type: github
-    repo: daytonaio/sdk
