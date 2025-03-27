@@ -57,6 +57,7 @@ import {
 import { SandboxTsCodeToolbox } from './code-toolbox/SandboxTsCodeToolbox'
 import axios, { AxiosError } from 'axios'
 import { DaytonaError } from './errors/DaytonaError'
+import dotenv from 'dotenv'
 
 /**
  * Configuration options for initializing the Daytona client.
@@ -216,6 +217,8 @@ export class Daytona {
    * @throws {DaytonaError} - `DaytonaError` - When API key or server URL is missing
    */
   constructor(config?: DaytonaConfig) {
+    dotenv.config()
+    dotenv.config({ path: '.env.local', override: true })
     const apiKey = config?.apiKey || process.env.DAYTONA_API_KEY
     if (!apiKey) {
       throw new DaytonaError('API key is required')
