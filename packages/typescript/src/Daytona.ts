@@ -5,7 +5,7 @@
  * @module Daytona
  *
  * @example
- * // Initialize using environment variables (DAYTONA_API_KEY, DAYTONA_SERVER_URL, DAYTONA_TARGET)
+ * // Initialize using environment variables (DAYTONA_API_KEY, DAYTONA_API_URL, DAYTONA_TARGET)
  * const daytona = new Daytona();
  *
  * // Create and use a sandbox
@@ -26,7 +26,7 @@
  * // Initialize with explicit configuration
  * const daytona = new Daytona({
  *     apiKey: process.env.CUSTOM_API_KEY,
- *     serverUrl: 'https://daytona.example.com',
+ *     apiUrl: 'https://daytona.example.com',
  *     target: 'us'
  * });
  *
@@ -63,22 +63,28 @@ import dotenv from 'dotenv'
  * Configuration options for initializing the Daytona client.
  *
  * @interface
- * @property {string} apiKey - API key for authentication with Daytona server
- * @property {string} serverUrl - URL of the Daytona server
+ * @property {string} apiKey - API key for authentication with Daytona Server API
+ * @property {string} apiUrl - URL of the Daytona API. Defaults to 'https://app.daytona.io/api'
+ * if not set here and not set in environment variable DAYTONA_API_URL.
  * @property {CreateSandboxTargetEnum} target - Target location for Sandboxes
  *
  * @example
  * const config: DaytonaConfig = {
  *     apiKey: "your-api-key",
- *     serverUrl: "https://your-server.com",
+ *     apiUrl: "https://your-api.com",
  *     target: "us"
  * };
  * const daytona = new Daytona(config);
  */
 export interface DaytonaConfig {
-  /** API key for authentication with Daytona server */
+  /** API key for authentication with Daytona Server API */
   apiKey?: string
-  /** URL of the Daytona server */
+  /** URL of the Daytona API.
+   */
+  apiUrl?: string
+  /**
+   * @deprecated Use `apiUrl` instead. This property will be removed in future versions.
+   */
   serverUrl?: string
   /** Target environment for sandboxes */
   target?: SandboxTargetRegion
@@ -188,7 +194,7 @@ export type CreateSandboxParams = {
  *
  * @example
  * // Using environment variables
- * // Uses DAYTONA_API_KEY, DAYTONA_SERVER_URL, DAYTONA_TARGET
+ * // Uses DAYTONA_API_KEY, DAYTONA_API_URL, DAYTONA_TARGET
  * const daytona = new Daytona();
  * const sandbox = await daytona.create();
  *
@@ -196,7 +202,7 @@ export type CreateSandboxParams = {
  * // Using explicit configuration
  * const config: DaytonaConfig = {
  *     apiKey: "your-api-key",
- *     serverUrl: "https://your-server.com",
+ *     apiUrl: "https://your-api.com",
  *     target: "us"
  * };
  * const daytona = new Daytona(config);
@@ -208,13 +214,13 @@ export class Daytona {
   private readonly toolboxApi: ToolboxApi
   private readonly target: SandboxTargetRegion
   private readonly apiKey: string
-  private readonly serverUrl: string
+  private readonly apiUrl: string
 
   /**
    * Creates a new Daytona client instance.
    *
    * @param {DaytonaConfig} [config] - Configuration options
-   * @throws {DaytonaError} - `DaytonaError` - When API key or server URL is missing
+   * @throws {DaytonaError} - `DaytonaError` - When API key is missing
    */
   constructor(config?: DaytonaConfig) {
     dotenv.config()
@@ -223,16 +229,27 @@ export class Daytona {
     if (!apiKey) {
       throw new DaytonaError('API key is required')
     }
-    const serverUrl = config?.serverUrl || process.env.DAYTONA_SERVER_URL || 'https://app.daytona.io/api'
+    const apiUrl =
+      config?.apiUrl ||
+      config?.serverUrl ||
+      process.env.DAYTONA_API_URL ||
+      process.env.DAYTONA_SERVER_URL ||
+      'https://app.daytona.io/api'
     const envTarget = process.env.DAYTONA_TARGET as SandboxTargetRegion
     const target = config?.target || envTarget || SandboxTargetRegion.US
 
+    if (process.env.DAYTONA_SERVER_URL && !process.env.DAYTONA_API_URL) {
+      console.warn(
+        '[Deprecation Warning] Environment variable `DAYTONA_SERVER_URL` is deprecated and will be removed in future versions. Use `DAYTONA_API_URL` instead.'
+      )
+    }
+
     this.apiKey = apiKey
-    this.serverUrl = serverUrl
+    this.apiUrl = apiUrl
     this.target = target
 
     const configuration = new Configuration({
-      basePath: this.serverUrl,
+      basePath: this.apiUrl,
       baseOptions: {
         headers: {
           Authorization: `Bearer ${this.apiKey}`,

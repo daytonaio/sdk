@@ -47,7 +47,7 @@ import { Daytona } from '@daytonaio/sdk'
 // Initialize with configuration
 const daytona = new Daytona({
   apiKey: 'your-api-key',
-  serverUrl: 'your-server-url',
+  apiUrl: 'your-api-url',
   target: 'us',
 })
 ```
@@ -55,7 +55,7 @@ const daytona = new Daytona({
 Or using environment variables:
 
 - `DAYTONA_API_KEY`: Your Daytona API key
-- `DAYTONA_SERVER_URL`: The Daytona server URL
+- `DAYTONA_API_URL`: The Daytona API URL
 - `DAYTONA_TARGET`: Your target environment
 
 You can also customize sandbox creation:

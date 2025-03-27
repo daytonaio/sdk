@@ -7,7 +7,7 @@ Examples:
     ```python
     from daytona_sdk import Daytona
     # Initialize using environment variables
-    daytona = Daytona()  # Uses env vars DAYTONA_API_KEY, DAYTONA_SERVER_URL, DAYTONA_TARGET
+    daytona = Daytona()  # Uses env vars DAYTONA_API_KEY, DAYTONA_API_URL, DAYTONA_TARGET
 
     # Create a default Python sandbox with custom environment variables
     sandbox = daytona.create(CreateSandboxParams(
@@ -34,7 +34,7 @@ Examples:
     # Initialize with explicit configuration
     config = DaytonaConfig(
         api_key="your-api-key",
-        server_url="https://your-server.com",
+        api_url="https://your-api.com",
         target="us"
     )
     daytona = Daytona(config)
@@ -58,6 +58,7 @@ Examples:
     ```
 """
 
+import warnings
 from dataclasses import dataclass
 from enum import Enum
 from typing import Annotated, Dict, List, Optional
@@ -69,7 +70,7 @@ from daytona_api_client import WorkspaceApi as SandboxApi
 from daytona_sdk._utils.errors import DaytonaError, intercept_errors
 from deprecated import deprecated
 from environs import Env
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from ._utils.enum import to_enum
 from ._utils.timeout import with_timeout
@@ -97,15 +98,17 @@ class CodeLanguage(Enum):
         return super().__eq__(other)
 
 
-@dataclass
-class DaytonaConfig:
+class DaytonaConfig(BaseModel):
     """Configuration options for initializing the Daytona client.
 
     Attributes:
-        api_key (Optional[str]): API key for authentication with Daytona server. If not set, it must be provided
+        api_key (Optional[str]): API key for authentication with Daytona Server API. If not set, it must be provided
         as environment variable DAYTONA_API_KEY.
-        server_url (Optional[str]): URL of the Daytona server. Defaults to 'https://app.daytona.io/api' if not set.
-        target (Optional[SandboxTargetRegion]): Target environment for Sandbox. Defaults to 'us' if not set.
+        api_url (Optional[str]): URL of the Daytona API. Defaults to 'https://app.daytona.io/api' if not set
+        here and not set in environment variable DAYTONA_API_URL.
+        server_url (Optional[str]): Deprecated. Use `api_url` instead. This property will be removed in future versions.
+        target (Optional[SandboxTargetRegion]): Target environment for Sandbox. Defaults to 'us' if not set here
+        and not set in environment variable DAYTONA_TARGET.
 
     Example:
         ```python
@@ -115,8 +118,30 @@ class DaytonaConfig:
     """
 
     api_key: Optional[str] = None
-    server_url: Optional[str] = None
+    api_url: Optional[str] = None
+    server_url: Annotated[
+        Optional[str],
+        Field(
+            default=None,
+            deprecated="`server_url` is deprecated and will be removed in a future version. Use `api_url` instead.",
+        ),
+    ]
     target: Optional[SandboxTargetRegion] = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def __handle_deprecated_server_url(
+        cls, values
+    ):  # pylint: disable=unused-private-member
+        if "server_url" in values and values.get("server_url"):
+            warnings.warn(
+                "'server_url' is deprecated and will be removed in a future version. Use 'api_url' instead.",
+                DeprecationWarning,
+                stacklevel=3,
+            )
+            if "api_url" not in values or not values["api_url"]:
+                values["api_url"] = values["server_url"]
+        return values
 
 
 @dataclass
@@ -205,6 +230,20 @@ class CreateSandboxParams(BaseModel):
     ]
     auto_stop_interval: Optional[int] = None
 
+    @model_validator(mode="before")
+    @classmethod
+    def __handle_deprecated_timeout(
+        cls, values
+    ):  # pylint: disable=unused-private-member
+        if "timeout" in values and values.get("timeout"):
+            warnings.warn(
+                "The `timeout` field is deprecated and will be removed in future versions. "
+                + "Use `timeout` argument in method calls instead.",
+                DeprecationWarning,
+                stacklevel=3,
+            )
+        return values
+
 
 class Daytona:
     """Main class for interacting with Daytona Server API.
@@ -214,20 +253,20 @@ class Daytona:
 
     Attributes:
         api_key (str): API key for authentication.
-        server_url (str): URL of the Daytona server.
+        api_url (str): URL of the Daytona API.
         target (str): Default target location for Sandboxes.
 
     Example:
         Using environment variables:
         ```python
-        daytona = Daytona()  # Uses DAYTONA_API_KEY, DAYTONA_SERVER_URL
+        daytona = Daytona()  # Uses DAYTONA_API_KEY, DAYTONA_API_URL
         ```
 
         Using explicit configuration:
         ```python
         config = DaytonaConfig(
             api_key="your-api-key",
-            server_url="https://your-server.com",
+            api_url="https://your-api.com",
             target="us"
         )
         daytona = Daytona(config)
@@ -239,14 +278,14 @@ class Daytona:
 
         If no config is provided, reads from environment variables:
         - `DAYTONA_API_KEY`: Required API key for authentication
-        - `DAYTONA_SERVER_URL`: Required server URL
+        - `DAYTONA_API_URL`: Required api URL
         - `DAYTONA_TARGET`: Optional target environment (defaults to SandboxTargetRegion.US)
 
         Args:
-            config (Optional[DaytonaConfig]): Object containing api_key, server_url, and target.
+            config (Optional[DaytonaConfig]): Object containing api_key, api_url, and target.
 
         Raises:
-            DaytonaError: If API key or Server URL is not provided either through config or environment variables
+            DaytonaError: If API key is not provided either through config or environment variables
 
         Example:
             ```python
@@ -256,18 +295,18 @@ class Daytona:
             # Using explicit configuration
             config = DaytonaConfig(
                 api_key="your-api-key",
-                server_url="https://your-server.com",
+                api_url="https://your-api.com",
                 target="us"
             )
             daytona2 = Daytona(config)
             ```
         """
 
-        default_server_url = "https://app.daytona.io/api"
+        default_api_url = "https://app.daytona.io/api"
         default_target = SandboxTargetRegion.US
         self.default_language = CodeLanguage.PYTHON
 
-        if config is None or None in [config.api_key, config.server_url, config.target]:
+        if config is None or None in [config.api_key, config.api_url, config.target]:
             # Initialize env - it automatically reads from .env and .env.local
             env = Env()
             env.read_env()  # reads .env
@@ -275,19 +314,31 @@ class Daytona:
             env.read_env(".env.local", override=True)
 
             self.api_key = env.str("DAYTONA_API_KEY", None)
-            self.server_url = env.str("DAYTONA_SERVER_URL", default_server_url)
+            self.api_url = env.str("DAYTONA_API_URL", None) or env.str(
+                "DAYTONA_SERVER_URL", default_api_url
+            )
             self.target = env.str("DAYTONA_TARGET", default_target)
+
+            if env.str("DAYTONA_SERVER_URL", None) and not env.str(
+                "DAYTONA_API_URL", None
+            ):
+                warnings.warn(
+                    "Environment variable `DAYTONA_SERVER_URL` is deprecated and will be removed in future versions. "
+                    + "Use `DAYTONA_API_URL` instead.",
+                    DeprecationWarning,
+                    stacklevel=2,
+                )
 
         if config:
             self.api_key = config.api_key or self.api_key
-            self.server_url = config.server_url or self.server_url
+            self.api_url = config.api_url or self.api_url
             self.target = config.target or self.target
 
         if not self.api_key:
             raise DaytonaError("API key is required")
 
         # Create API configuration without api_key
-        configuration = Configuration(host=self.server_url)
+        configuration = Configuration(host=self.api_url)
         api_client = ApiClient(configuration)
         api_client.default_headers["Authorization"] = f"Bearer {self.api_key}"
 
@@ -405,7 +456,9 @@ class Daytona:
             sandbox_data.disk = params.resources.disk
             sandbox_data.gpu = params.resources.gpu
 
-        response = self.sandbox_api.create_workspace(sandbox_data, _request_timeout=timeout or None)
+        response = self.sandbox_api.create_workspace(
+            sandbox_data, _request_timeout=timeout or None
+        )
         sandbox_info = Sandbox.to_sandbox_info(response)
         response.info = sandbox_info
 
@@ -473,7 +526,9 @@ class Daytona:
             daytona.remove(sandbox)  # Clean up when done
             ```
         """
-        return self.sandbox_api.delete_workspace(sandbox.id, force=True, _request_timeout=timeout or None)
+        return self.sandbox_api.delete_workspace(
+            sandbox.id, force=True, _request_timeout=timeout or None
+        )
 
     @deprecated(
         reason=(
@@ -556,7 +611,9 @@ class Daytona:
                 self.toolbox_api,
                 self._get_code_toolbox(
                     CreateSandboxParams(
-                        language=self._validate_language_label(sandbox.labels.get("code-toolbox-language"))
+                        language=self._validate_language_label(
+                            sandbox.labels.get("code-toolbox-language")
+                        )
                     )
                 ),
             )
