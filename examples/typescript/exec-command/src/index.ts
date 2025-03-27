@@ -55,7 +55,7 @@ async function sessionExec(sandbox: Sandbox) {
 }
 
 async function sessionExecLogsAsync(sandbox: Sandbox) {
-  console.log('Executing command long running command in session and streaming logs asynchronously...')
+  console.log('Executing long running command in a session and streaming logs asynchronously...')
 
   const sessionId = 'exec-session-async-logs'
   await sandbox.process.createSession(sessionId)
