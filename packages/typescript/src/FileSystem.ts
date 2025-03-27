@@ -196,7 +196,7 @@ export class FileSystem {
    * });
    */
   public async listFiles(path: string): Promise<FileInfo[]> {
-    const response = await this.toolboxApi.listFiles(this.instance.id, path)
+    const response = await this.toolboxApi.listFiles(this.instance.id, undefined, path)
     return response.data
   }
 
@@ -279,6 +279,7 @@ export class FileSystem {
     const response = await this.toolboxApi.setFilePermissions(
       this.instance.id,
       path,
+      undefined,
       permissions.owner!,
       permissions.group!,
       permissions.mode!
