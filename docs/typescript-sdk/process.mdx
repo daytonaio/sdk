@@ -40,7 +40,7 @@ await sandbox.process.deleteSession(sessionId);
 
 ## CodeRunParams
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/f89648b5356140fc193144bfd859dcfb21ca47cb/packages/typescript/src/Process.ts#L50)
+[[view_source]](https://github.com/daytonaio/sdk/blob/cd66ff57d6ea1c7e8338ae56f7f538395c33533c/packages/typescript/src/Process.ts#L50)
 
 Parameters for code execution
 
@@ -67,7 +67,7 @@ new CodeRunParams(): CodeRunParams
 
 ## Process
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/f89648b5356140fc193144bfd859dcfb21ca47cb/packages/typescript/src/Process.ts#L61)
+[[view_source]](https://github.com/daytonaio/sdk/blob/cd66ff57d6ea1c7e8338ae56f7f538395c33533c/packages/typescript/src/Process.ts#L61)
 
 ### Constructors
 
@@ -80,7 +80,7 @@ new Process(
    instance: SandboxInstance): Process
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/f89648b5356140fc193144bfd859dcfb21ca47cb/packages/typescript/src/Process.ts#L62)
+[[view_source]](https://github.com/daytonaio/sdk/blob/cd66ff57d6ea1c7e8338ae56f7f538395c33533c/packages/typescript/src/Process.ts#L62)
 
 ##### Parameters
 
@@ -105,7 +105,7 @@ codeRun(
 timeout?: number): Promise<ExecuteResponse>
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/f89648b5356140fc193144bfd859dcfb21ca47cb/packages/typescript/src/Process.ts#L119)
+[[view_source]](https://github.com/daytonaio/sdk/blob/cd66ff57d6ea1c7e8338ae56f7f538395c33533c/packages/typescript/src/Process.ts#L119)
 
 Executes code in the Sandbox using the appropriate language runtime.
 
@@ -145,7 +145,7 @@ console.log(response.result);  // Prints: Sum: 30
 createSession(sessionId: string): Promise<void>
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/f89648b5356140fc193144bfd859dcfb21ca47cb/packages/typescript/src/Process.ts#L145)
+[[view_source]](https://github.com/daytonaio/sdk/blob/cd66ff57d6ea1c7e8338ae56f7f538395c33533c/packages/typescript/src/Process.ts#L145)
 
 Creates a new long-running background session in the Sandbox.
 
@@ -182,7 +182,7 @@ await process.deleteSession(sessionId);
 deleteSession(sessionId: string): Promise<void>
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/f89648b5356140fc193144bfd859dcfb21ca47cb/packages/typescript/src/Process.ts#L336)
+[[view_source]](https://github.com/daytonaio/sdk/blob/cd66ff57d6ea1c7e8338ae56f7f538395c33533c/packages/typescript/src/Process.ts#L336)
 
 Delete a session from the Sandbox.
 
@@ -214,7 +214,7 @@ executeCommand(
 timeout?: number): Promise<ExecuteResponse>
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/f89648b5356140fc193144bfd859dcfb21ca47cb/packages/typescript/src/Process.ts#L91)
+[[view_source]](https://github.com/daytonaio/sdk/blob/cd66ff57d6ea1c7e8338ae56f7f538395c33533c/packages/typescript/src/Process.ts#L91)
 
 Executes a shell command in the Sandbox.
 
@@ -263,7 +263,7 @@ executeSessionCommand(
 timeout?: number): Promise<SessionExecuteResponse>
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/f89648b5356140fc193144bfd859dcfb21ca47cb/packages/typescript/src/Process.ts#L219)
+[[view_source]](https://github.com/daytonaio/sdk/blob/cd66ff57d6ea1c7e8338ae56f7f538395c33533c/packages/typescript/src/Process.ts#L219)
 
 Executes a command in an existing session.
 
@@ -310,7 +310,7 @@ console.log(result.output);  // Prints: /workspace
 getSession(sessionId: string): Promise<Session>
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/f89648b5356140fc193144bfd859dcfb21ca47cb/packages/typescript/src/Process.ts#L165)
+[[view_source]](https://github.com/daytonaio/sdk/blob/cd66ff57d6ea1c7e8338ae56f7f538395c33533c/packages/typescript/src/Process.ts#L165)
 
 Get a session in the sandbox.
 
@@ -345,7 +345,7 @@ session.commands.forEach(cmd => {
 getSessionCommand(sessionId: string, commandId: string): Promise<Command>
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/f89648b5356140fc193144bfd859dcfb21ca47cb/packages/typescript/src/Process.ts#L186)
+[[view_source]](https://github.com/daytonaio/sdk/blob/cd66ff57d6ea1c7e8338ae56f7f538395c33533c/packages/typescript/src/Process.ts#L186)
 
 Gets information about a specific command executed in a session.
 
@@ -384,7 +384,7 @@ if (cmd.exitCode === 0) {
 getSessionCommandLogs(sessionId: string, commandId: string): Promise<string>
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/f89648b5356140fc193144bfd859dcfb21ca47cb/packages/typescript/src/Process.ts#L245)
+[[view_source]](https://github.com/daytonaio/sdk/blob/cd66ff57d6ea1c7e8338ae56f7f538395c33533c/packages/typescript/src/Process.ts#L245)
 
 Get the logs for a command executed in a session.
 
@@ -417,7 +417,7 @@ getSessionCommandLogs(
 onLogs: (chunk: string) => void): Promise<void>
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/f89648b5356140fc193144bfd859dcfb21ca47cb/packages/typescript/src/Process.ts#L259)
+[[view_source]](https://github.com/daytonaio/sdk/blob/cd66ff57d6ea1c7e8338ae56f7f538395c33533c/packages/typescript/src/Process.ts#L259)
 
 Asynchronously retrieve and process the logs for a command executed in a session as they become available.
 
@@ -449,7 +449,7 @@ const logs = await process.getSessionCommandLogs('my-session', 'cmd-123', (chunk
 listSessions(): Promise<Session[]>
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/f89648b5356140fc193144bfd859dcfb21ca47cb/packages/typescript/src/Process.ts#L321)
+[[view_source]](https://github.com/daytonaio/sdk/blob/cd66ff57d6ea1c7e8338ae56f7f538395c33533c/packages/typescript/src/Process.ts#L321)
 
 Lists all active sessions in the Sandbox.
 
