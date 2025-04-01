@@ -1,74 +1,12 @@
 ---
-title: Sandbox Management
+title: ""
 ---
 
-Sandboxes are isolated development environments managed by Daytona.
-This guide covers how to create, manage, and remove Sandboxes using the SDK.
-
-**Examples**:
-
-  Basic usage with environment variables:
-```python
-from daytona_sdk import Daytona
-# Initialize using environment variables
-daytona = Daytona()  # Uses env vars DAYTONA_API_KEY, DAYTONA_API_URL, DAYTONA_TARGET
-
-# Create a default Python sandbox with custom environment variables
-sandbox = daytona.create(CreateSandboxParams(
-    language="python",
-    env_vars={"PYTHON_ENV": "development"}
-))
-
-# Execute commands in the sandbox
-response = sandbox.process.execute_command('echo "Hello, World!"')
-print(response.result)
-
-# Run Python code securely inside the sandbox
-response = sandbox.process.code_run('print("Hello from Python!")')
-print(response.result)
-
-# Remove the sandbox after use
-daytona.remove(sandbox)
-```
-  
-  Usage with explicit configuration:
-```python
-from daytona_sdk import Daytona, DaytonaConfig, CreateSandboxParams, SandboxResources
-
-# Initialize with explicit configuration
-config = DaytonaConfig(
-    api_key="your-api-key",
-    api_url="https://your-api.com",
-    target="us"
-)
-daytona = Daytona(config)
-
-# Create a custom sandbox with specific resources and settings
-sandbox = daytona.create(CreateSandboxParams(
-    language="python",
-    image="python:3.11",
-    resources=SandboxResources(
-        cpu=2,
-        memory=4,  # 4GB RAM
-        disk=20    # 20GB disk
-    ),
-    env_vars={"PYTHON_ENV": "development"},
-    auto_stop_interval=60  # Auto-stop after 1 hour of inactivity
-))
-
-# Use sandbox features
-sandbox.git.clone("https://github.com/user/repo.git")
-sandbox.process.execute_command("python -m pytest")
-```
-
-<a id="daytona_sdk.daytona.Daytona"></a>
 ## Daytona
 
 ```python
 class Daytona()
 ```
-
-[[view_source]](https://github.com/daytonaio/sdk/blob/cd66ff57d6ea1c7e8338ae56f7f538395c33533c/packages/python/src/daytona_sdk/daytona.py#L248)
 
 Main class for interacting with the Daytona API.
 
@@ -99,14 +37,11 @@ config = DaytonaConfig(
 daytona = Daytona(config)
 ```
 
-
 #### Daytona.\_\_init\_\_
 
 ```python
 def __init__(config: Optional[DaytonaConfig] = None)
 ```
-
-[[view_source]](https://github.com/daytonaio/sdk/blob/cd66ff57d6ea1c7e8338ae56f7f538395c33533c/packages/python/src/daytona_sdk/daytona.py#L276)
 
 Initializes Daytona instance with optional configuration.
 
@@ -140,7 +75,6 @@ config = DaytonaConfig(
 daytona2 = Daytona(config)
 ```
 
-
 #### Daytona.create
 
 ```python
@@ -148,8 +82,6 @@ daytona2 = Daytona(config)
 def create(params: Optional[CreateSandboxParams] = None,
            timeout: Optional[float] = 60) -> Sandbox
 ```
-
-[[view_source]](https://github.com/daytonaio/sdk/blob/cd66ff57d6ea1c7e8338ae56f7f538395c33533c/packages/python/src/daytona_sdk/daytona.py#L350)
 
 Creates Sandboxes with default or custom configurations. You can specify various parameters,
 including language, image, resources, environment variables, and volumes for the Sandbox.
@@ -192,15 +124,12 @@ params = CreateSandboxParams(
 sandbox = daytona.create(params, 40)
 ```
 
-
 #### Daytona.remove
 
 ```python
 @intercept_errors(message_prefix="Failed to remove sandbox: ")
 def remove(sandbox: Sandbox, timeout: Optional[float] = 60) -> None
 ```
-
-[[view_source]](https://github.com/daytonaio/sdk/blob/cd66ff57d6ea1c7e8338ae56f7f538395c33533c/packages/python/src/daytona_sdk/daytona.py#L511)
 
 Removes a Sandbox.
 
@@ -224,7 +153,6 @@ sandbox = daytona.create()
 daytona.remove(sandbox)  # Clean up when done
 ```
 
-
 #### Daytona.get\_current\_workspace
 
 ```python
@@ -234,9 +162,7 @@ daytona.remove(sandbox)  # Clean up when done
 def get_current_workspace(workspace_id: str) -> Workspace
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/cd66ff57d6ea1c7e8338ae56f7f538395c33533c/packages/python/src/daytona_sdk/daytona.py#L538)
-
-Get a Sandbox by its ID.
+Gets a Sandbox by its ID.
 
 **Arguments**:
 
@@ -247,7 +173,6 @@ Get a Sandbox by its ID.
 
 - `Workspace` - The Sandbox instance.
 
-
 #### Daytona.get\_current\_sandbox
 
 ```python
@@ -255,9 +180,7 @@ Get a Sandbox by its ID.
 def get_current_sandbox(sandbox_id: str) -> Sandbox
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/cd66ff57d6ea1c7e8338ae56f7f538395c33533c/packages/python/src/daytona_sdk/daytona.py#L550)
-
-Get a Sandbox by its ID.
+Gets a Sandbox by its ID.
 
 **Arguments**:
 
@@ -281,15 +204,12 @@ sandbox = daytona.get_current_sandbox("my-sandbox-id")
 print(sandbox.status)
 ```
 
-
 #### Daytona.list
 
 ```python
 @intercept_errors(message_prefix="Failed to list sandboxes: ")
 def list() -> List[Sandbox]
 ```
-
-[[view_source]](https://github.com/daytonaio/sdk/blob/cd66ff57d6ea1c7e8338ae56f7f538395c33533c/packages/python/src/daytona_sdk/daytona.py#L587)
 
 Lists all Sandboxes.
 
@@ -306,14 +226,11 @@ for sandbox in sandboxes:
     print(f"{sandbox.id}: {sandbox.status}")
 ```
 
-
 #### Daytona.start
 
 ```python
 def start(sandbox: Sandbox, timeout: Optional[float] = 60) -> None
 ```
-
-[[view_source]](https://github.com/daytonaio/sdk/blob/cd66ff57d6ea1c7e8338ae56f7f538395c33533c/packages/python/src/daytona_sdk/daytona.py#L652)
 
 Starts a Sandbox and waits for it to be ready.
 
@@ -328,14 +245,11 @@ Starts a Sandbox and waits for it to be ready.
 
 - `DaytonaError` - If timeout is negative; If Sandbox fails to start or times out
 
-
 #### Daytona.stop
 
 ```python
 def stop(sandbox: Sandbox, timeout: Optional[float] = 60) -> None
 ```
-
-[[view_source]](https://github.com/daytonaio/sdk/blob/cd66ff57d6ea1c7e8338ae56f7f538395c33533c/packages/python/src/daytona_sdk/daytona.py#L665)
 
 Stops a Sandbox and waits for it to be stopped.
 
@@ -351,67 +265,6 @@ Stops a Sandbox and waits for it to be stopped.
 - `DaytonaError` - If timeout is negative; If Sandbox fails to stop or times out
 
 
-Sandboxes are isolated development environments managed by Daytona.
-This guide covers how to create, manage, and remove Sandboxes using the SDK.
-
-**Examples**:
-
-  Basic usage with environment variables:
-```python
-from daytona_sdk import Daytona
-# Initialize using environment variables
-daytona = Daytona()  # Uses env vars DAYTONA_API_KEY, DAYTONA_API_URL, DAYTONA_TARGET
-
-# Create a default Python sandbox with custom environment variables
-sandbox = daytona.create(CreateSandboxParams(
-    language="python",
-    env_vars={"PYTHON_ENV": "development"}
-))
-
-# Execute commands in the sandbox
-response = sandbox.process.execute_command('echo "Hello, World!"')
-print(response.result)
-
-# Run Python code securely inside the sandbox
-response = sandbox.process.code_run('print("Hello from Python!")')
-print(response.result)
-
-# Remove the sandbox after use
-daytona.remove(sandbox)
-```
-  
-  Usage with explicit configuration:
-```python
-from daytona_sdk import Daytona, DaytonaConfig, CreateSandboxParams, SandboxResources
-
-# Initialize with explicit configuration
-config = DaytonaConfig(
-    api_key="your-api-key",
-    api_url="https://your-api.com",
-    target="us"
-)
-daytona = Daytona(config)
-
-# Create a custom sandbox with specific resources and settings
-sandbox = daytona.create(CreateSandboxParams(
-    language="python",
-    image="python:3.11",
-    resources=SandboxResources(
-        cpu=2,
-        memory=4,  # 4GB RAM
-        disk=20    # 20GB disk
-    ),
-    env_vars={"PYTHON_ENV": "development"},
-    auto_stop_interval=60  # Auto-stop after 1 hour of inactivity
-))
-
-# Use sandbox features
-sandbox.git.clone("https://github.com/user/repo.git")
-sandbox.process.execute_command("python -m pytest")
-```
-
-
-<a id="daytona_sdk.daytona.CodeLanguage"></a>
 ## CodeLanguage
 
 ```python
@@ -419,19 +272,18 @@ sandbox.process.execute_command("python -m pytest")
 class CodeLanguage(Enum)
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/cd66ff57d6ea1c7e8338ae56f7f538395c33533c/packages/python/src/daytona_sdk/daytona.py#L85)
-
 Programming languages supported by Daytona
 
+**Enum Members**:
+    - `PYTHON` ("python")
+    - `TYPESCRIPT` ("typescript")
+    - `JAVASCRIPT` ("javascript")
 
-<a id="daytona_sdk.daytona.DaytonaConfig"></a>
 ## DaytonaConfig
 
 ```python
 class DaytonaConfig(BaseModel)
 ```
-
-[[view_source]](https://github.com/daytonaio/sdk/blob/cd66ff57d6ea1c7e8338ae56f7f538395c33533c/packages/python/src/daytona_sdk/daytona.py#L101)
 
 Configuration options for initializing the Daytona client.
 
@@ -449,20 +301,15 @@ Configuration options for initializing the Daytona client.
 **Example**:
 
 ```python
-# Only API key is required
 config = DaytonaConfig(api_key="your-api-key")
 ```
 
-
-<a id="daytona_sdk.daytona.SandboxResources"></a>
 ## SandboxResources
 
 ```python
 @dataclass
 class SandboxResources()
 ```
-
-[[view_source]](https://github.com/daytonaio/sdk/blob/cd66ff57d6ea1c7e8338ae56f7f538395c33533c/packages/python/src/daytona_sdk/daytona.py#L148)
 
 Resources configuration for Sandbox.
 
@@ -489,15 +336,11 @@ params = CreateSandboxParams(
 )
 ```
 
-
-<a id="daytona_sdk.daytona.CreateSandboxParams"></a>
 ## CreateSandboxParams
 
 ```python
 class CreateSandboxParams(BaseModel)
 ```
-
-[[view_source]](https://github.com/daytonaio/sdk/blob/cd66ff57d6ea1c7e8338ae56f7f538395c33533c/packages/python/src/daytona_sdk/daytona.py#L178)
 
 Parameters for creating a new Sandbox.
 
@@ -532,5 +375,4 @@ params = CreateSandboxParams(
 )
 sandbox = daytona.create(params, 50)
 ```
-
 

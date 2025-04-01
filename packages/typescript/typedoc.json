@@ -14,6 +14,8 @@
   "plugin": ["typedoc-plugin-markdown", "./hooks/typedoc-custom.mjs", "typedoc-plugin-merge-modules"],
   "theme": "markdown",
   "sort": ["static-first", "alphabetical"],
+  "groupOrder": ["Classes", "Enums", "*"],
+  "disableSources": true,
 
   "membersWithOwnFile": [],
   "flattenOutputFiles": true,
@@ -25,17 +27,6 @@
   "useCodeBlocks": true,
   "expandObjects": true,
   "expandParameters": true,
-  "indexFormat": "table",
-  "parametersFormat": "table",
-  "interfacePropertiesFormat": "table",
-  "classPropertiesFormat": "table",
-  "enumMembersFormat": "table",
-  "propertyMembersFormat": "table",
-  "typeDeclarationFormat": "table",
-  "propertiesFormat": "table",
-  "tableColumnSettings": {
-    "hideSources": true,
-  },
 
   "mergeModulesMergeMode": "module"
 }

@@ -1,41 +1,3 @@
-"""
-The Daytona SDK provides powerful process and code execution capabilities through
-the `process` module in Sandboxes. This guide covers all available process operations
-and best practices.
-
-Example:
-    Basic command execution:
-    ```python
-    sandbox = daytona.create()
-
-    # Execute a shell command
-    response = sandbox.process.exec("ls -la")
-    print(response.result)
-
-    # Run Python code
-    response = sandbox.process.code_run("print('Hello, World!')")
-    print(response.result)
-    ```
-
-    Using interactive sessions:
-    ```python
-    # Create a new session
-    session_id = "my-session"
-    sandbox.process.create_session(session_id)
-
-    # Execute commands in the session
-    req = SessionExecuteRequest(command="cd /workspace", var_async=False)
-    sandbox.process.execute_session_command(session_id, req)
-
-    req = SessionExecuteRequest(command="pwd", var_async=False)
-    response = sandbox.process.execute_session_command(session_id, req)
-    print(response.result)  # Should print "/workspace"
-
-    # Clean up
-    sandbox.process.delete_session(session_id)
-    ```
-"""
-
 import asyncio
 import time
 from typing import Callable, List, Optional
@@ -60,9 +22,6 @@ from .protocols import SandboxInstance
 
 class Process:
     """Handles process and code execution within a Sandbox.
-
-    This class provides methods for executing shell commands and running code in
-    the Sandbox environment.
 
     Attributes:
         code_toolbox (SandboxPythonCodeToolbox): Language-specific code execution toolbox.
@@ -123,7 +82,9 @@ class Process:
         """
         execute_request = ExecuteRequest(command=command, cwd=cwd, timeout=timeout)
 
-        return self.toolbox_api.execute_command(self.instance.id, execute_request=execute_request)
+        return self.toolbox_api.execute_command(
+            self.instance.id, execute_request=execute_request
+        )
 
     def code_run(
         self,
@@ -160,7 +121,7 @@ class Process:
 
     @intercept_errors(message_prefix="Failed to create session: ")
     def create_session(self, session_id: str) -> None:
-        """Create a new long-running background session in the Sandbox.
+        """Creates a new long-running background session in the Sandbox.
 
         Sessions are background processes that maintain state between commands, making them ideal for
         scenarios requiring multiple related commands or persistent environment setup. You can run
@@ -180,11 +141,13 @@ class Process:
             ```
         """
         request = CreateSessionRequest(sessionId=session_id)
-        self.toolbox_api.create_session(self.instance.id, create_session_request=request)
+        self.toolbox_api.create_session(
+            self.instance.id, create_session_request=request
+        )
 
     @intercept_errors(message_prefix="Failed to get session: ")
     def get_session(self, session_id: str) -> Session:
-        """Get a session in the Sandbox.
+        """Gets a session in the Sandbox.
 
         Args:
             session_id (str): Unique identifier of the session to retrieve.
@@ -205,7 +168,7 @@ class Process:
 
     @intercept_errors(message_prefix="Failed to get session command: ")
     def get_session_command(self, session_id: str, command_id: str) -> Command:
-        """Get information about a specific command executed in a session.
+        """Gets information about a specific command executed in a session.
 
         Args:
             session_id (str): Unique identifier of the session.
@@ -224,7 +187,9 @@ class Process:
                 print(f"Command {cmd.command} completed successfully")
             ```
         """
-        return self.toolbox_api.get_session_command(self.instance.id, session_id=session_id, command_id=command_id)
+        return self.toolbox_api.get_session_command(
+            self.instance.id, session_id=session_id, command_id=command_id
+        )
 
     @intercept_errors(message_prefix="Failed to execute session command: ")
     def execute_session_command(
@@ -288,11 +253,8 @@ class Process:
 
     @intercept_errors(message_prefix="Failed to get session command logs: ")
     def get_session_command_logs(self, session_id: str, command_id: str) -> str:
-        """Get the logs for a command executed in a session.
-
-        This method retrieves the complete output (stdout and stderr) from a
-        command executed in a session. It's particularly useful for checking
-        the output of asynchronous commands.
+        """Get the logs for a command executed in a session. Retrieves the complete output
+        (stdout and stderr) from a command executed in a session.
 
         Args:
             session_id (str): Unique identifier of the session.
@@ -310,13 +272,15 @@ class Process:
             print(f"Command output: {logs}")
             ```
         """
-        return self.toolbox_api.get_session_command_logs(self.instance.id, session_id=session_id, command_id=command_id)
+        return self.toolbox_api.get_session_command_logs(
+            self.instance.id, session_id=session_id, command_id=command_id
+        )
 
     @intercept_errors(message_prefix="Failed to get session command logs: ")
     async def get_session_command_logs_async(
         self, session_id: str, command_id: str, on_logs: Callable[[str], None]
     ) -> None:
-        """Asynchronously retrieve and process the logs for a command executed in a session as they become available.
+        """Asynchronously retrieves and processes the logs for a command executed in a session as they become available.
 
         Args:
             session_id (str): Unique identifier of the session.
@@ -336,7 +300,11 @@ class Process:
             f"{self.toolbox_api.api_client.configuration.host}/toolbox/{self.instance.id}"
             + f"/toolbox/process/session/{session_id}/command/{command_id}/logs?follow=true"
         )
-        headers = {"Authorization": self.toolbox_api.api_client.default_headers["Authorization"]}
+        headers = {
+            "Authorization": self.toolbox_api.api_client.default_headers[
+                "Authorization"
+            ]
+        }
 
         async with httpx.AsyncClient(timeout=None) as client:
             async with client.stream("GET", url, headers=headers) as response:
@@ -349,7 +317,9 @@ class Process:
                         next_chunk = asyncio.create_task(anext(stream, None))
                     timeout = asyncio.create_task(asyncio.sleep(2))
 
-                    done, pending = await asyncio.wait([next_chunk, timeout], return_when=asyncio.FIRST_COMPLETED)
+                    done, pending = await asyncio.wait(
+                        [next_chunk, timeout], return_when=asyncio.FIRST_COMPLETED
+                    )
 
                     if next_chunk in done:
                         timeout.cancel()
@@ -372,7 +342,7 @@ class Process:
 
     @intercept_errors(message_prefix="Failed to list sessions: ")
     def list_sessions(self) -> List[Session]:
-        """List all sessions in the Sandbox.
+        """Lists all sessions in the Sandbox.
 
         Returns:
             List[Session]: List of all sessions in the Sandbox.
@@ -389,9 +359,7 @@ class Process:
 
     @intercept_errors(message_prefix="Failed to delete session: ")
     def delete_session(self, session_id: str) -> None:
-        """Delete an interactive session from the Sandbox.
-
-        This method terminates and removes a session, cleaning up any resources
+        """Terminates and removes a session from the Sandbox, cleaning up any resources
         associated with it.
 
         Args:

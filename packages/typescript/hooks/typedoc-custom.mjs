@@ -1,116 +1,386 @@
 // @ts-check
 
-import { MarkdownPageEvent } from 'typedoc-plugin-markdown';
+import { MarkdownPageEvent } from 'typedoc-plugin-markdown'
 
 /**
  * @param {import('typedoc-plugin-markdown').MarkdownApplication} app
  */
 export function load(app) {
-  const titleMap = {
-    Daytona: "Sandbox Management",
-    FileSystem: "File System Operations",
-    LspServer: "Language Server Protocol",
-    Git: "Git Operations",
-    Process: "Process and Code Execution",
-    // Add other model.name to title mappings here as needed
-  };
+  // --- TITLE HACK ---
+  app.renderer.markdownHooks.on('page.begin', () => {
+    return '---\ntitle: ""\n---\n'
+  })
 
-  const filenameMap = {
-    Workspace: "sandbox",
-    // Add other model.name to filename mappings here as needed
-  };
-
-  // --- SET TITLE HACK ---
-  app.renderer.markdownHooks.on("page.begin", (ctx) => {
-    let title = titleMap[ctx.page.model.name] || ctx.page.model.name;
-    title = title.replace(/([A-Z])/g, ' $1').trim();
-
-    return `---\ntitle: ${title}\n---\n`
-  });
-
-  // --- A LOT OF LITTLE HACKS ---
+  // --- CONTENT HACKS ---
   app.renderer.on(MarkdownPageEvent.END, (page) => {
-    if (page.contents) {
-      // Replace "Defined in: filename.ts:line" with "[view_source]"
-      page.contents = page.contents.replace(/Defined in: \[([^\]]+)]\(([^)]+)\)/g, "[[view_source]]($2)");
+    if (!page.contents) return
 
-      // Remove all internal links
-      page.contents = page.contents.replace(/\[([^\]]+)]\([^)]+\)/g, "$1");
+    page.contents = transformContent(page.contents)
+    page.filename = transformFilename(page.filename)
+  })
+}
 
-      // Ensure params and types in tables are formatted correctly
-      page.contents = page.contents.replace(/\| ([^|`]*`[^|]+`[^|]*(?:\\\|[^|`]*`[^|]+`)*) (?=\|)/g, (match, cellContent) => {
-        // If the cell contains backticks, remove <a> elements entirely (including their content)
-        if (cellContent.includes("`")) {
-          cellContent = cellContent.replace(/<a [^>]*>.*?<\/a>/g, '');
-          cellContent = ` \`${cellContent.replace(/`/g, '').replace(/\\(?!\|)/g, '').trim()}\` `;
-        } else {
-          cellContent = ` ${cellContent.trim()} `;
+function transformContent(contents) {
+  return [
+    removeInternalLinks,
+    escapePromiseSpecialCharacters,
+    transformExtendsSection,
+    transformParametersSection,
+    transformReturnsSection,
+    transformPropertiesSection,
+    transformExamplesSection,
+    transformEnumSection,
+    transformThrowsSection,
+    fixFormattingArtifacts,
+  ].reduce((acc, fn) => fn(acc), contents)
+}
+
+function transformFilename(filename) {
+  return filename.replace(/\/([^/]+)\.md$/, (_, name) => {
+    const formatted = name
+      .replace(/([a-z])([A-Z])/g, '$1-$2') // Add hyphen between lowercase & uppercase
+      .replace(/([A-Z])([A-Z][a-z])/g, '$1-$2') // Add hyphen between uppercase followed by lowercase
+      .replace(/([0-9])([A-Za-z])/g, '$1-$2') // Add hyphen between number & letter
+      .toLowerCase() // Convert to lowercase
+    return `/${formatted}.mdx`
+  })
+}
+
+function removeInternalLinks(contents) {
+  return contents.replace(/\[([^\]]+)]\([^)]+\)/g, '$1')
+}
+
+function escapePromiseSpecialCharacters(contents) {
+  return contents.replace(/`Promise`\s*\\<((?:`?[^`<>]+`?|<[^<>]+>)*?)>/g, (_match, typeContent) => {
+    return '`Promise<' + typeContent.replace(/[`\\]/g, '') + '>`'
+  })
+}
+
+function transformParametersSection(contents) {
+  for (let i = 6; i > 1; i--) {
+    let paramsRegex = new RegExp(`\#{${i}} Parameters\\s*\\n\\n([\\s\\S]*?)(?=\\n\#{1,${i}} |$)`, 'g')
+    if (i == 6) {
+      paramsRegex = new RegExp(
+        `\#{${i}} Parameters\\s*\\n\\n([\\s\\S]*?)(?=\\n\#{1,${
+          i - 1
+        }} |\#{1,${i}} Returns|\#{1,${i}} Example|\#{1,${i}} Examples|$)`,
+        'g'
+      )
+    }
+    contents = contents.replace(paramsRegex, (match, paramsContent) => {
+      const paramHeadingLevel = i == 6 ? 6 : i + 1
+      const headingHashes = '#'.repeat(paramHeadingLevel)
+      const headingHashesShorter = Array.from({ length: paramHeadingLevel }, (_, k) => '#'.repeat(k + 1)).join('|')
+
+      const paramBlockRegex = new RegExp(
+        `${headingHashes} ([^\\n]+)\\n\\n` + // parameter name
+          '([^\\n]+)' + // type line
+          `(?:\\n\\n((?:(?!${headingHashes} |${headingHashesShorter} |\\*\\*\\*|#{1,6} ).+[\\r\\n]*)*))?`, // safe multiline description
+        'g'
+      )
+
+      const parameters = []
+      let paramMatch
+
+      while ((paramMatch = paramBlockRegex.exec(paramsContent)) !== null) {
+        const [, name, typeLine, rawDescription = ''] = paramMatch
+
+        const lines = rawDescription
+          .split('\n')
+          .map((line) => line.trim())
+          .filter((line) => line.length > 0)
+
+        parameters.push({
+          name,
+          typeLine,
+          mainDescription: lines[0] || '',
+          otherLines: lines.slice(1),
+        })
+      }
+
+      if (parameters.length === 0) return match
+
+      let result = '**Parameters**:\n\n'
+
+      for (const { name, typeLine, mainDescription, otherLines } of parameters) {
+        let type = typeLine.replace(/`/g, '').trim()
+        type = type.replace(/readonly\s+/, '').trim()
+        type = type.replace(/(?<!\\)([*_`[\]()<>|])/g, '\\$1')
+
+        result += `- \`${name}\` _${type}_`
+        if (mainDescription) result += ` - ${mainDescription}`
+        result += '\n'
+
+        for (const line of otherLines) {
+          result += `    ${line}\n`
+        }
+      }
+
+      return result + '\n'
+    })
+  }
+
+  return contents
+}
+
+function transformReturnsSection(contents) {
+  return contents.replace(
+    /^#{1,6} Returns\s*\n+`([^`]+)`\n+((?:(?!^#{1,6} |\*\*\*).*\n?)*)/gm,
+    (_, type, rawDescription) => {
+      const lines = rawDescription
+        .split('\n')
+        .map((l) => l.trim())
+        .filter((l) => l && !/^#{1,6} /.test(l) && l !== '***') // ignore headings and separators
+
+      let result = '**Returns**:\n\n- `' + type + '`'
+      if (lines.length > 0) {
+        result += ' - ' + lines[0] + '\n'
+        for (const line of lines.slice(1)) {
+          result += `    ${line}\n`
+        }
+      } else {
+        result += '\n'
+      }
+      result += '\n'
+      return result
+    }
+  )
+}
+
+function transformPropertiesSection(contents) {
+  for (let i = 5; i > 1; i--) {
+    contents = contents.replace(
+      new RegExp(`\#{${i}} Properties\\s*\\n\\n([\\s\\S]*?)(?=\\n\#{1,${i}} |$)`, 'g'),
+      (match, propertiesContent) => {
+        const propHeadingLevel = i + 1
+        const headingHashes = '#'.repeat(propHeadingLevel)
+        const headingHashesShorter = Array.from({ length: propHeadingLevel }, (_, k) => '#'.repeat(k + 1)).join('|')
+        const propertyBlockRegex = new RegExp(
+          `${headingHashes} ([^\\n]+)\\n\\n` + // #### propName
+            '```ts\\n([^\\n]+);\\n```\\n\\n' + // code block
+            '([\\s\\S]*?)' + // description block
+            `(?=\\n\\*\\*\\*\\n\\n(?=${headingHashes} )|` + // *** followed by same-level heading
+            `\\n(?:${headingHashesShorter}) |$)`, // or lower/same-level heading or end of file
+          'g'
+        )
+
+        const properties = []
+        let propMatch
+
+        while ((propMatch = propertyBlockRegex.exec(propertiesContent)) !== null) {
+          const [, name, typeLine, rawDescription] = propMatch
+
+          const lines = rawDescription
+            .trim()
+            .split('\n')
+            .map((line) => line.trim())
+            .filter((line) => !line.includes('***'))
+
+          let deprecation = ''
+          const contentLines = []
+
+          for (let i = 0; i < lines.length; i++) {
+            if (new RegExp(`^\#{${propHeadingLevel + 1}}? Overrides`, 'i').test(lines[i])) {
+              let j = i + 1
+              while (j < lines.length && !lines[j].trim().startsWith('#')) j++
+              i = j - 1
+            } else if (new RegExp(`^\#{${propHeadingLevel + 1}}? Deprecated`, 'i').test(lines[i])) {
+              let j = i + 1
+              while (j < lines.length && lines[j].trim() === '') j++
+              if (j < lines.length) {
+                deprecation = lines[j].trim()
+                i = j
+              }
+            } else {
+              contentLines.push(lines[i])
+            }
+          }
+
+          const mainDescription = contentLines[0] || ''
+          const otherLines = contentLines.slice(1)
+
+          properties.push({
+            name,
+            typeLine,
+            mainDescription,
+            otherLines,
+            deprecation,
+          })
         }
 
-        return `|${cellContent}`;
-      });
+        if (properties.length === 0) return match
 
-      // Ensure `Promise<T>` is correctly wrapped
-      page.contents = page.contents.replace(/`Promise`\s*\\<((?:`?[^`<>]+`?|<[^<>]+>)*?)>/g, (match, typeContent) => {
-          return "`Promise<" + typeContent.replace(/[`\\]/g, '') + ">`";
-      });
+        let result = '**Properties**:\n\n'
 
-      // Convert "Example" and "Examples" with < 3 hashtags to "### Example" / "### Examples"
-      page.contents = page.contents.replace(/^(#{1,2})\s*(Example|Examples)$/gm, "### $2");
+        for (const { name, typeLine, mainDescription, otherLines, deprecation } of properties) {
+          const typeMatch = typeLine.match(/:\s*([^;]+)/)
+          if (!typeMatch) continue
 
-      // Determine filename
-      if (filenameMap[page.model.name]) {
-        page.filename = page.filename.replace(/\/([^\/]+)\.md$/, (match, fileName) => {
-          return `/${filenameMap[page.model.name]}.mdx`;
-        });
+          let type = typeMatch[1].trim()
+          type = type.replace(/readonly\s+/, '').trim()
+          type = type.replace(/([*_`\[\]()<>|])/g, '\\$1')
+
+          if (!mainDescription && deprecation) {
+            result += `- \`${name}\` _${type}_ - **_Deprecated_** - ${deprecation}\n`
+            continue
+          }
+
+          result += `- \`${name}\` _${type}_`
+          if (mainDescription) result += ` - ${mainDescription}`
+          result += '\n'
+
+          for (const line of otherLines) {
+            result += `    ${line}\n`
+          }
+
+          if (deprecation) {
+            result += `    - **_Deprecated_** - ${deprecation}\n`
+          }
+        }
+
+        result = result.replace(/^\s{4}\*\*\*/gm, '***')
+
+        return result + '\n'
+      }
+    )
+  }
+
+  // Move Properties section right after each class/interface description
+  const sections = contents.split(/^## /gm)
+  const updatedSections = sections.map((section, i) => {
+    if (i === 0) return section // Skip content before first ##
+
+    const sectionLines = section.split('\n')
+    const classHeader = sectionLines[0].trim()
+    const body = sectionLines.slice(1).join('\n')
+
+    const propsMatch = body.match(/\*\*Properties\*\*:\s*\n\n([\s\S]*?)(?=\n###|\n\*\*|\n## |\n# |$)/)
+    if (!propsMatch) return '## ' + section
+
+    const fullPropsBlock = propsMatch[0]
+    const bodyWithoutProps = body.replace(fullPropsBlock, '').trim()
+
+    const descEnd = bodyWithoutProps.search(/\n{2,}(?=###|\*\*|$)/)
+    let newBody
+
+    if (descEnd !== -1) {
+      const desc = bodyWithoutProps.slice(0, descEnd).trim()
+      const rest = bodyWithoutProps.slice(descEnd).trim()
+      newBody = `${desc}\n\n${fullPropsBlock}\n\n${rest}`
+    } else {
+      newBody = `${fullPropsBlock}\n\n${bodyWithoutProps}`
+    }
+
+    return `## ${classHeader}\n\n${newBody.trim()}`
+  })
+
+  return updatedSections.join('\n')
+}
+
+function transformExamplesSection(contents) {
+  return contents.replace(/^#{1,10}\s*(Example|Examples)$/gm, '**$1:**')
+}
+
+function transformExtendsSection(contents) {
+  return contents.replace(/^#{1,10}\s*(Extends)$/gm, '**$1:**')
+}
+
+function transformEnumSection(contents) {
+  // First, find all sections with "Enumeration Members" headings
+  const sections = contents.split(/^## /gm)
+  let newContent = ''
+
+  for (let i = 0; i < sections.length; i++) {
+    const section = sections[i]
+
+    if (i === 0) {
+      // This is content before the first ## heading
+      newContent += section
+      continue
+    }
+
+    // Add back the ## that was removed in the split
+    const sectionWithHeader = '## ' + section
+
+    // Check if this section contains an enum
+    if (sectionWithHeader.includes('### Enumeration Members')) {
+      // Split at the enum members heading
+      const [headerPart, membersPart] = sectionWithHeader.split('### Enumeration Members')
+
+      // Parse and extract all enum values
+      const enumValues = []
+      const regex = /#### ([A-Z0-9_]+)[\s\S]*?```ts[\s\S]*?\1:\s*"([^"]+)"/g
+      let match
+
+      let memberPartCopy = membersPart
+      while ((match = regex.exec(memberPartCopy)) !== null) {
+        enumValues.push({
+          name: match[1],
+          value: match[2],
+        })
+      }
+
+      // Create the transformed section
+      let transformedSection = headerPart + '**Enum Members**:\n\n'
+
+      if (enumValues.length > 0) {
+        enumValues.forEach((entry) => {
+          transformedSection += `- \`${entry.name}\` ("${entry.value}")\n`
+        })
+        transformedSection += '\n'
       } else {
-        // Convert CamelCase filename to lowercase with hyphens
-        page.filename = page.filename.replace(/\/([^\/]+)\.md$/, (match, fileName) => {
-          let formattedName = fileName
-          .replace(/([a-z])([A-Z])/g, "$1-$2") // Add hyphen between lowercase & uppercase
-          .replace(/([A-Z])([A-Z][a-z])/g, "$1-$2") // Add hyphen between uppercase followed by lowercase
-          .replace(/([0-9])([A-Za-z])/g, "$1-$2") // Add hyphen between number & letter
-          .toLowerCase(); // Convert to lowercase
-          return `/${formattedName}.mdx`; // Change extension to .mdx
-        });
+        // If we couldn't parse any values, just keep the original content
+        transformedSection = sectionWithHeader
       }
+
+      newContent += transformedSection
+    } else {
+      // Non-enum section, just add it back unchanged
+      newContent += sectionWithHeader
     }
-  });
+  }
 
-  // --- HACK FOR DUPLICATE "THROWS" HEADERS (LEVEL 2 TO 7) ---
-  app.renderer.on(MarkdownPageEvent.END, (page) => {
-    if (page.contents) {
-      // Process "Throws" headers from level 2 to level 7
-      for (let level = 2; level <= 7; level++) {
-        const throwsHeader = "#".repeat(level) + " Throws"; // Generate header (e.g., ## Throws, ### Throws)
-        const sectionHeaderRegex = new RegExp(`(?=^#{${level - 1}} .+)`, "gm"); // Regex for section start (parent level)
-        const throwsRegex = new RegExp(`(\n${throwsHeader}\n)`, "g"); // Matches only the "Throws" header itself
+  return newContent
+}
 
-        if (!page.contents) continue;
+function transformThrowsSection(contents) {
+  // Process "Throws" headers from level 2 to level 7
+  for (let level = 2; level <= 7; level++) {
+    const throwsHeader = '#'.repeat(level) + ' Throws' // Generate header (e.g., ## Throws, ### Throws)
+    const sectionHeaderRegex = new RegExp(`(?=^#{${level - 1}} .+)`, 'gm') // Regex for section start (parent level)
+    const throwsRegex = new RegExp(`(\n${throwsHeader}\n)`, 'g') // Matches only the "Throws" header itself
 
-        // Split document into sections at parent level
-        const sections = page.contents.split(sectionHeaderRegex);
+    if (!contents) continue
 
-        page.contents = sections
-          .map((section) => {
-            if (!section.includes(`\n${throwsHeader}`)) return section; // Skip if no "Throws" found at this level
+    // Split document into sections at parent level
+    const sections = contents.split(sectionHeaderRegex)
 
-            // Capture all occurrences of "Throws" headers at this specific level
-            let throwsMatches = [...section.matchAll(throwsRegex)];
+    contents = sections
+      .map((section) => {
+        if (!section.includes(`\n${throwsHeader}`)) return section // Skip if no "Throws" found at this level
 
-            if (throwsMatches.length <= 1) return section; // No duplicates, leave as is
+        // Capture all occurrences of "Throws" headers at this specific level
+        let throwsMatches = [...section.matchAll(throwsRegex)]
 
-            // Keep the first "Throws" header and remove only subsequent ones
-            let headerRemovedCount = 0;
-            let cleanedSection = section.replace(throwsRegex, (match) => {
-              return headerRemovedCount++ === 0 ? match : ""; // Remove all except the first one
-            });
+        if (throwsMatches.length <= 1) {
+          // Transform single occurrence
+          return section.replace(throwsRegex, '\n**Throws**:\n')
+        }
 
-            return cleanedSection;
-          })
-          .join("");
-      }
-    }
-  });
+        // Keep the first "Throws" header and remove only subsequent ones
+        let headerRemovedCount = 0
+        let cleanedSection = section.replace(throwsRegex, () => {
+          return headerRemovedCount++ === 0 ? '\n**Throws**:\n' : '' // Transform first one to bold, remove others
+        })
 
+        return cleanedSection
+      })
+      .join('')
+  }
+
+  return contents
+}
+
+function fixFormattingArtifacts(content) {
+  return content.replace(/`~~([^`]+?)\?~~`/g, '~~`$1?`~~')
 }

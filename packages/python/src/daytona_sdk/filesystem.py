@@ -1,72 +1,13 @@
-"""
-The Daytona SDK provides comprehensive file system operations through the `fs` module in Sandboxes.
-You can perform various operations like listing files, creating directories, reading and writing files, and more.
-This guide covers all available file system operations and best practices.
-
-Examples:
-    Basic file operations:
-    ```python
-    sandbox = daytona.create()
-
-    # Create a directory
-    sandbox.fs.create_folder("/workspace/data", "755")
-
-    # Upload a file
-    with open("local_file.txt", "rb") as f:
-        content = f.read()
-    sandbox.fs.upload_file("/workspace/data/file.txt", content)
-
-    # List directory contents
-    files = sandbox.fs.list_files("/workspace")
-    for file in files:
-        print(f"Name: {file.name}")
-        print(f"Is directory: {file.is_dir}")
-        print(f"Size: {file.size}")
-        print(f"Modified: {file.mod_time}")
-
-    # Search file contents
-    matches = sandbox.fs.find_files(
-        path="/workspace/src",
-        pattern="text-of-interest"
-    )
-    for match in matches:
-        print(f"Absolute file path: {match.file}")
-        print(f"Line number: {match.line}")
-        print(f"Line content: {match.content}")
-        print("\n")
-    ```
-
-    File manipulation:
-    ```python
-    # Move files
-    sandbox.fs.move_files(
-        "/workspace/data/old.txt",
-        "/workspace/data/new.txt"
-    )
-
-    # Replace text in files
-    results = sandbox.fs.replace_in_files(
-        files=["/workspace/data/new.txt"],
-        pattern="old_version",
-        new_value="new_version"
-    )
-
-    # Set permissions
-    sandbox.fs.set_file_permissions(
-        path="/workspace/data/script.sh",
-        mode="755",
-        owner="daytona"
-    )
-    ```
-
-Note:
-    All paths should be absolute paths within the Sandbox if not explicitly
-    stated otherwise.
-"""
-
 from typing import List
 
-from daytona_api_client import FileInfo, Match, ReplaceRequest, ReplaceResult, SearchFilesResponse, ToolboxApi
+from daytona_api_client import (
+    FileInfo,
+    Match,
+    ReplaceRequest,
+    ReplaceResult,
+    SearchFilesResponse,
+    ToolboxApi,
+)
 from daytona_sdk._utils.errors import intercept_errors
 
 from .protocols import SandboxInstance
@@ -76,9 +17,7 @@ class FileSystem:
     """Provides file system operations within a Sandbox.
 
     This class implements a high-level interface to file system operations that can
-    be performed within a Daytona Sandbox. It supports common operations like
-    creating, deleting, and moving files, as well as searching file contents and
-    managing permissions.
+    be performed within a Daytona Sandbox.
 
     Attributes:
         instance (SandboxInstance): The Sandbox instance this file system belongs to.
@@ -96,9 +35,7 @@ class FileSystem:
 
     @intercept_errors(message_prefix="Failed to create folder: ")
     def create_folder(self, path: str, mode: str) -> None:
-        """Creates a new directory in the Sandbox.
-
-        This method creates a new directory at the specified path with the given
+        """Creates a new directory in the Sandbox at the specified path with the given
         permissions.
 
         Args:
@@ -120,8 +57,6 @@ class FileSystem:
     def delete_file(self, path: str) -> None:
         """Deletes a file from the Sandbox.
 
-        This method permanently deletes a file from the Sandbox.
-
         Args:
             path (str): Absolute path to the file to delete.
 
@@ -136,8 +71,6 @@ class FileSystem:
     @intercept_errors(message_prefix="Failed to download file: ")
     def download_file(self, path: str) -> bytes:
         """Downloads a file from the Sandbox.
-
-        This method retrieves the contents of a file from the Sandbox.
 
         Args:
             path (str): Absolute path to the file to download.
@@ -161,9 +94,7 @@ class FileSystem:
 
     @intercept_errors(message_prefix="Failed to find files: ")
     def find_files(self, path: str, pattern: str) -> List[Match]:
-        """Searches for files containing a pattern.
-
-        This method searches file contents for a specified pattern, similar to
+        """Searches for files containing a pattern, similar to
         the grep command.
 
         Args:
@@ -185,13 +116,13 @@ class FileSystem:
                 print(f"{match.file}:{match.line}: {match.content.strip()}")
             ```
         """
-        return self.toolbox_api.find_in_files(self.instance.id, path=path, pattern=pattern)
+        return self.toolbox_api.find_in_files(
+            self.instance.id, path=path, pattern=pattern
+        )
 
     @intercept_errors(message_prefix="Failed to get file info: ")
     def get_file_info(self, path: str) -> FileInfo:
-        """Gets detailed information about a file.
-
-        This method retrieves metadata about a file or directory, including its
+        """Gets detailed information about a file or directory, including its
         size, permissions, and timestamps.
 
         Args:
@@ -226,17 +157,14 @@ class FileSystem:
 
     @intercept_errors(message_prefix="Failed to list files: ")
     def list_files(self, path: str) -> List[FileInfo]:
-        """Lists files and directories in a given path.
-
-        This method returns information about all files and directories in the
-        specified directory, similar to the ls -l command.
+        """Lists files and directories in a given path and returns their information, similar to the ls -l command.
 
         Args:
             path (str): Absolute path to the directory to list contents from.
 
         Returns:
             List[FileInfo]: List of file and directory information. Each FileInfo
-                object includes the same fields as described in get_file_info().
+            object includes the same fields as described in get_file_info().
 
         Example:
             ```python
@@ -257,10 +185,7 @@ class FileSystem:
 
     @intercept_errors(message_prefix="Failed to move files: ")
     def move_files(self, source: str, destination: str) -> None:
-        """Moves files from one location to another.
-
-        This method moves or renames a file or directory. The parent directory
-        of the destination must exist.
+        """Moves or renames a file or directory. The parent directory of the destination must exist.
 
         Args:
             source (str): Absolute path to the source file or directory.
@@ -294,10 +219,10 @@ class FileSystem:
         )
 
     @intercept_errors(message_prefix="Failed to replace in files: ")
-    def replace_in_files(self, files: List[str], pattern: str, new_value: str) -> List[ReplaceResult]:
-        """Replaces text in multiple files.
-
-        This method performs search and replace operations across multiple files.
+    def replace_in_files(
+        self, files: List[str], pattern: str, new_value: str
+    ) -> List[ReplaceResult]:
+        """Performs search and replace operations across multiple files.
 
         Args:
             files (List[str]): List of absolute file paths to perform replacements in.
@@ -328,15 +253,17 @@ class FileSystem:
                     print(f"{result.file}: {result.error}")
             ```
         """
-        replace_request = ReplaceRequest(files=files, new_value=new_value, pattern=pattern)
+        replace_request = ReplaceRequest(
+            files=files, new_value=new_value, pattern=pattern
+        )
 
-        return self.toolbox_api.replace_in_files(self.instance.id, replace_request=replace_request)
+        return self.toolbox_api.replace_in_files(
+            self.instance.id, replace_request=replace_request
+        )
 
     @intercept_errors(message_prefix="Failed to search files: ")
     def search_files(self, path: str, pattern: str) -> SearchFilesResponse:
-        """Searches for files and directories matching a pattern in their names.
-
-        This method searches for files and directories whose names match the
+        """Searches for files and directories whose names match the
         specified pattern. The pattern can be a simple string or a glob pattern.
 
         Args:
@@ -360,15 +287,16 @@ class FileSystem:
             print(f"Found {len(result.files)} test files")
             ```
         """
-        return self.toolbox_api.search_files(self.instance.id, path=path, pattern=pattern)
+        return self.toolbox_api.search_files(
+            self.instance.id, path=path, pattern=pattern
+        )
 
     @intercept_errors(message_prefix="Failed to set file permissions: ")
-    def set_file_permissions(self, path: str, mode: str = None, owner: str = None, group: str = None) -> None:
-        """Sets permissions and ownership for a file or directory.
-
-        This method allows changing the permissions and ownership of a file or
-        directory. Any of the parameters can be None to leave that attribute
-        unchanged.
+    def set_file_permissions(
+        self, path: str, mode: str = None, owner: str = None, group: str = None
+    ) -> None:
+        """Sets permissions and ownership for a file or directory. Any of the parameters can be None
+        to leave that attribute unchanged.
 
         Args:
             path (str): Absolute path to the file or directory.
@@ -403,9 +331,7 @@ class FileSystem:
 
     @intercept_errors(message_prefix="Failed to upload file: ")
     def upload_file(self, path: str, file: bytes) -> None:
-        """Uploads a file to the Sandbox.
-
-        This method uploads a file to the specified path in the Sandbox. The
+        """Uploads a file to the specified path in the Sandbox. The
         parent directory must exist. If a file already exists at the destination
         path, it will be overwritten.
 

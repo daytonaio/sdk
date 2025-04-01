@@ -1,71 +1,12 @@
 ---
-title: Language  Server  Protocol
+title: ""
 ---
 
-The Daytona SDK provides Language Server Protocol (LSP) support through Sandbox instances.
-This enables advanced language features like code completion, diagnostics, and more.
-
-The LSP server must be started with start() before using any other methods,
-and should be stopped with stop() when no longer needed to free resources.
-
-### Example
-
-```ts
-// Basic LSP server usage
-// Create and initialize sandbox
-const sandbox = await daytona.create();
-
-// Create and start LSP server
-const lsp = sandbox.createLspServer('typescript', '/workspace/project');
-await lsp.start();
-
-// Open a file for editing
-await lsp.didOpen('/workspace/project/src/index.ts');
-
-// Get completions at a position
-const completions = await lsp.completions(
-  '/workspace/project/src/index.ts',
-  { line: 10, character: 15 }
-);
-console.log('Completions:', completions);
-
-// Get document symbols
-const symbols = await lsp.documentSymbols('/workspace/project/src/index.ts');
-symbols.forEach(symbol => {
-  console.log(`${symbol.name}: ${symbol.kind}`);
-});
-
-// Clean up
-await lsp.didClose('/workspace/project/src/index.ts');
-await lsp.stop();
-```
-
-## LspLanguageId
-
-[[view_source]](https://github.com/daytonaio/sdk/blob/cd66ff57d6ea1c7e8338ae56f7f538395c33533c/packages/typescript/src/LspServer.ts#L47)
-
-Supported language server types.
-
-### Enumeration Members
-
-| Enumeration Member | Value |
-| ------ | ------ |
-| `JAVASCRIPT` | `"javascript"` |
-| `PYTHON` | `"python"` |
-| `TYPESCRIPT` | `"typescript"` |
-
-***
 
 ## LspServer
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/cd66ff57d6ea1c7e8338ae56f7f538395c33533c/packages/typescript/src/LspServer.ts#L89)
-
-Provides Language Server Protocol functionality for code intelligence.
-
-This class implements a subset of the Language Server Protocol (LSP) to provide
+Provides Language Server Protocol functionality for code intelligence to provide
 IDE-like features such as code completion, symbol search, and more.
-
- LspServer
 
 ### Constructors
 
@@ -79,20 +20,17 @@ new LspServer(
    instance: SandboxInstance): LspServer
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/cd66ff57d6ea1c7e8338ae56f7f538395c33533c/packages/typescript/src/LspServer.ts#L90)
+**Parameters**:
 
-##### Parameters
+- `languageId` _LspLanguageId_
+- `pathToProject` _string_
+- `toolboxApi` _ToolboxApi_
+- `instance` _SandboxInstance_
 
-| Parameter | Type |
-| ------ | ------ |
-| `languageId` | `LspLanguageId` |
-| `pathToProject` | `string` |
-| `toolboxApi` | `ToolboxApi` |
-| `instance` | `SandboxInstance` |
 
-##### Returns
+**Returns**:
 
-`LspServer`
+- `LspServer`
 
 ### Methods
 
@@ -102,33 +40,28 @@ new LspServer(
 completions(path: string, position: Position): Promise<CompletionList>
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/cd66ff57d6ea1c7e8338ae56f7f538395c33533c/packages/typescript/src/LspServer.ts#L290)
-
 Gets completion suggestions at a position in a file.
 
-##### Parameters
+**Parameters**:
 
-| Parameter | Type | Description |
-| ------ | ------ | ------ |
-| `path` | `string` | Absolute path to the file |
-| `position` | `Position` | The position in the file where completion was requested |
+- `path` _string_ - Absolute path to the file
+- `position` _Position_ - The position in the file where completion was requested
 
-##### Returns
 
-`Promise<CompletionList>`
+**Returns**:
 
-List of completion suggestions. The list includes:
-                                   - isIncomplete: Whether more items might be available
-                                   - items: List of completion items, each containing:
-                                     - label: The text to insert
-                                     - kind: The kind of completion
-                                     - detail: Additional details about the item
-                                     - documentation: Documentation for the item
-                                     - sortText: Text used to sort the item in the list
-                                     - filterText: Text used to filter the item
-                                     - insertText: The actual text to insert (if different from label)
+- `Promise<CompletionList>` - List of completion suggestions. The list includes:
+    - isIncomplete: Whether more items might be available
+    - items: List of completion items, each containing:
+    - label: The text to insert
+    - kind: The kind of completion
+    - detail: Additional details about the item
+    - documentation: Documentation for the item
+    - sortText: Text used to sort the item in the list
+    - filterText: Text used to filter the item
+    - insertText: The actual text to insert (if different from label)
 
-##### Example
+**Example:**
 
 ```ts
 // Get completions at a specific position
@@ -149,24 +82,19 @@ completions.items.forEach(item => {
 didClose(path: string): Promise<void>
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/cd66ff57d6ea1c7e8338ae56f7f538395c33533c/packages/typescript/src/LspServer.ts#L178)
+Notifies the language server that a file has been closed, should be called when a file is closed
+in the editor to allow the language server to clean up any resources associated with that file.
 
-Notifies the language server that a file has been closed.
+**Parameters**:
 
-This method should be called when a file is closed in the editor to allow
-the language server to clean up any resources associated with that file.
+- `path` _string_ - Absolute path to the closed file
 
-##### Parameters
 
-| Parameter | Type | Description |
-| ------ | ------ | ------ |
-| `path` | `string` | Absolute path to the closed file |
+**Returns**:
 
-##### Returns
+- `Promise<void>`
 
-`Promise<void>`
-
-##### Example
+**Example:**
 
 ```ts
 // When done editing a file
@@ -181,25 +109,20 @@ await lsp.didClose('/workspace/project/src/index.ts');
 didOpen(path: string): Promise<void>
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/cd66ff57d6ea1c7e8338ae56f7f538395c33533c/packages/typescript/src/LspServer.ts#L157)
-
-Notifies the language server that a file has been opened.
-
-This method should be called when a file is opened in the editor to enable
+Notifies the language server that a file has been opened, enabling
 language features like diagnostics and completions for that file. The server
 will begin tracking the file's contents and providing language features.
 
-##### Parameters
+**Parameters**:
 
-| Parameter | Type | Description |
-| ------ | ------ | ------ |
-| `path` | `string` | Absolute path to the opened file |
+- `path` _string_ - Absolute path to the opened file
 
-##### Returns
 
-`Promise<void>`
+**Returns**:
 
-##### Example
+- `Promise<void>`
+
+**Example:**
 
 ```ts
 // When opening a file for editing
@@ -215,29 +138,21 @@ await lsp.didOpen('/workspace/project/src/index.ts');
 documentSymbols(path: string): Promise<LspSymbol[]>
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/cd66ff57d6ea1c7e8338ae56f7f538395c33533c/packages/typescript/src/LspServer.ts#L205)
+Get symbol information (functions, classes, variables, etc.) from a document.
 
-Get symbol information from a document.
+**Parameters**:
 
-This method returns information about all symbols (functions, classes,
-variables, etc.) defined in the specified document.
+- `path` _string_ - Absolute path to the file to get symbols from
 
-##### Parameters
 
-| Parameter | Type | Description |
-| ------ | ------ | ------ |
-| `path` | `string` | Absolute path to the file to get symbols from |
+**Returns**:
 
-##### Returns
+- `Promise<LspSymbol[]>` - List of symbols in the document. Each symbol includes:
+    - name: The symbol's name
+    - kind: The symbol's kind (function, class, variable, etc.)
+    - location: The location of the symbol in the file
 
-`Promise<LspSymbol[]>`
-
-List of symbols in the document. Each symbol includes:
-                                - name: The symbol's name
-                                - kind: The symbol's kind (function, class, variable, etc.)
-                                - location: The location of the symbol in the file
-
-##### Example
+**Example:**
 
 ```ts
 // Get all symbols in a file
@@ -255,30 +170,21 @@ symbols.forEach(symbol => {
 sandboxSymbols(query: string): Promise<LspSymbol[]>
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/cd66ff57d6ea1c7e8338ae56f7f538395c33533c/packages/typescript/src/LspServer.ts#L254)
+Searches for symbols matching the query string across the entire Sandbox.
 
-Searches for symbols across the entire Sandbox.
+**Parameters**:
 
-This method searches for symbols matching the query string across all files
-in the Sandbox. It's useful for finding declarations and definitions
-without knowing which file they're in.
+- `query` _string_ - Search query to match against symbol names
 
-##### Parameters
 
-| Parameter | Type | Description |
-| ------ | ------ | ------ |
-| `query` | `string` | Search query to match against symbol names |
+**Returns**:
 
-##### Returns
+- `Promise<LspSymbol[]>` - List of matching symbols from all files. Each symbol includes:
+    - name: The symbol's name
+    - kind: The symbol's kind (function, class, variable, etc.)
+    - location: The location of the symbol in the file
 
-`Promise<LspSymbol[]>`
-
-List of matching symbols from all files. Each symbol includes:
-                                - name: The symbol's name
-                                - kind: The symbol's kind (function, class, variable, etc.)
-                                - location: The location of the symbol in the file
-
-##### Example
+**Example:**
 
 ```ts
 // Search for all symbols containing "User"
@@ -296,18 +202,14 @@ symbols.forEach(symbol => {
 start(): Promise<void>
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/cd66ff57d6ea1c7e8338ae56f7f538395c33533c/packages/typescript/src/LspServer.ts#L116)
-
-Starts the language server.
-
-This method must be called before using any other LSP functionality.
+Starts the language server, must be called before using any other LSP functionality.
 It initializes the language server for the specified language and project.
 
-##### Returns
+**Returns**:
 
-`Promise<void>`
+- `Promise<void>`
 
-##### Example
+**Example:**
 
 ```ts
 const lsp = sandbox.createLspServer('typescript', '/workspace/project');
@@ -323,18 +225,14 @@ await lsp.start();  // Initialize the server
 stop(): Promise<void>
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/cd66ff57d6ea1c7e8338ae56f7f538395c33533c/packages/typescript/src/LspServer.ts#L135)
-
-Stops the language server.
-
-This method should be called when the LSP server is no longer needed to
+Stops the language server, should be called when the LSP server is no longer needed to
 free up system resources.
 
-##### Returns
+**Returns**:
 
-`Promise<void>`
+- `Promise<void>`
 
-##### Example
+**Example:**
 
 ```ts
 // When done with LSP features
@@ -349,28 +247,19 @@ await lsp.stop();  // Clean up resources
 workspaceSymbols(query: string): Promise<LspSymbol[]>
 ```
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/cd66ff57d6ea1c7e8338ae56f7f538395c33533c/packages/typescript/src/LspServer.ts#L230)
+Searches for symbols matching the query string across the entire Sandbox.
 
-Searches for symbols across the entire Sandbox.
+**Parameters**:
 
-This method searches for symbols matching the query string across all files
-in the Sandbox. It's useful for finding declarations and definitions
-without knowing which file they're in.
+- `query` _string_ - Search query to match against symbol names
 
-##### Parameters
 
-| Parameter | Type | Description |
-| ------ | ------ | ------ |
-| `query` | `string` | Search query to match against symbol names |
+**Returns**:
 
-##### Returns
-
-`Promise<LspSymbol[]>`
-
-List of matching symbols from all files. Each symbol includes:
-                                - name: The symbol's name
-                                - kind: The symbol's kind (function, class, variable, etc.)
-                                - location: The location of the symbol in the file
+- `Promise<LspSymbol[]>` - List of matching symbols from all files. Each symbol includes:
+    - name: The symbol's name
+    - kind: The symbol's kind (function, class, variable, etc.)
+    - location: The location of the symbol in the file
 
 ##### Deprecated
 
@@ -378,18 +267,30 @@ Use `sandboxSymbols` instead. This method will be removed in a future version.
 
 ***
 
+
+## LspLanguageId
+
+Supported language server types.
+
+**Enum Members**:
+
+- `JAVASCRIPT` ("javascript")
+- `PYTHON` ("python")
+- `TYPESCRIPT` ("typescript")
+
 ## Position
 
-[[view_source]](https://github.com/daytonaio/sdk/blob/cd66ff57d6ea1c7e8338ae56f7f538395c33533c/packages/typescript/src/LspServer.ts#L69)
-
-Represents a position in a text document.
-
-This interface represents a zero-based position within a text document,
+Represents a zero-based position within a text document,
 specified by line number and character offset.
 
- Position
+**Properties**:
 
-### Example
+- `character` _number_ - Zero-based character offset on the line
+- `line` _number_ - Zero-based line number in the document
+
+
+
+**Example:**
 
 ```ts
 const position: Position = {
@@ -397,10 +298,3 @@ const position: Position = {
   character: 15  // Character 16 on the line (zero-based)
 };
 ```
-
-### Properties
-
-| Property | Type | Description |
-| ------ | ------ | ------ |
-| `character` | `number` | Zero-based character offset on the line |
-| `line` | `number` | Zero-based line number in the document |

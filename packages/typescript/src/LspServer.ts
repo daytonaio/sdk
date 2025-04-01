@@ -1,43 +1,3 @@
-/**
- * The Daytona SDK provides Language Server Protocol (LSP) support through Sandbox instances.
- * This enables advanced language features like code completion, diagnostics, and more.
- *
- * The LSP server must be started with start() before using any other methods,
- * and should be stopped with stop() when no longer needed to free resources.
- *
- * @module LspServer
- *
- * @example
- * // Basic LSP server usage
- * // Create and initialize sandbox
- * const sandbox = await daytona.create();
- *
- * // Create and start LSP server
- * const lsp = sandbox.createLspServer('typescript', '/workspace/project');
- * await lsp.start();
- *
- * // Open a file for editing
- * await lsp.didOpen('/workspace/project/src/index.ts');
- *
- * // Get completions at a position
- * const completions = await lsp.completions(
- *   '/workspace/project/src/index.ts',
- *   { line: 10, character: 15 }
- * );
- * console.log('Completions:', completions);
- *
- * // Get document symbols
- * const symbols = await lsp.documentSymbols('/workspace/project/src/index.ts');
- * symbols.forEach(symbol => {
- *   console.log(`${symbol.name}: ${symbol.kind}`);
- * });
- *
- * // Clean up
- * await lsp.didClose('/workspace/project/src/index.ts');
- * await lsp.stop();
- *
- */
-
 import { CompletionList, LspSymbol, ToolboxApi } from '@daytonaio/api-client'
 import { SandboxInstance } from './Sandbox'
 
@@ -51,12 +11,10 @@ export enum LspLanguageId {
 }
 
 /**
- * Represents a position in a text document.
- *
- * This interface represents a zero-based position within a text document,
+ * Represents a zero-based position within a text document,
  * specified by line number and character offset.
  *
- * @interface Position
+ * @interface
  * @property {number} line - Zero-based line number in the document
  * @property {number} character - Zero-based character offset on the line
  *
@@ -74,17 +32,15 @@ export type Position = {
 }
 
 /**
- * Provides Language Server Protocol functionality for code intelligence.
- *
- * This class implements a subset of the Language Server Protocol (LSP) to provide
+ * Provides Language Server Protocol functionality for code intelligence to provide
  * IDE-like features such as code completion, symbol search, and more.
- *
- * @class LspServer
  *
  * @property {LspLanguageId} languageId - The language server type (e.g., "typescript")
  * @property {string} pathToProject - Absolute path to the project root directory
  * @property {ToolboxApi} toolboxApi - API client for Sandbox operations
  * @property {SandboxInstance} instance - The Sandbox instance this server belongs to
+ *
+ * @class
  */
 export class LspServer {
   constructor(
@@ -101,9 +57,7 @@ export class LspServer {
   }
 
   /**
-   * Starts the language server.
-   *
-   * This method must be called before using any other LSP functionality.
+   * Starts the language server, must be called before using any other LSP functionality.
    * It initializes the language server for the specified language and project.
    *
    * @returns {Promise<void>}
@@ -121,9 +75,7 @@ export class LspServer {
   }
 
   /**
-   * Stops the language server.
-   *
-   * This method should be called when the LSP server is no longer needed to
+   * Stops the language server, should be called when the LSP server is no longer needed to
    * free up system resources.
    *
    * @returns {Promise<void>}
@@ -140,9 +92,7 @@ export class LspServer {
   }
 
   /**
-   * Notifies the language server that a file has been opened.
-   *
-   * This method should be called when a file is opened in the editor to enable
+   * Notifies the language server that a file has been opened, enabling
    * language features like diagnostics and completions for that file. The server
    * will begin tracking the file's contents and providing language features.
    *
@@ -163,10 +113,8 @@ export class LspServer {
   }
 
   /**
-   * Notifies the language server that a file has been closed.
-   *
-   * This method should be called when a file is closed in the editor to allow
-   * the language server to clean up any resources associated with that file.
+   * Notifies the language server that a file has been closed, should be called when a file is closed
+   * in the editor to allow the language server to clean up any resources associated with that file.
    *
    * @param {string} path - Absolute path to the closed file
    * @returns {Promise<void>}
@@ -184,10 +132,7 @@ export class LspServer {
   }
 
   /**
-   * Get symbol information from a document.
-   *
-   * This method returns information about all symbols (functions, classes,
-   * variables, etc.) defined in the specified document.
+   * Get symbol information (functions, classes, variables, etc.) from a document.
    *
    * @param {string} path - Absolute path to the file to get symbols from
    * @returns {Promise<LspSymbol[]>} List of symbols in the document. Each symbol includes:
@@ -213,11 +158,7 @@ export class LspServer {
   }
 
   /**
-   * Searches for symbols across the entire Sandbox.
-   *
-   * This method searches for symbols matching the query string across all files
-   * in the Sandbox. It's useful for finding declarations and definitions
-   * without knowing which file they're in.
+   * Searches for symbols matching the query string across the entire Sandbox.
    *
    * @param {string} query - Search query to match against symbol names
    * @returns {Promise<LspSymbol[]>} List of matching symbols from all files. Each symbol includes:
@@ -232,11 +173,7 @@ export class LspServer {
   }
 
   /**
-   * Searches for symbols across the entire Sandbox.
-   *
-   * This method searches for symbols matching the query string across all files
-   * in the Sandbox. It's useful for finding declarations and definitions
-   * without knowing which file they're in.
+   * Searches for symbols matching the query string across the entire Sandbox.
    *
    * @param {string} query - Search query to match against symbol names
    * @returns {Promise<LspSymbol[]>} List of matching symbols from all files. Each symbol includes:

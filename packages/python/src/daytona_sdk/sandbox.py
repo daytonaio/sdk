@@ -1,42 +1,3 @@
-"""
-The Daytona SDK core Sandbox functionality.
-
-Provides the main Sandbox class representing a Daytona Sandbox that coordinates file system,
-Git, process execution, and LSP functionality. It serves as the central point
-for interacting with Daytona sandboxes.
-
-Examples:
-    Basic usage:
-    ```python
-    # Create and initialize sandbox
-    daytona = Daytona()
-    sandbox = daytona.create()
-
-    # File operations
-    sandbox.fs.upload_file(
-        '/app/config.json',
-        b'{"setting": "value"}'
-    )
-    content = sandbox.fs.download_file('/app/config.json')
-
-    # Git operations
-    sandbox.git.clone('https://github.com/user/repo.git')
-
-    # Process execution
-    response = sandbox.process.execute_command('ls -la')
-    print(response.result)
-
-    # LSP functionality
-    lsp = sandbox.create_lsp_server('python', '/workspace/project')
-    lsp.did_open('/workspace/project/src/main.py')
-    completions = lsp.completions('/workspace/project/src/main.py', {
-        'line': 10,
-        'character': 15
-    })
-    print(completions)
-    ```
-"""
-
 import json
 import time
 from dataclasses import dataclass
@@ -65,7 +26,13 @@ from .protocols import SandboxCodeToolbox
 
 @dataclass
 class SandboxTargetRegion(Enum):
-    """Target regions for Sandboxes"""
+    """Target regions for Sandboxes
+
+    **Enum Members**:
+        - `EU` ("eu")
+        - `US` ("us")
+        - `ASIA` ("asia")
+    """
 
     EU = "eu"
     US = "us"
@@ -109,9 +76,6 @@ class SandboxResources:
 
 class SandboxInfo(ApiSandboxInfo):
     """Structured information about a Sandbox.
-
-    This class provides detailed information about a Sandbox's configuration,
-    resources, and current state.
 
     Attributes:
         id (str): Unique identifier for the Sandbox.
@@ -175,10 +139,6 @@ class SandboxInstance(ApiSandbox):
 
 class Sandbox:
     """Represents a Daytona Sandbox.
-
-    A Sandbox provides file system operations, Git operations, process execution,
-    and LSP functionality. It serves as the main interface for interacting with
-    a Daytona Sandbox.
 
     Attributes:
         id (str): Unique identifier for the Sandbox.
@@ -256,7 +216,9 @@ class Sandbox:
     def get_workspace_root_dir(self) -> str:
         return self.get_user_root_dir()
 
-    def create_lsp_server(self, language_id: LspLanguageId, path_to_project: str) -> LspServer:
+    def create_lsp_server(
+        self, language_id: LspLanguageId, path_to_project: str
+    ) -> LspServer:
         """Creates a new Language Server Protocol (LSP) server instance.
 
         The LSP server provides language-specific features like code completion,
@@ -299,7 +261,10 @@ class Sandbox:
             ```
         """
         # Convert all values to strings and create the expected labels structure
-        string_labels = {k: str(v).lower() if isinstance(v, bool) else str(v) for k, v in labels.items()}
+        string_labels = {
+            k: str(v).lower() if isinstance(v, bool) else str(v)
+            for k, v in labels.items()
+        }
         labels_payload = {"labels": string_labels}
         return self.sandbox_api.replace_labels(self.id, labels_payload)
 
@@ -310,9 +275,7 @@ class Sandbox:
         )
     )
     def start(self, timeout: Optional[float] = 60):
-        """Starts the Sandbox.
-
-        This method starts the Sandbox and waits for it to be ready.
+        """Starts the Sandbox and waits for it to be ready.
 
         Args:
             timeout (Optional[float]): Maximum time to wait in seconds. 0 means no timeout. Default is 60 seconds.
@@ -337,9 +300,7 @@ class Sandbox:
         )
     )
     def stop(self, timeout: Optional[float] = 60):
-        """Stops the Sandbox.
-
-        This method stops the Sandbox and waits for it to be fully stopped.
+        """Stops the Sandbox and waits for it to be fully stopped.
 
         Args:
             timeout (Optional[float]): Maximum time to wait in seconds. 0 means no timeout. Default is 60 seconds.
@@ -364,10 +325,8 @@ class Sandbox:
         )
     )
     def wait_for_workspace_start(self, timeout: Optional[float] = 60) -> None:
-        """Waits for the Sandbox to reach the 'started' state.
-
-        This method polls the Sandbox status until it reaches the 'started' state
-        or encounters an error.
+        """Waits for the Sandbox to reach the 'started' state. Polls the Sandbox status until it
+        reaches the 'started' state, encounters an error or times out.
 
         Args:
             timeout (Optional[float]): Maximum time to wait in seconds. 0 means no timeout. Default is 60 seconds.
@@ -383,11 +342,12 @@ class Sandbox:
             f"Sandbox {self.id} failed to become ready within the {timeout} seconds timeout period"
         )
     )
-    def wait_for_sandbox_start(self, timeout: Optional[float] = 60) -> None:  # pylint: disable=unused-argument
-        """Waits for the Sandbox to reach the 'started' state.
-
-        This method polls the Sandbox status until it reaches the 'started' state
-        or encounters an error.
+    def wait_for_sandbox_start(
+        self,
+        timeout: Optional[float] = 60,  # pylint: disable=unused-argument
+    ) -> None:
+        """Waits for the Sandbox to reach the 'started' state. Polls the Sandbox status until it
+        reaches the 'started' state, encounters an error or times out.
 
         Args:
             timeout (Optional[float]): Maximum time to wait in seconds. 0 means no timeout. Default is 60 seconds.
@@ -415,10 +375,9 @@ class Sandbox:
         )
     )
     def wait_for_workspace_stop(self, timeout: Optional[float] = 60) -> None:
-        """Waits for the Sandbox to reach the 'stopped' state.
-
-        This method polls the Sandbox status until it reaches the 'stopped' state
-        or encounters an error. It will wait up to 60 seconds for the Sandbox to stop.
+        """Waits for the Sandbox to reach the 'stopped' state. Polls the Sandbox status until it
+        reaches the 'stopped' state, encounters an error or times out. It will wait up to 60 seconds
+        for the Sandbox to stop.
 
         Args:
             timeout (Optional[float]): Maximum time to wait in seconds. 0 means no timeout. Default is 60 seconds.
@@ -434,11 +393,13 @@ class Sandbox:
             f"Sandbox {self.id} failed to become stopped within the {timeout} seconds timeout period"
         )
     )
-    def wait_for_sandbox_stop(self, timeout: Optional[float] = 60) -> None:  # pylint: disable=unused-argument
-        """Waits for the Sandbox to reach the 'stopped' state.
-
-        This method polls the Sandbox status until it reaches the 'stopped' state
-        or encounters an error. It will wait up to 60 seconds for the Sandbox to stop.
+    def wait_for_sandbox_stop(
+        self,
+        timeout: Optional[float] = 60,  # pylint: disable=unused-argument
+    ) -> None:
+        """Waits for the Sandbox to reach the 'stopped' state. Polls the Sandbox status until it
+        reaches the 'stopped' state, encounters an error or times out. It will wait up to 60 seconds
+        for the Sandbox to stop.
 
         Args:
             timeout (Optional[float]): Maximum time to wait in seconds. 0 means no timeout. Default is 60 seconds.
@@ -507,7 +468,9 @@ class Sandbox:
         provider_metadata = json.loads(self.instance.info.provider_metadata)
         node_domain = provider_metadata.get("nodeDomain", "")
         if not node_domain:
-            raise DaytonaError("Node domain not found in provider metadata. Please contact support.")
+            raise DaytonaError(
+                "Node domain not found in provider metadata. Please contact support."
+            )
 
         return f"https://{port}-{self.id}.{node_domain}"
 
@@ -523,10 +486,10 @@ class Sandbox:
 
     @staticmethod
     def to_sandbox_info(instance: ApiSandbox) -> SandboxInfo:
-        """Converts an API sandbox instance to a SandboxInfo object.
+        """Converts an API Sandbox instance to a SandboxInfo object.
 
         Args:
-            instance (ApiSandbox): The API sandbox instance to convert
+            instance (ApiSandbox): The API Sandbox instance to convert
 
         Returns:
             SandboxInfo: The converted SandboxInfo object

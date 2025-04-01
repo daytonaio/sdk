@@ -1,74 +1,10 @@
-/**
- * The Daytona SDK provides comprehensive file system operations through the `fs` module in Sandboxes.
- * You can perform various operations like listing files, creating directories, reading and writing files, and more.
- * This guide covers all available file system operations and best practices.
- *
- * @module FileSystem
- *
- * @example
- * // Basic file operations
- * // Create a sandbox
- * const sandbox = await daytona.create();
- *
- * // Create a directory
- * await sandbox.fs.createFolder('/workspace/data', '755');
- *
- * // Upload a file
- * const fileContent = new File(['content'], 'local_file.txt');
- * await sandbox.fs.uploadFile('/workspace/data/file.txt', fileContent);
- *
- * // List directory contents
- * const files = await sandbox.fs.listFiles('/workspace');
- * files.forEach(file => {
- *   console.log(`Name: ${file.name}`);
- *   console.log(`Is directory: ${file.isDir}`);
- *   console.log(`Size: ${file.size}`);
- *   console.log(`Modified: ${file.modTime}`);
- * });
- *
- * // Search file contents
- * const matches = await sandbox.fs.findFiles(
- *   '/workspace/src',
- *   'text-of-interest'
- * );
- * matches.forEach(match => {
- *   console.log(`Absolute file path: ${match.file}`);
- *   console.log(`Line number: ${match.line}`);
- *   console.log(`Line content: ${match.content}\n`);
- * });
- *
- * @example
- * // File manipulation
- * // Move files
- * await sandbox.fs.moveFiles(
- *   '/workspace/data/old.txt',
- *   '/workspace/data/new.txt'
- * );
- *
- * // Replace text in files
- * const results = await sandbox.fs.replaceInFiles(
- *   ['/workspace/data/new.txt'],
- *   'old_version',
- *   'new_version'
- * );
- *
- * // Set permissions
- * await sandbox.fs.setFilePermissions(
- *   '/workspace/data/script.sh',
- *   {
- *     mode: '755',
- *     owner: 'daytona'
- *   }
- * );
- */
-
 import { FileInfo, Match, ReplaceRequest, ReplaceResult, SearchFilesResponse, ToolboxApi } from '@daytonaio/api-client'
 import { SandboxInstance } from './Sandbox'
 
 /**
  * Parameters for setting file permissions in the Sandbox.
  *
- * @interface FilePermissionsParams
+ * @interface
  * @property {string} [mode] - File mode/permissions in octal format (e.g. "644")
  * @property {string} [owner] - User owner of the file
  * @property {string} [group] - Group owner of the file
@@ -92,10 +28,7 @@ export type FilePermissionsParams = {
 /**
  * Provides file system operations within a Sandbox.
  *
- * This class implements a high-level interface to file system operations that can
- * be performed within a Daytona Sandbox. It supports common operations like
- * creating, deleting, and moving files, as well as searching file contents and
- * managing permissions.
+ * @class
  */
 export class FileSystem {
   constructor(private readonly instance: SandboxInstance, private readonly toolboxApi: ToolboxApi) {}

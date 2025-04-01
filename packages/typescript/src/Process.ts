@@ -1,39 +1,3 @@
-/**
- * The Daytona SDK provides powerful process and code execution capabilities through
- * the `process` module in Sandboxes. This guide covers all available process operations
- * and best practices.
- *
- * @module Process
- *
- * @example
- * // Execute a shell command
- * const response = await sandbox.process.executeCommand('ls -la');
- * console.log(response.result);
- *
- * // Run TypeScript code
- * const response = await sandbox.process.codeRun('console.log("Hello, World!")');
- * console.log(response.result);
- *
- * @example
- * // Using interactive sessions
- * // Create a new session
- * const sessionId = 'my-session';
- * await sandbox.process.createSession(sessionId);
- *
- * // Execute commands in the session
- * const response = await sandbox.process.executeSessionCommand(sessionId, {
- *   command: 'cd /workspace'
- * });
- *
- * const response2 = await sandbox.process.executeSessionCommand(sessionId, {
- *   command: 'pwd'
- * });
- * console.log(response2.result);  // Should print "/workspace"
- *
- * // Clean up
- * await sandbox.process.deleteSession(sessionId);
- */
-
 import {
   Command,
   ExecuteResponse,
@@ -58,6 +22,11 @@ export class CodeRunParams {
   env?: Record<string, string>
 }
 
+/**
+ * Handles process and code execution within a Sandbox.
+ *
+ * @class
+ */
 export class Process {
   constructor(
     private readonly codeToolbox: SandboxCodeToolbox,
