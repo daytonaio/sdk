@@ -168,7 +168,8 @@ sandbox.git.clone(
 
 ```python
 @intercept_errors(message_prefix="Failed to commit changes: ")
-def commit(path: str, message: str, author: str, email: str) -> None
+def commit(path: str, message: str, author: str,
+           email: str) -> GitCommitResponse
 ```
 
 Creates a new commit with the staged changes. Make sure to stage
@@ -295,4 +296,16 @@ print(f"Commits ahead: {status.ahead}")
 print(f"Commits behind: {status.behind}")
 ```
 
+
+## GitCommitResponse
+
+```python
+class GitCommitResponse()
+```
+
+Response from the git commit.
+
+**Attributes**:
+
+- `sha` _str_ - The SHA of the commit
 

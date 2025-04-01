@@ -17,6 +17,17 @@ if TYPE_CHECKING:
     from .sandbox import Sandbox
 
 
+class GitCommitResponse:
+    """Response from the git commit.
+
+    Attributes:
+        sha (str): The SHA of the commit
+    """
+
+    def __init__(self, sha: str):
+        self.sha = sha
+
+
 class Git:
     """Provides Git operations within a Sandbox.
 
@@ -174,7 +185,9 @@ class Git:
         )
 
     @intercept_errors(message_prefix="Failed to commit changes: ")
-    def commit(self, path: str, message: str, author: str, email: str) -> None:
+    def commit(
+        self, path: str, message: str, author: str, email: str
+    ) -> GitCommitResponse:
         """Creates a new commit with the staged changes. Make sure to stage
         changes using the add() method before committing.
 
@@ -196,12 +209,13 @@ class Git:
             )
             ```
         """
-        self.toolbox_api.git_commit_changes(
+        response = self.toolbox_api.git_commit_changes(
             self.instance.id,
             git_commit_request=GitCommitRequest(
                 path=path, message=message, author=author, email=email
             ),
         )
+        return GitCommitResponse(sha=response.hash)
 
     @intercept_errors(message_prefix="Failed to push changes: ")
     def push(
