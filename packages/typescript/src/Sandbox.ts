@@ -1,44 +1,3 @@
-/**
- * The Daytona SDK core Sandbox functionality.
- *
- * Provides the main Sandbox class representing a Daytona Sandbox that coordinates file system,
- * Git, process execution, and LSP functionality. It serves as the central point
- * for interacting with Daytona Sandboxes.
- *
- * The Sandbox must be in a 'started' state before performing operations.
- *
- * @module Sandbox
- *
- * @example
- * // Create and initialize sandbox
- * const daytona = new Daytona();
- * const sandbox = await daytona.create();
- *
- * // File operations
- * await sandbox.fs.uploadFile(
- *   '/app/config.json',
- *   new File(['{"setting": "value"}'], 'config.json')
- * );
- * const contentBlob = await sandbox.fs.downloadFile('/app/config.json');
- *
- * // Git operations
- * await sandbox.git.clone('https://github.com/user/repo.git');
- *
- * // Process execution
- * const response = await sandbox.process.executeCommand('ls -la');
- * console.log(response.result);
- *
- * // LSP functionality
- * const lsp = sandbox.createLspServer('typescript', '/workspace/project');
- * await lsp.didOpen('/workspace/project/src/index.ts');
- * const completions = await lsp.completions('/workspace/project/src/index.ts', {
- *   line: 10,
- *   character: 15
- * });
- * console.log(completions);
- *
- */
-
 import {
   ToolboxApi,
   WorkspaceState as SandboxState,
@@ -65,7 +24,7 @@ export interface SandboxInstance extends Omit<ApiSandbox, 'info'> {
 /**
  * Resources allocated to a Sandbox
  *
- * @interface SandboxResources
+ * @interface
  * @property {string} cpu - Number of CPU cores allocated (e.g., "1", "2")
  * @property {string | null} gpu - Number of GPUs allocated (e.g., "1") or null if no GPU
  * @property {string} memory - Amount of memory allocated with unit (e.g., "2Gi", "4Gi")
@@ -96,7 +55,7 @@ export interface SandboxResources {
  * This interface provides detailed information about a Sandbox's configuration,
  * resources, and current state.
  *
- * @interface SandboxInfo
+ * @interface
  * @property {string} id - Unique identifier for the Sandbox
  * @property {string} name - Display name of the Sandbox
  * @property {string} image - Docker image used for the Sandbox
@@ -164,7 +123,7 @@ export interface SandboxInfo extends ApiSandboxInfo {
 
 /**
  * Interface defining methods that a code toolbox must implement
- * @interface SandboxCodeToolbox
+ * @interface
  */
 export interface SandboxCodeToolbox {
   /** Generates a command to run the provided code */
@@ -174,10 +133,6 @@ export interface SandboxCodeToolbox {
 /**
  * Represents a Daytona Sandbox.
  *
- * A Sandbox provides file system operations, Git operations, process execution,
- * and LSP functionality. It serves as the main interface for interacting with
- * a Daytona sandbox.
- *
  * @property {string} id - Unique identifier for the Sandbox
  * @property {SandboxInstance} instance - The underlying Sandbox instance
  * @property {SandboxApi} sandboxApi - API client for Sandbox operations
@@ -186,6 +141,8 @@ export interface SandboxCodeToolbox {
  * @property {FileSystem} fs - File system operations interface
  * @property {Git} git - Git operations interface
  * @property {Process} process - Process execution interface
+ *
+ * @class
  */
 export class Sandbox {
   /** File system operations for the Sandbox */

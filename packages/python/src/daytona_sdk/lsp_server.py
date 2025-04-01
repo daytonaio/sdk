@@ -1,39 +1,3 @@
-"""
-The Daytona SDK provides Language Server Protocol (LSP) support through Sandbox instances.
-This enables advanced language features like code completion, diagnostics, and more.
-
-Example:
-    Basic LSP server usage:
-    ```python
-    sandbox = daytona.create()
-
-    # Create and start LSP server
-    lsp = sandbox.create_lsp_server("typescript", "/workspace/project")
-    lsp.start()
-
-    # Open a file for editing
-    lsp.did_open("/workspace/project/src/index.ts")
-
-    # Get completions at a position
-    pos = Position(line=10, character=15)
-    completions = lsp.completions("/workspace/project/src/index.ts", pos)
-    print(f"Completions: {completions}")
-
-    # Get document symbols
-    symbols = lsp.document_symbols("/workspace/project/src/index.ts")
-    for symbol in symbols:
-        print(f"{symbol.name}: {symbol.kind}")
-
-    # Clean up
-    lsp.did_close("/workspace/project/src/index.ts")
-    lsp.stop()
-    ```
-
-Note:
-    The LSP server must be started with start() before using any other methods,
-    and should be stopped with stop() when no longer needed to free resources.
-"""
-
 from enum import Enum
 from typing import List
 
@@ -52,6 +16,14 @@ from .protocols import SandboxInstance
 
 
 class LspLanguageId(Enum):
+    """Language IDs for Language Server Protocol (LSP).
+
+    **Enum Members**:
+        - `PYTHON` ("python")
+        - `TYPESCRIPT` ("typescript")
+        - `JAVASCRIPT` ("javascript")
+    """
+
     PYTHON = "python"
     TYPESCRIPT = "typescript"
     JAVASCRIPT = "javascript"
@@ -66,9 +38,7 @@ class LspLanguageId(Enum):
 
 
 class Position:
-    """Represents a position in a text document.
-
-    This class represents a zero-based position within a text document,
+    """Represents a zero-based position in a text document,
     specified by line number and character offset.
 
     Attributes:
@@ -88,9 +58,7 @@ class Position:
 
 
 class LspServer:
-    """Provides Language Server Protocol functionality for code intelligence.
-
-    This class implements a subset of the Language Server Protocol (LSP) to provide
+    """Provides Language Server Protocol functionality for code intelligence to provide
     IDE-like features such as code completion, symbol search, and more.
 
     Attributes:
@@ -215,10 +183,7 @@ class LspServer:
 
     @intercept_errors(message_prefix="Failed to get symbols from document: ")
     def document_symbols(self, path: str) -> List[LspSymbol]:
-        """Gets symbol information from a document.
-
-        This method returns information about all symbols (functions, classes,
-        variables, etc.) defined in the specified document.
+        """Gets symbol information (functions, classes, variables, etc.) from a document.
 
         Args:
             path (str): Absolute path to the file to get symbols from.
@@ -248,11 +213,8 @@ class LspServer:
         reason="Method is deprecated. Use `sandbox_symbols` instead. This method will be removed in a future version."
     )
     def workspace_symbols(self, query: str) -> List[LspSymbol]:
-        """Searches for symbols across the entire Sandbox.
-
-        This method searches for symbols matching the query string across all files
-        in the Sandbox. It's useful for finding declarations and definitions
-        without knowing which file they're in.
+        """Searches for symbols matching the query string across all files
+        in the Sandbox.
 
         Args:
             query (str): Search query to match against symbol names.
@@ -264,11 +226,8 @@ class LspServer:
 
     @intercept_errors(message_prefix="Failed to get symbols from sandbox: ")
     def sandbox_symbols(self, query: str) -> List[LspSymbol]:
-        """Searches for symbols across the entire Sandbox.
-
-        This method searches for symbols matching the query string across all files
-        in the Sandbox. It's useful for finding declarations and definitions
-        without knowing which file they're in.
+        """Searches for symbols matching the query string across all files
+        in the Sandbox.
 
         Args:
             query (str): Search query to match against symbol names.

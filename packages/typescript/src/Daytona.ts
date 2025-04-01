@@ -1,51 +1,3 @@
-/**
- * Sandboxes are isolated development environments managed by Daytona.
- * This guide covers how to create, manage, and remove Sandboxes using the SDK.
- *
- * @module Daytona
- *
- * @example
- * // Initialize using environment variables (DAYTONA_API_KEY, DAYTONA_API_URL, DAYTONA_TARGET)
- * const daytona = new Daytona();
- *
- * // Create and use a sandbox
- * const sandbox = await daytona.create({
- *     language: 'typescript',
- *     envVars: { NODE_ENV: 'development' }
- * });
- *
- * // Execute commands in the sandbox
- * const response = await sandbox.process.executeCommand('echo "Hello, World!"');
- * console.log(response.result);
- *
- * // Execute code in the sandbox
- * const response = await sandbox.process.codeRun('console.log("Hello, World!")');
- * console.log(response.result);
- *
- * @example
- * // Initialize with explicit configuration
- * const daytona = new Daytona({
- *     apiKey: process.env.CUSTOM_API_KEY,
- *     apiUrl: 'https://daytona.example.com',
- *     target: 'us'
- * });
- *
- * // Create a custom sandbox
- * const sandbox = await daytona.create({
- *     language: 'typescript',
- *     image: 'node:18',
- *     resources: {
- *         cpu: 2,
- *         memory: 4 // 4GB RAM
- *     },
- *     autoStopInterval: 60 // Auto-stop after 1 hour of inactivity
- * });
- *
- * // Use sandbox features
- * await sandbox.git.clone('https://github.com/user/repo.git');
- * await sandbox.process.executeCommand('npm test');
- */
-
 import { SandboxPythonCodeToolbox } from './code-toolbox/SandboxPythonCodeToolbox'
 import { Sandbox, SandboxInstance, Sandbox as Workspace } from './Sandbox'
 import {
@@ -133,11 +85,11 @@ export interface SandboxResources {
  * @property {string} [id] - Optional Sandbox ID. If not provided, a random ID will be generated
  * @property {string} [image] - Optional Docker image to use for the Sandbox
  * @property {string} [user] - Optional os user to use for the Sandbox
- * @property {CodeLanguage} [language] - Programming language for direct code execution
+ * @property {CodeLanguage | string} [language] - Programming language for direct code execution
  * @property {Record<string, string>} [envVars] - Optional environment variables to set in the Sandbox
  * @property {Record<string, string>} [labels] - Sandbox labels
  * @property {boolean} [public] - Is the Sandbox port preview public
- * @property {string} [target] - Target location for the Sandbox
+ * @property {SandboxTargetRegion | string} [target] - Target location for the Sandbox
  * @property {SandboxResources} [resources] - Resource allocation for the Sandbox
  * @property {boolean} [async] - If true, will not wait for the Sandbox to be ready before returning
  * @property {number} [timeout] - Timeout in seconds for the Sandbox to be ready (0 means no timeout)

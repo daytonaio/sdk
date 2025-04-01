@@ -1,49 +1,11 @@
-/**
- * The Daytona SDK provides built-in Git support. This guide covers all available Git
- * operations and best practices. Daytona SDK provides an option to clone, check status,
- * and manage Git repositories in Sandboxes. You can interact with Git repositories using
- * the `git` module.
- *
- * @module Git
- *
- * @example
- * // Basic Git workflow
- * // Create and initialize sandbox
- * const sandbox = await daytona.create();
- *
- * // Clone a repository
- * await sandbox.git.clone(
- *   'https://github.com/user/repo.git',
- *   '/workspace/repo'
- * );
- *
- * // Make some changes
- * await sandbox.fs.uploadFile(
- *   '/workspace/repo/test.txt',
- *   new File([Buffer.from('Hello, World!')], 'test.txt')
- * );
- *
- * // Stage and commit changes
- * await sandbox.git.add('/workspace/repo', ['test.txt']);
- * await sandbox.git.commit(
- *   '/workspace/repo',
- *   'Add test file',
- *   'John Doe',
- *   'john@example.com'
- * );
- *
- * // Push changes (with authentication)
- * await sandbox.git.push(
- *   '/workspace/repo',
- *   'user',
- *   'token'
- * );
- *
- */
-
 import { ToolboxApi, ListBranchResponse, GitStatus } from '@daytonaio/api-client'
 import { Sandbox, SandboxInstance } from './Sandbox'
 
+/**
+ * Provides Git operations within a Sandbox.
+ *
+ * @class
+ */
 export class Git {
   constructor(
     private readonly sandbox: Sandbox,
@@ -52,9 +14,7 @@ export class Git {
   ) {}
 
   /**
-   * Stages files for commit.
-   *
-   * This method stages the specified files for the next commit, similar to
+   * Stages the specified files for the next commit, similar to
    * running 'git add' on the command line.
    *
    * @param {string} path - Absolute path to the Git repository root
@@ -79,8 +39,6 @@ export class Git {
   /**
    * List branches in the repository.
    *
-   * This method returns information about all branches in the repository.
-   *
    * @param {string} path - Absolute path to the Git repository root
    * @returns {Promise<ListBranchResponse>} List of branches in the repository
    *
@@ -94,9 +52,7 @@ export class Git {
   }
 
   /**
-   * Clones a Git repository.
-   *
-   * This method clones a Git repository into the specified path. It supports
+   * Clones a Git repository into the specified path. It supports
    * cloning specific branches or commits, and can authenticate with the remote
    * repository if credentials are provided.
    *
@@ -154,9 +110,6 @@ export class Git {
   /**
    * Commits staged changes.
    *
-   * This method creates a new commit with the staged changes. Make sure to stage
-   * changes using the add() method before committing.
-   *
    * @param {string} path - Absolute path to the Git repository root
    * @param {string} message - Commit message describing the changes
    * @param {string} author - Name of the commit author
@@ -184,9 +137,6 @@ export class Git {
 
   /**
    * Push local changes to the remote repository.
-   *
-   * This method pushes committed changes to the remote repository. If the remote
-   * requires authentication, username and password/token must be provided.
    *
    * @param {string} path - Absolute path to the Git repository root
    * @param {string} [username] - Git username for authentication
@@ -216,9 +166,6 @@ export class Git {
   /**
    * Pulls changes from the remote repository.
    *
-   * This method fetches and merges changes from the remote repository. If the remote
-   * requires authentication, username and password/token must be provided.
-   *
    * @param {string} path - Absolute path to the Git repository root
    * @param {string} [username] - Git username for authentication
    * @param {string} [password] - Git password or token for authentication
@@ -246,9 +193,6 @@ export class Git {
 
   /**
    * Gets the current status of the Git repository.
-   *
-   * This method returns information about the current state of the repository,
-   * including staged and unstaged changes, current branch, and untracked files.
    *
    * @param {string} path - Absolute path to the Git repository root
    * @returns {Promise<GitStatus>} Current repository status including:

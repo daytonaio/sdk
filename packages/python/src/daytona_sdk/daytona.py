@@ -1,63 +1,3 @@
-"""
-Sandboxes are isolated development environments managed by Daytona.
-This guide covers how to create, manage, and remove Sandboxes using the SDK.
-
-Examples:
-    Basic usage with environment variables:
-    ```python
-    from daytona_sdk import Daytona
-    # Initialize using environment variables
-    daytona = Daytona()  # Uses env vars DAYTONA_API_KEY, DAYTONA_API_URL, DAYTONA_TARGET
-
-    # Create a default Python sandbox with custom environment variables
-    sandbox = daytona.create(CreateSandboxParams(
-        language="python",
-        env_vars={"PYTHON_ENV": "development"}
-    ))
-
-    # Execute commands in the sandbox
-    response = sandbox.process.execute_command('echo "Hello, World!"')
-    print(response.result)
-
-    # Run Python code securely inside the sandbox
-    response = sandbox.process.code_run('print("Hello from Python!")')
-    print(response.result)
-
-    # Remove the sandbox after use
-    daytona.remove(sandbox)
-    ```
-
-    Usage with explicit configuration:
-    ```python
-    from daytona_sdk import Daytona, DaytonaConfig, CreateSandboxParams, SandboxResources
-
-    # Initialize with explicit configuration
-    config = DaytonaConfig(
-        api_key="your-api-key",
-        api_url="https://your-api.com",
-        target="us"
-    )
-    daytona = Daytona(config)
-
-    # Create a custom sandbox with specific resources and settings
-    sandbox = daytona.create(CreateSandboxParams(
-        language="python",
-        image="python:3.11",
-        resources=SandboxResources(
-            cpu=2,
-            memory=4,  # 4GB RAM
-            disk=20    # 20GB disk
-        ),
-        env_vars={"PYTHON_ENV": "development"},
-        auto_stop_interval=60  # Auto-stop after 1 hour of inactivity
-    ))
-
-    # Use sandbox features
-    sandbox.git.clone("https://github.com/user/repo.git")
-    sandbox.process.execute_command("python -m pytest")
-    ```
-"""
-
 import warnings
 from dataclasses import dataclass
 from enum import Enum
@@ -83,7 +23,13 @@ Workspace = Sandbox
 
 @dataclass
 class CodeLanguage(Enum):
-    """Programming languages supported by Daytona"""
+    """Programming languages supported by Daytona
+
+    **Enum Members**:
+        - `PYTHON` ("python")
+        - `TYPESCRIPT` ("typescript")
+        - `JAVASCRIPT` ("javascript")
+    """
 
     PYTHON = "python"
     TYPESCRIPT = "typescript"
@@ -112,7 +58,6 @@ class DaytonaConfig(BaseModel):
 
     Example:
         ```python
-        # Only API key is required
         config = DaytonaConfig(api_key="your-api-key")
         ```
     """
@@ -536,7 +481,7 @@ class Daytona:
         )
     )
     def get_current_workspace(self, workspace_id: str) -> Workspace:
-        """Get a Sandbox by its ID.
+        """Gets a Sandbox by its ID.
 
         Args:
             workspace_id (str): The ID of the Sandbox to retrieve.
@@ -548,7 +493,7 @@ class Daytona:
 
     @intercept_errors(message_prefix="Failed to get sandbox: ")
     def get_current_sandbox(self, sandbox_id: str) -> Sandbox:
-        """Get a Sandbox by its ID.
+        """Gets a Sandbox by its ID.
 
         Args:
             sandbox_id (str): The ID of the Sandbox to retrieve.

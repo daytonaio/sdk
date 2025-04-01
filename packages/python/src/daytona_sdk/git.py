@@ -1,45 +1,3 @@
-"""
-The Daytona SDK provides built-in Git support. This guide covers all available Git
-operations and best practices. Daytona SDK provides an option to clone, check status,
-and manage Git repositories in Sandboxes. You can interact with Git repositories using
-the `git` module.
-
-Example:
-    Basic Git workflow:
-    ```python
-    sandbox = daytona.create()
-
-    # Clone a repository
-    sandbox.git.clone(
-        url="https://github.com/user/repo.git",
-        path="/workspace/repo"
-    )
-
-    # Make some changes
-    sandbox.fs.upload_file("/workspace/repo/test.txt", "Hello, World!")
-
-    # Stage and commit changes
-    sandbox.git.add("/workspace/repo", ["test.txt"])
-    sandbox.git.commit(
-        path="/workspace/repo",
-        message="Add test file",
-        author="John Doe",
-        email="john@example.com"
-    )
-
-    # Push changes (with authentication)
-    sandbox.git.push(
-        path="/workspace/repo",
-        username="user",
-        password="token"
-    )
-    ```
-
-Note:
-    All paths should be absolute paths within the Sandbox if not explicitly
-    stated otherwise.
-"""
-
 from typing import TYPE_CHECKING, List, Optional
 
 from daytona_api_client import (
@@ -61,11 +19,6 @@ if TYPE_CHECKING:
 
 class Git:
     """Provides Git operations within a Sandbox.
-
-    This class implements a high-level interface to Git operations that can be
-    performed within a Daytona Sandbox. It supports common Git operations like
-    cloning repositories, staging and committing changes, pushing and pulling
-    changes, and checking repository status.
 
     Attributes:
         sandbox (Sandbox): The parent Sandbox instance.
@@ -113,9 +66,7 @@ class Git:
 
     @intercept_errors(message_prefix="Failed to add files: ")
     def add(self, path: str, files: List[str]) -> None:
-        """Stages files for commit.
-
-        This method stages the specified files for the next commit, similar to
+        """Stages the specified files for the next commit, similar to
         running 'git add' on the command line.
 
         Args:
@@ -144,8 +95,6 @@ class Git:
     def branches(self, path: str) -> ListBranchResponse:
         """Lists branches in the repository.
 
-        This method returns information about all branches in the repository.
-
         Args:
             path (str): Absolute path to the Git repository root.
 
@@ -173,9 +122,7 @@ class Git:
         username: Optional[str] = None,
         password: Optional[str] = None,
     ) -> None:
-        """Clones a Git repository.
-
-        This method clones a Git repository into the specified path. It supports
+        """Clones a Git repository into the specified path. It supports
         cloning specific branches or commits, and can authenticate with the remote
         repository if credentials are provided.
 
@@ -228,9 +175,7 @@ class Git:
 
     @intercept_errors(message_prefix="Failed to commit changes: ")
     def commit(self, path: str, message: str, author: str, email: str) -> None:
-        """Commits staged changes.
-
-        This method creates a new commit with the staged changes. Make sure to stage
+        """Creates a new commit with the staged changes. Make sure to stage
         changes using the add() method before committing.
 
         Args:
@@ -253,7 +198,9 @@ class Git:
         """
         self.toolbox_api.git_commit_changes(
             self.instance.id,
-            git_commit_request=GitCommitRequest(path=path, message=message, author=author, email=email),
+            git_commit_request=GitCommitRequest(
+                path=path, message=message, author=author, email=email
+            ),
         )
 
     @intercept_errors(message_prefix="Failed to push changes: ")
@@ -263,9 +210,7 @@ class Git:
         username: Optional[str] = None,
         password: Optional[str] = None,
     ) -> None:
-        """Pushes local commits to the remote repository.
-
-        This method pushes all local commits on the current branch to the remote
+        """Pushes all local commits on the current branch to the remote
         repository. If the remote repository requires authentication, provide
         username and password/token.
 
@@ -289,7 +234,9 @@ class Git:
         """
         self.toolbox_api.git_push_changes(
             self.instance.id,
-            git_repo_request=GitRepoRequest(path=path, username=username, password=password),
+            git_repo_request=GitRepoRequest(
+                path=path, username=username, password=password
+            ),
         )
 
     @intercept_errors(message_prefix="Failed to pull changes: ")
@@ -299,10 +246,7 @@ class Git:
         username: Optional[str] = None,
         password: Optional[str] = None,
     ) -> None:
-        """Pulls changes from the remote repository.
-
-        This method fetches and merges changes from the remote repository into
-        the current branch. If the remote repository requires authentication,
+        """Pulls changes from the remote repository. If the remote repository requires authentication,
         provide username and password/token.
 
         Args:
@@ -325,15 +269,14 @@ class Git:
         """
         self.toolbox_api.git_pull_changes(
             self.instance.id,
-            git_repo_request=GitRepoRequest(path=path, username=username, password=password),
+            git_repo_request=GitRepoRequest(
+                path=path, username=username, password=password
+            ),
         )
 
     @intercept_errors(message_prefix="Failed to get status: ")
     def status(self, path: str) -> GitStatus:
         """Gets the current Git repository status.
-
-        This method returns detailed information about the current state of the
-        repository, including staged, unstaged, and untracked files.
 
         Args:
             path (str): Absolute path to the Git repository root.
