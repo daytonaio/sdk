@@ -2,6 +2,16 @@ import { ToolboxApi, ListBranchResponse, GitStatus } from '@daytonaio/api-client
 import { Sandbox, SandboxInstance } from './Sandbox'
 
 /**
+ * Response from the git commit.
+ *
+ * @interface
+ * @property {string} sha - The SHA of the commit
+ */
+export interface GitCommitResponse {
+  sha: string
+}
+
+/**
  * Provides Git operations within a Sandbox.
  *
  * @class
@@ -126,13 +136,16 @@ export class Git {
    *   'john@example.com'
    * );
    */
-  public async commit(path: string, message: string, author: string, email: string): Promise<void> {
-    await this.toolboxApi.gitCommitChanges(this.instance.id, {
+  public async commit(path: string, message: string, author: string, email: string): Promise<GitCommitResponse> {
+    const response = await this.toolboxApi.gitCommitChanges(this.instance.id, {
       path,
       message,
       author,
       email,
     })
+    return {
+      sha: response.data.hash,
+    }
   }
 
   /**
