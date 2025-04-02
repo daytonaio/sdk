@@ -31,6 +31,7 @@ function transformContent(contents) {
     transformExamplesSection,
     transformEnumSection,
     transformThrowsSection,
+    transformTypeDeclarationSection,
     fixFormattingArtifacts,
   ].reduce((acc, fn) => fn(acc), contents)
 }
@@ -38,6 +39,8 @@ function transformContent(contents) {
 function transformFilename(filename) {
   return filename.replace(/\/([^/]+)\.md$/, (_, name) => {
     const formatted = name
+      .split('.')
+      .pop()
       .replace(/([a-z])([A-Z])/g, '$1-$2') // Add hyphen between lowercase & uppercase
       .replace(/([A-Z])([A-Z][a-z])/g, '$1-$2') // Add hyphen between uppercase followed by lowercase
       .replace(/([0-9])([A-Za-z])/g, '$1-$2') // Add hyphen between number & letter
@@ -148,102 +151,7 @@ function transformReturnsSection(contents) {
 }
 
 function transformPropertiesSection(contents) {
-  for (let i = 5; i > 1; i--) {
-    contents = contents.replace(
-      new RegExp(`\#{${i}} Properties\\s*\\n\\n([\\s\\S]*?)(?=\\n\#{1,${i}} |$)`, 'g'),
-      (match, propertiesContent) => {
-        const propHeadingLevel = i + 1
-        const headingHashes = '#'.repeat(propHeadingLevel)
-        const headingHashesShorter = Array.from({ length: propHeadingLevel }, (_, k) => '#'.repeat(k + 1)).join('|')
-        const propertyBlockRegex = new RegExp(
-          `${headingHashes} ([^\\n]+)\\n\\n` + // #### propName
-            '```ts\\n([^\\n]+);\\n```\\n\\n' + // code block
-            '([\\s\\S]*?)' + // description block
-            `(?=\\n\\*\\*\\*\\n\\n(?=${headingHashes} )|` + // *** followed by same-level heading
-            `\\n(?:${headingHashesShorter}) |$)`, // or lower/same-level heading or end of file
-          'g'
-        )
-
-        const properties = []
-        let propMatch
-
-        while ((propMatch = propertyBlockRegex.exec(propertiesContent)) !== null) {
-          const [, name, typeLine, rawDescription] = propMatch
-
-          const lines = rawDescription
-            .trim()
-            .split('\n')
-            .map((line) => line.trim())
-            .filter((line) => !line.includes('***'))
-
-          let deprecation = ''
-          const contentLines = []
-
-          for (let i = 0; i < lines.length; i++) {
-            if (new RegExp(`^\#{${propHeadingLevel + 1}}? Overrides`, 'i').test(lines[i])) {
-              let j = i + 1
-              while (j < lines.length && !lines[j].trim().startsWith('#')) j++
-              i = j - 1
-            } else if (new RegExp(`^\#{${propHeadingLevel + 1}}? Deprecated`, 'i').test(lines[i])) {
-              let j = i + 1
-              while (j < lines.length && lines[j].trim() === '') j++
-              if (j < lines.length) {
-                deprecation = lines[j].trim()
-                i = j
-              }
-            } else {
-              contentLines.push(lines[i])
-            }
-          }
-
-          const mainDescription = contentLines[0] || ''
-          const otherLines = contentLines.slice(1)
-
-          properties.push({
-            name,
-            typeLine,
-            mainDescription,
-            otherLines,
-            deprecation,
-          })
-        }
-
-        if (properties.length === 0) return match
-
-        let result = '**Properties**:\n\n'
-
-        for (const { name, typeLine, mainDescription, otherLines, deprecation } of properties) {
-          const typeMatch = typeLine.match(/:\s*([^;]+)/)
-          if (!typeMatch) continue
-
-          let type = typeMatch[1].trim()
-          type = type.replace(/readonly\s+/, '').trim()
-          type = type.replace(/([*_`\[\]()<>|])/g, '\\$1')
-
-          if (!mainDescription && deprecation) {
-            result += `- \`${name}\` _${type}_ - **_Deprecated_** - ${deprecation}\n`
-            continue
-          }
-
-          result += `- \`${name}\` _${type}_`
-          if (mainDescription) result += ` - ${mainDescription}`
-          result += '\n'
-
-          for (const line of otherLines) {
-            result += `    ${line}\n`
-          }
-
-          if (deprecation) {
-            result += `    - **_Deprecated_** - ${deprecation}\n`
-          }
-        }
-
-        result = result.replace(/^\s{4}\*\*\*/gm, '***')
-
-        return result + '\n'
-      }
-    )
-  }
+  contents = transformPropsOrTypeDeclaration(contents, 'Properties')
 
   // Move Properties section right after each class/interface description
   const sections = contents.split(/^## /gm)
@@ -260,7 +168,14 @@ function transformPropertiesSection(contents) {
     const fullPropsBlock = propsMatch[0]
     const bodyWithoutProps = body.replace(fullPropsBlock, '').trim()
 
-    const descEnd = bodyWithoutProps.search(/\n{2,}(?=###|\*\*|$)/)
+    let descEnd = bodyWithoutProps.search(/\n{2,}(?=###|\*\*|$)|(?=^\s*$)/m)
+    if (descEnd === -1) {
+      const trimmed = bodyWithoutProps.trim()
+
+      if (!trimmed.includes('\n') && !trimmed.startsWith('#') && !trimmed.startsWith('**')) {
+        descEnd = bodyWithoutProps.length
+      }
+    }
     let newBody
 
     if (descEnd !== -1) {
@@ -383,4 +298,108 @@ function transformThrowsSection(contents) {
 
 function fixFormattingArtifacts(content) {
   return content.replace(/`~~([^`]+?)\?~~`/g, '~~`$1?`~~')
+}
+
+function transformTypeDeclarationSection(contents) {
+  return transformPropsOrTypeDeclaration(contents, 'Type declaration')
+}
+
+function transformPropsOrTypeDeclaration(contents, headerTitle) {
+  for (let i = 5; i > 1; i--) {
+    contents = contents.replace(
+      new RegExp(`\#{${i}} ${headerTitle}\\s*\\n\\n([\\s\\S]*?)(?=\\n\#{1,${i}} |$)`, 'g'),
+      (match, sectionContent) => {
+        const itemHeadingLevel = i + 1
+        const headingHashes = '#'.repeat(itemHeadingLevel)
+        const headingHashesShorter = Array.from({ length: itemHeadingLevel }, (_, k) => '#'.repeat(k + 1)).join('|')
+        const itemBlockRegex = new RegExp(
+          `${headingHashes} ([^\\n]+)\\n\\n` + // #### propName
+            '```ts\\n([^\\n]+);\\n```\\n' + // code block
+            '([\\s\\S]*?)' + // description block
+            `(?=(?:\\n\\*\\*\\*\\n)?(?=\\n${headingHashes} )|\\n(?:${headingHashesShorter}) |$)`,
+          'g'
+        )
+
+        const items = []
+        let itemMatch
+
+        while ((itemMatch = itemBlockRegex.exec(sectionContent)) !== null) {
+          const [, name, typeLine, rawDescription] = itemMatch
+
+          const lines = rawDescription
+            .trim()
+            .split('\n')
+            .map((line) => line.trim())
+            .filter((line) => !line.includes('***'))
+
+          let deprecation = ''
+          const contentLines = []
+
+          for (let i = 0; i < lines.length; i++) {
+            if (new RegExp(`^\#{${itemHeadingLevel + 1}}? Overrides`, 'i').test(lines[i])) {
+              let j = i + 1
+              while (j < lines.length && !lines[j].trim().startsWith('#')) j++
+              i = j - 1
+            } else if (new RegExp(`^\#{${itemHeadingLevel + 1}}? Deprecated`, 'i').test(lines[i])) {
+              let j = i + 1
+              while (j < lines.length && lines[j].trim() === '') j++
+              if (j < lines.length) {
+                deprecation = lines[j].trim()
+                i = j
+              }
+            } else {
+              contentLines.push(lines[i])
+            }
+          }
+
+          const mainDescription = contentLines[0] || ''
+          const otherLines = contentLines.slice(1)
+
+          items.push({
+            name,
+            typeLine,
+            mainDescription,
+            otherLines,
+            deprecation,
+          })
+        }
+
+        if (items.length === 0) return match
+
+        let result = `**${headerTitle}**:\n\n`
+
+        for (const { name, typeLine, mainDescription, otherLines, deprecation } of items) {
+          const typeMatch = typeLine.match(/:\s*([^;]+)/)
+          if (!typeMatch) continue
+
+          let type = typeMatch[1].trim()
+          type = type.replace(/readonly\s+/, '').trim()
+          type = type.replace(/([*_`\[\]()<>|])/g, '\\$1')
+
+          if (!mainDescription && deprecation) {
+            result += `- \`${name}\` _${type}_ - **_Deprecated_** - ${deprecation}\n`
+            continue
+          }
+
+          result += `- \`${name}\` _${type}_`
+          if (mainDescription) result += ` - ${mainDescription}`
+          result += '\n'
+
+          for (const line of otherLines) {
+            result += `    ${line}\n`
+          }
+
+          if (deprecation) {
+            result += `    - **_Deprecated_** - ${deprecation}\n`
+          }
+        }
+
+        result = result.replace(/^\s{4}\*\*\*/gm, '***')
+
+        return result + '\n'
+      }
+    )
+  }
+
+  return contents
 }

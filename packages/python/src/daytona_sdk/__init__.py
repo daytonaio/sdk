@@ -2,6 +2,7 @@ from daytona_api_client import WorkspaceState as SandboxState
 
 # Create deprecated aliases with proper warnings
 from ._utils.deprecation import deprecated_alias
+from .charts import BarChart, BoxAndWhiskerChart, Chart, ChartType, CompositeChart, LineChart, PieChart, ScatterChart
 from .common.code_run_params import CodeRunParams
 from .daytona import (
     CodeLanguage,
@@ -42,4 +43,12 @@ __all__ = [
     "WorkspaceTargetRegion",
     "WorkspaceResources",
     "WorkspaceState",
+    "ChartType",
+    "Chart",
+    "LineChart",
+    "ScatterChart",
+    "BarChart",
+    "PieChart",
+    "BoxAndWhiskerChart",
+    "CompositeChart",
 ]

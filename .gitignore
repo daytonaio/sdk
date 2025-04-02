@@ -54,3 +54,5 @@ logs
 __pycache__/
 
 .eslintcache
+
+examples/**/*.png

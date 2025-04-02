@@ -1,4 +1,5 @@
 import asyncio
+import json
 import time
 from typing import Callable, List, Optional
 
@@ -7,7 +8,6 @@ from daytona_api_client import (
     Command,
     CreateSessionRequest,
     ExecuteRequest,
-    ExecuteResponse,
     Session,
     SessionExecuteRequest,
     SessionExecuteResponse,
@@ -15,8 +15,10 @@ from daytona_api_client import (
 )
 from daytona_sdk._utils.errors import intercept_errors
 
+from .charts import parse_chart
 from .code_toolbox.sandbox_python_code_toolbox import SandboxPythonCodeToolbox
 from .common.code_run_params import CodeRunParams
+from .common.execute_response import ExecuteResponse, ExecutionArtifacts
 from .protocols import SandboxInstance
 
 
@@ -46,6 +48,35 @@ class Process:
         self.toolbox_api = toolbox_api
         self.instance = instance
 
+    @staticmethod
+    def _parse_output(lines: List[str]) -> Optional[ExecutionArtifacts]:
+        """
+        Parse the output of a command to extract ExecutionArtifacts.
+
+        Args:
+            lines: A list of lines of output from a command
+
+        Returns:
+            ExecutionArtifacts: The artifacts from the command execution
+        """
+        artifacts = ExecutionArtifacts("", [])
+        for line in lines:
+            if not line.startswith("dtn_artifact_k39fd2:"):
+                artifacts.stdout += line
+                artifacts.stdout += "\n"
+            else:
+                # Remove the prefix and parse JSON
+                json_str = line.replace("dtn_artifact_k39fd2:", "", 1).strip()
+                data = json.loads(json_str)
+                data_type = data.pop("type")
+
+                # Check if this is chart data
+                if data_type == "chart":
+                    chart_data = data.get("value", {})
+                    artifacts.charts.append(parse_chart(**chart_data))
+
+        return artifacts
+
     @intercept_errors(message_prefix="Failed to execute command: ")
     def exec(
         self,
@@ -66,12 +97,14 @@ class Process:
             ExecuteResponse: Command execution results containing:
                 - exit_code: The command's exit status
                 - result: Standard output from the command
+                - artifacts: ExecutionArtifacts object containing `stdout` (same as result)
+                and `charts` (matplotlib charts metadata)
 
         Example:
             ```python
             # Simple command
             response = sandbox.process.exec("echo 'Hello'")
-            print(response.result)  # Prints: Hello
+            print(response.artifacts.stdout)  # Prints: Hello
 
             # Command with working directory
             result = sandbox.process.exec("ls", cwd="/workspace/src")
@@ -82,15 +115,22 @@ class Process:
         """
         execute_request = ExecuteRequest(command=command, cwd=cwd, timeout=timeout)
 
-        return self.toolbox_api.execute_command(
-            self.instance.id, execute_request=execute_request
+        response = self.toolbox_api.execute_command(workspace_id=self.instance.id, execute_request=execute_request)
+
+        # Post-process the output to extract ExecutionArtifacts
+        artifacts = Process._parse_output(response.result.splitlines())
+
+        # Create new response with processed output and charts
+        # TODO: Remove model_construct once everything is migrated to pydantic # pylint: disable=fixme
+        return ExecuteResponse.model_construct(
+            exit_code=response.exit_code,
+            result=artifacts.stdout,
+            artifacts=artifacts,
+            additional_properties=response.additional_properties,
         )
 
     def code_run(
-        self,
-        code: str,
-        params: Optional[CodeRunParams] = None,
-        timeout: Optional[int] = None,
+        self, code: str, params: Optional[CodeRunParams] = None, timeout: Optional[int] = None
     ) -> ExecuteResponse:
         """Executes code in the Sandbox using the appropriate language runtime.
 
@@ -104,6 +144,8 @@ class Process:
             ExecuteResponse: Code execution result containing:
                 - exit_code: The execution's exit status
                 - result: Standard output from the code
+                - artifacts: ExecutionArtifacts object containing `stdout` (same as result)
+                and `charts` (matplotlib charts metadata)
 
         Example:
             ```python
@@ -113,7 +155,46 @@ class Process:
                 y = 20
                 print(f"Sum: {x + y}")
             ''')
-            print(response.result)  # Prints: Sum: 30
+            print(response.artifacts.stdout)  # Prints: Sum: 30
+            ```
+
+            Matplotlib charts are automatically detected and returned in the `charts` field
+            of the `ExecutionArtifacts` object.
+            ```python
+            code = '''
+            import matplotlib.pyplot as plt
+            import numpy as np
+
+            x = np.linspace(0, 10, 30)
+            y = np.sin(x)
+
+            plt.figure(figsize=(8, 5))
+            plt.plot(x, y, 'b-', linewidth=2)
+            plt.title('Line Chart')
+            plt.xlabel('X-axis (seconds)')
+            plt.ylabel('Y-axis (amplitude)')
+            plt.grid(True)
+            plt.show()
+            '''
+
+            response = sandbox.process.code_run(code)
+            chart = response.artifacts.charts[0]
+
+            print(f"Type: {chart.type}")
+            print(f"Title: {chart.title}")
+            if chart.type == ChartType.LINE and isinstance(chart, LineChart):
+                print(f"X Label: {chart.x_label}")
+                print(f"Y Label: {chart.y_label}")
+                print(f"X Ticks: {chart.x_ticks}")
+                print(f"X Tick Labels: {chart.x_tick_labels}")
+                print(f"X Scale: {chart.x_scale}")
+                print(f"Y Ticks: {chart.y_ticks}")
+                print(f"Y Tick Labels: {chart.y_tick_labels}")
+                print(f"Y Scale: {chart.y_scale}")
+                print("Elements:")
+                for element in chart.elements:
+                    print(f"\n\tLabel: {element.label}")
+                    print(f"\tPoints: {element.points}")
             ```
         """
         command = self.code_toolbox.get_run_command(code, params)
@@ -141,9 +222,7 @@ class Process:
             ```
         """
         request = CreateSessionRequest(sessionId=session_id)
-        self.toolbox_api.create_session(
-            self.instance.id, create_session_request=request
-        )
+        self.toolbox_api.create_session(self.instance.id, create_session_request=request)
 
     @intercept_errors(message_prefix="Failed to get session: ")
     def get_session(self, session_id: str) -> Session:
@@ -187,9 +266,7 @@ class Process:
                 print(f"Command {cmd.command} completed successfully")
             ```
         """
-        return self.toolbox_api.get_session_command(
-            self.instance.id, session_id=session_id, command_id=command_id
-        )
+        return self.toolbox_api.get_session_command(self.instance.id, session_id=session_id, command_id=command_id)
 
     @intercept_errors(message_prefix="Failed to execute session command: ")
     def execute_session_command(
@@ -272,9 +349,7 @@ class Process:
             print(f"Command output: {logs}")
             ```
         """
-        return self.toolbox_api.get_session_command_logs(
-            self.instance.id, session_id=session_id, command_id=command_id
-        )
+        return self.toolbox_api.get_session_command_logs(self.instance.id, session_id=session_id, command_id=command_id)
 
     @intercept_errors(message_prefix="Failed to get session command logs: ")
     async def get_session_command_logs_async(
@@ -300,11 +375,7 @@ class Process:
             f"{self.toolbox_api.api_client.configuration.host}/toolbox/{self.instance.id}"
             + f"/toolbox/process/session/{session_id}/command/{command_id}/logs?follow=true"
         )
-        headers = {
-            "Authorization": self.toolbox_api.api_client.default_headers[
-                "Authorization"
-            ]
-        }
+        headers = {"Authorization": self.toolbox_api.api_client.default_headers["Authorization"]}
 
         async with httpx.AsyncClient(timeout=None) as client:
             async with client.stream("GET", url, headers=headers) as response:
@@ -317,9 +388,7 @@ class Process:
                         next_chunk = asyncio.create_task(anext(stream, None))
                     timeout = asyncio.create_task(asyncio.sleep(2))
 
-                    done, pending = await asyncio.wait(
-                        [next_chunk, timeout], return_when=asyncio.FIRST_COMPLETED
-                    )
+                    done, pending = await asyncio.wait([next_chunk, timeout], return_when=asyncio.FIRST_COMPLETED)
 
                     if next_chunk in done:
                         timeout.cancel()

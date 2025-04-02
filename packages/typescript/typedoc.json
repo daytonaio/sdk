@@ -4,7 +4,7 @@
   "readme": "none",
   
   "$schema": "https://typedoc-plugin-markdown.org/schema.json",
-  "entryPoints": ["./src/*.ts", "./src/errors/*.ts"],
+  "entryPoints": ["./src/*.ts", "./src/errors/*.ts", "./src/types/*.ts"],
   "exclude": ["src/index.ts"],
   "out": "../../docs/typescript-sdk",
   "excludePrivate": true,

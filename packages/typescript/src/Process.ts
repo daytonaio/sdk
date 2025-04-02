@@ -1,15 +1,10 @@
-import {
-  Command,
-  ExecuteResponse,
-  Session,
-  SessionExecuteRequest,
-  SessionExecuteResponse,
-  ToolboxApi,
-} from '@daytonaio/api-client'
+import { Command, Session, SessionExecuteRequest, SessionExecuteResponse, ToolboxApi } from '@daytonaio/api-client'
 import { SandboxCodeToolbox, SandboxInstance } from './Sandbox'
+import { ExecuteResponse } from './types/ExecuteResponse'
+import { ArtifactParser } from './utils/ArtifactParser'
 
 /**
- * Parameters for code execution
+ * Parameters for code execution.
  */
 export class CodeRunParams {
   /**
@@ -43,11 +38,12 @@ export class Process {
    * @returns {Promise<ExecuteResponse>} Command execution results containing:
    *                                    - exitCode: The command's exit status
    *                                    - result: Standard output from the command
+   *                                    - artifacts: ExecutionArtifacts object containing `stdout` (same as result) and `charts` (matplotlib charts metadata)
    *
    * @example
    * // Simple command
    * const response = await process.executeCommand('echo "Hello"');
-   * console.log(response.result);  // Prints: Hello
+   * console.log(response.artifacts.stdout);  // Prints: Hello
    *
    * @example
    * // Command with working directory
@@ -64,7 +60,17 @@ export class Process {
       cwd,
     })
 
-    return response.data
+    // console.log(response)
+
+    // Parse artifacts from the output
+    const artifacts = ArtifactParser.parseArtifacts(response.data.result)
+
+    // Return enhanced response with parsed artifacts
+    return {
+      ...response.data,
+      result: artifacts.stdout,
+      artifacts,
+    }
   }
 
   /**
@@ -72,9 +78,11 @@ export class Process {
    *
    * @param {string} code - Code to execute
    * @param {CodeRunParams} params - Parameters for code execution
+   * @param {number} [timeout] - Maximum time in seconds to wait for execution to complete
    * @returns {Promise<ExecuteResponse>} Code execution results containing:
    *                                    - exitCode: The execution's exit status
    *                                    - result: Standard output from the code
+   *                                    - artifacts: ExecutionArtifacts object containing `stdout` (same as result) and `charts` (matplotlib charts metadata)
    *
    * @example
    * // Run TypeScript code
@@ -83,14 +91,49 @@ export class Process {
    *   const y = 20;
    *   console.log(\`Sum: \${x + y}\`);
    * `);
-   * console.log(response.result);  // Prints: Sum: 30
+   * console.log(response.artifacts.stdout);  // Prints: Sum: 30
+   *
+   * @example
+   * // Run Python code with matplotlib
+   * const response = await process.codeRun(`
+   * import matplotlib.pyplot as plt
+   * import numpy as np
+   *
+   * x = np.linspace(0, 10, 30)
+   * y = np.sin(x)
+   *
+   * plt.figure(figsize=(8, 5))
+   * plt.plot(x, y, 'b-', linewidth=2)
+   * plt.title('Line Chart')
+   * plt.xlabel('X-axis (seconds)')
+   * plt.ylabel('Y-axis (amplitude)')
+   * plt.grid(True)
+   * plt.show()
+   * `);
+   *
+   * if (response.artifacts?.charts) {
+   *   const chart = response.artifacts.charts[0];
+   *
+   *   console.log(`Type: ${chart.type}`);
+   *   console.log(`Title: ${chart.title}`);
+   *   if (chart.type === ChartType.LINE) {
+   *     const lineChart = chart as LineChart
+   *     console.log('X Label:', lineChart.x_label)
+   *     console.log('Y Label:', lineChart.y_label)
+   *     console.log('X Ticks:', lineChart.x_ticks)
+   *     console.log('Y Ticks:', lineChart.y_ticks)
+   *     console.log('X Tick Labels:', lineChart.x_tick_labels)
+   *     console.log('Y Tick Labels:', lineChart.y_tick_labels)
+   *     console.log('X Scale:', lineChart.x_scale)
+   *     console.log('Y Scale:', lineChart.y_scale)
+   *     console.log('Elements:')
+   *     console.dir(lineChart.elements, { depth: null })
+   *   }
+   * }
    */
   public async codeRun(code: string, params?: CodeRunParams, timeout?: number): Promise<ExecuteResponse> {
     const runCommand = this.codeToolbox.getRunCommand(code, params)
-
-    const response = await this.executeCommand(runCommand, undefined, timeout)
-
-    return response
+    return this.executeCommand(runCommand, undefined, timeout)
   }
 
   /**
