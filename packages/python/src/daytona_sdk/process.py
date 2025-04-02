@@ -97,13 +97,14 @@ class Process:
             ExecuteResponse: Command execution results containing:
                 - exit_code: The command's exit status
                 - result: Standard output from the command
-                - charts: List of Chart objects if any charts were generated
+                - artifacts: ExecutionArtifacts object containing `stdout` (same as result)
+                and `charts` (matplotlib charts metadata)
 
         Example:
             ```python
             # Simple command
             response = sandbox.process.exec("echo 'Hello'")
-            print(response.result)  # Prints: Hello
+            print(response.artifacts.stdout)  # Prints: Hello
 
             # Command with working directory
             result = sandbox.process.exec("ls", cwd="/workspace/src")
@@ -143,7 +144,8 @@ class Process:
             ExecuteResponse: Code execution result containing:
                 - exit_code: The execution's exit status
                 - result: Standard output from the code
-                - charts: List of Chart objects if any charts were generated
+                - artifacts: ExecutionArtifacts object containing `stdout` (same as result)
+                and `charts` (matplotlib charts metadata)
 
         Example:
             ```python
@@ -153,7 +155,46 @@ class Process:
                 y = 20
                 print(f"Sum: {x + y}")
             ''')
-            print(response.result)  # Prints: Sum: 30
+            print(response.artifacts.stdout)  # Prints: Sum: 30
+            ```
+
+            Matplotlib charts are automatically detected and returned in the `charts` field
+            of the `ExecutionArtifacts` object.
+            ```python
+            code = '''
+            import matplotlib.pyplot as plt
+            import numpy as np
+
+            x = np.linspace(0, 10, 30)
+            y = np.sin(x)
+
+            plt.figure(figsize=(8, 5))
+            plt.plot(x, y, 'b-', linewidth=2)
+            plt.title('Line Chart')
+            plt.xlabel('X-axis (seconds)')
+            plt.ylabel('Y-axis (amplitude)')
+            plt.grid(True)
+            plt.show()
+            '''
+
+            response = sandbox.process.code_run(code)
+            chart = response.artifacts.charts[0]
+
+            print(f"Type: {chart.type}")
+            print(f"Title: {chart.title}")
+            if chart.type == ChartType.LINE and isinstance(chart, LineChart):
+                print(f"X Label: {chart.x_label}")
+                print(f"Y Label: {chart.y_label}")
+                print(f"X Ticks: {chart.x_ticks}")
+                print(f"X Tick Labels: {chart.x_tick_labels}")
+                print(f"X Scale: {chart.x_scale}")
+                print(f"Y Ticks: {chart.y_ticks}")
+                print(f"Y Tick Labels: {chart.y_tick_labels}")
+                print(f"Y Scale: {chart.y_scale}")
+                print("Elements:")
+                for element in chart.elements:
+                    print(f"\n\tLabel: {element.label}")
+                    print(f"\tPoints: {element.points}")
             ```
         """
         command = self.code_toolbox.get_run_command(code, params)
@@ -181,9 +222,7 @@ class Process:
             ```
         """
         request = CreateSessionRequest(sessionId=session_id)
-        self.toolbox_api.create_session(
-            self.instance.id, create_session_request=request
-        )
+        self.toolbox_api.create_session(self.instance.id, create_session_request=request)
 
     @intercept_errors(message_prefix="Failed to get session: ")
     def get_session(self, session_id: str) -> Session:
@@ -227,9 +266,7 @@ class Process:
                 print(f"Command {cmd.command} completed successfully")
             ```
         """
-        return self.toolbox_api.get_session_command(
-            self.instance.id, session_id=session_id, command_id=command_id
-        )
+        return self.toolbox_api.get_session_command(self.instance.id, session_id=session_id, command_id=command_id)
 
     @intercept_errors(message_prefix="Failed to execute session command: ")
     def execute_session_command(
@@ -312,9 +349,7 @@ class Process:
             print(f"Command output: {logs}")
             ```
         """
-        return self.toolbox_api.get_session_command_logs(
-            self.instance.id, session_id=session_id, command_id=command_id
-        )
+        return self.toolbox_api.get_session_command_logs(self.instance.id, session_id=session_id, command_id=command_id)
 
     @intercept_errors(message_prefix="Failed to get session command logs: ")
     async def get_session_command_logs_async(
@@ -340,11 +375,7 @@ class Process:
             f"{self.toolbox_api.api_client.configuration.host}/toolbox/{self.instance.id}"
             + f"/toolbox/process/session/{session_id}/command/{command_id}/logs?follow=true"
         )
-        headers = {
-            "Authorization": self.toolbox_api.api_client.default_headers[
-                "Authorization"
-            ]
-        }
+        headers = {"Authorization": self.toolbox_api.api_client.default_headers["Authorization"]}
 
         async with httpx.AsyncClient(timeout=None) as client:
             async with client.stream("GET", url, headers=headers) as response:
@@ -357,9 +388,7 @@ class Process:
                         next_chunk = asyncio.create_task(anext(stream, None))
                     timeout = asyncio.create_task(asyncio.sleep(2))
 
-                    done, pending = await asyncio.wait(
-                        [next_chunk, timeout], return_when=asyncio.FIRST_COMPLETED
-                    )
+                    done, pending = await asyncio.wait([next_chunk, timeout], return_when=asyncio.FIRST_COMPLETED)
 
                     if next_chunk in done:
                         timeout.cancel()

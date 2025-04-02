@@ -452,9 +452,6 @@ Generates a command to run the provided code
 
 Structured information about a Sandbox
 
-This interface provides detailed information about a Sandbox's configuration,
-resources, and current state.
-
 **Properties**:
 
 - `autoStopInterval` _number_ - Auto-stop interval in minutes
@@ -483,6 +480,9 @@ resources, and current state.
 
 
 
+This interface provides detailed information about a Sandbox's configuration,
+resources, and current state.
+
 **Example:**
 
 ```ts
@@ -497,14 +497,14 @@ console.log(`Resources: ${info.resources.cpu} CPU, ${info.resources.memory} RAM`
 - `WorkspaceInfo`
 ## SandboxInstance
 
+**Extends:**
+
 **Properties**:
 
 - `info?` _SandboxInfo_
 
 
 
-
-**Extends:**
 
 - `Omit`\<`ApiSandbox`, `"info"`\>
 ## SandboxResources

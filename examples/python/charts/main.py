@@ -29,26 +29,26 @@ box_data = [np.random.normal(0, std, 100) for std in range(1, 6)]
 plt.figure(figsize=(8, 5))
 plt.plot(x, y, 'b-', linewidth=2)
 plt.title('Line Chart')
-plt.xlabel('X-axis (seconds)')  # Added unit
-plt.ylabel('Y-axis (amplitude)')  # Added unit
+plt.xlabel('X-axis (seconds)')
+plt.ylabel('Y-axis (amplitude)')
 plt.grid(True)
 plt.show()
 
 # 2. Scatter Plot
 plt.figure(figsize=(8, 5))
 plt.scatter(x, y, c=y, cmap='viridis', s=100*np.abs(y))
-plt.colorbar(label='Value (normalized)')  # Added unit
+plt.colorbar(label='Value (normalized)')
 plt.title('Scatter Plot')
-plt.xlabel('X-axis (time in seconds)')  # Added unit
-plt.ylabel('Y-axis (signal strength)')  # Added unit
+plt.xlabel('X-axis (time in seconds)')
+plt.ylabel('Y-axis (signal strength)')
 plt.show()
 
 # 3. Bar Chart
 plt.figure(figsize=(10, 6))
 plt.bar(categories, values, color='skyblue', edgecolor='navy')
 plt.title('Bar Chart')
-plt.xlabel('Categories')  # No change (categories don't have units)
-plt.ylabel('Values (count)')  # Added unit
+plt.xlabel('Categories')
+plt.ylabel('Values (count)')
 plt.show()
 
 # 4. Pie Chart
@@ -56,8 +56,8 @@ plt.figure(figsize=(8, 8))
 plt.pie(values, labels=categories,
         autopct='%1.1f%%',
         colors=plt.cm.Set3.colors, shadow=True, startangle=90)
-plt.title('Pie Chart (Distribution in %)')  # Modified title
-plt.axis('equal')  # Equal aspect ratio ensures the pie chart is circular
+plt.title('Pie Chart (Distribution in %)')
+plt.axis('equal')
 plt.legend()
 plt.show()
 
@@ -67,8 +67,8 @@ plt.boxplot(box_data, patch_artist=True,
             boxprops=dict(facecolor='lightblue'),
             medianprops=dict(color='red', linewidth=2))
 plt.title('Box and Whisker Plot')
-plt.xlabel('Groups (Experiment IDs)')  # Added unit
-plt.ylabel('Values (measurement units)')  # Added unit
+plt.xlabel('Groups (Experiment IDs)')
+plt.ylabel('Values (measurement units)')
 plt.grid(True, linestyle='--', alpha=0.7)
 plt.show()
 """

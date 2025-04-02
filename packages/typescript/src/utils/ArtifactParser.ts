@@ -1,4 +1,4 @@
-import { Chart, parseChart } from '../types/Chart'
+import { Chart, parseChart } from '../types/Charts'
 import { ExecutionArtifacts } from '../types/ExecuteResponse'
 
 /**

@@ -5,7 +5,7 @@ title: ""
 
 ## CodeRunParams
 
-Parameters for code execution
+Parameters for code execution.
 
 **Properties**:
 
@@ -70,7 +70,7 @@ Executes code in the Sandbox using the appropriate language runtime.
 
 - `code` _string_ - Code to execute
 - `params?` _CodeRunParams_ - Parameters for code execution
-- `timeout?` _number_
+- `timeout?` _number_ - Maximum time in seconds to wait for execution to complete
 
 
 **Returns**:
@@ -78,8 +78,9 @@ Executes code in the Sandbox using the appropriate language runtime.
 - `Promise<ExecuteResponse>` - Code execution results containing:
     - exitCode: The execution's exit status
     - result: Standard output from the code
+    - artifacts: ExecutionArtifacts object containing `stdout` (same as result) and `charts` (matplotlib charts metadata)
 
-**Example:**
+**Examples:**
 
 ```ts
 // Run TypeScript code
@@ -88,7 +89,46 @@ const response = await process.codeRun(`
   const y = 20;
   console.log(\`Sum: \${x + y}\`);
 `);
-console.log(response.result);  // Prints: Sum: 30
+console.log(response.artifacts.stdout);  // Prints: Sum: 30
+```
+
+```ts
+// Run Python code with matplotlib
+const response = await process.codeRun(`
+import matplotlib.pyplot as plt
+import numpy as np
+
+x = np.linspace(0, 10, 30)
+y = np.sin(x)
+
+plt.figure(figsize=(8, 5))
+plt.plot(x, y, 'b-', linewidth=2)
+plt.title('Line Chart')
+plt.xlabel('X-axis (seconds)')
+plt.ylabel('Y-axis (amplitude)')
+plt.grid(True)
+plt.show()
+`);
+
+if (response.artifacts?.charts) {
+  const chart = response.artifacts.charts[0];
+
+  console.log(`Type: ${chart.type}`);
+  console.log(`Title: ${chart.title}`);
+  if (chart.type === ChartType.LINE) {
+    const lineChart = chart as LineChart
+    console.log('X Label:', lineChart.x_label)
+    console.log('Y Label:', lineChart.y_label)
+    console.log('X Ticks:', lineChart.x_ticks)
+    console.log('Y Ticks:', lineChart.y_ticks)
+    console.log('X Tick Labels:', lineChart.x_tick_labels)
+    console.log('Y Tick Labels:', lineChart.y_tick_labels)
+    console.log('X Scale:', lineChart.x_scale)
+    console.log('Y Scale:', lineChart.y_scale)
+    console.log('Elements:')
+    console.dir(lineChart.elements, { depth: null })
+  }
+}
 ```
 
 ***
@@ -176,13 +216,14 @@ Executes a shell command in the Sandbox.
 - `Promise<ExecuteResponse>` - Command execution results containing:
     - exitCode: The command's exit status
     - result: Standard output from the command
+    - artifacts: ExecutionArtifacts object containing `stdout` (same as result) and `charts` (matplotlib charts metadata)
 
 **Examples:**
 
 ```ts
 // Simple command
 const response = await process.executeCommand('echo "Hello"');
-console.log(response.result);  // Prints: Hello
+console.log(response.artifacts.stdout);  // Prints: Hello
 ```
 
 ```ts

@@ -56,6 +56,8 @@ Execute a shell command in the Sandbox.
 - `ExecuteResponse` - Command execution results containing:
   - exit_code: The command's exit status
   - result: Standard output from the command
+  - artifacts: ExecutionArtifacts object containing `stdout` (same as result)
+  and `charts` (matplotlib charts metadata)
   
 
 **Example**:
@@ -63,7 +65,7 @@ Execute a shell command in the Sandbox.
 ```python
 # Simple command
 response = sandbox.process.exec("echo 'Hello'")
-print(response.result)  # Prints: Hello
+print(response.artifacts.stdout)  # Prints: Hello
 
 # Command with working directory
 result = sandbox.process.exec("ls", cwd="/workspace/src")
@@ -95,6 +97,8 @@ Executes code in the Sandbox using the appropriate language runtime.
 - `ExecuteResponse` - Code execution result containing:
   - exit_code: The execution's exit status
   - result: Standard output from the code
+  - artifacts: ExecutionArtifacts object containing `stdout` (same as result)
+  and `charts` (matplotlib charts metadata)
   
 
 **Example**:
@@ -106,7 +110,47 @@ response = sandbox.process.code_run('''
     y = 20
     print(f"Sum: {x + y}")
 ''')
-print(response.result)  # Prints: Sum: 30
+print(response.artifacts.stdout)  # Prints: Sum: 30
+```
+  
+  Matplotlib charts are automatically detected and returned in the `charts` field
+  of the `ExecutionArtifacts` object.
+```python
+           code = '''
+           import matplotlib.pyplot as plt
+           import numpy as np
+
+           x = np.linspace(0, 10, 30)
+           y = np.sin(x)
+
+           plt.figure(figsize=(8, 5))
+           plt.plot(x, y, 'b-', linewidth=2)
+           plt.title('Line Chart')
+           plt.xlabel('X-axis (seconds)')
+           plt.ylabel('Y-axis (amplitude)')
+           plt.grid(True)
+           plt.show()
+           '''
+
+           response = sandbox.process.code_run(code)
+           chart = response.artifacts.charts[0]
+
+           print(f"Type: {chart.type}")
+           print(f"Title: {chart.title}")
+           if chart.type == ChartType.LINE and isinstance(chart, LineChart):
+               print(f"X Label: {chart.x_label}")
+               print(f"Y Label: {chart.y_label}")
+               print(f"X Ticks: {chart.x_ticks}")
+               print(f"X Tick Labels: {chart.x_tick_labels}")
+               print(f"X Scale: {chart.x_scale}")
+               print(f"Y Ticks: {chart.y_ticks}")
+               print(f"Y Tick Labels: {chart.y_tick_labels}")
+               print(f"Y Scale: {chart.y_scale}")
+               print("Elements:")
+               for element in chart.elements:
+                   print(f"
+Label: {element.label}")
+                   print(f"	Points: {element.points}")
 ```
 
 #### Process.create\_session
@@ -363,4 +407,9 @@ class CodeRunParams()
 ```
 
 Parameters for code execution.
+
+**Attributes**:
+
+- `argv` _Optional[List[str]]_ - Command line arguments
+- `env` _Optional[Dict[str, str]]_ - Environment variables
 

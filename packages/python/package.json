@@ -1,12 +1,15 @@
 {
   "scripts": {
-    "docs": "rm -rf ../../docs/python-sdk/* && npm run docs:daytona && npm run docs:sandbox && npm run docs:filesystem && npm run docs:git && npm run docs:process && npm run docs:lsp && npm run docs:errors",
-    "docs:daytona": "TITLE='Sandbox Management' FIRST_SECTION='Daytona' OUTPUT_FILE='../../docs/python-sdk/daytona.mdx' pydoc-markdown -m daytona_sdk.daytona pydoc-markdown.yml",
-    "docs:sandbox": "TITLE='Sandbox' FIRST_SECTION='Sandbox' OUTPUT_FILE='../../docs/python-sdk/sandbox.mdx' pydoc-markdown -m daytona_sdk.sandbox pydoc-markdown.yml",
-    "docs:filesystem": "TITLE='File System Operations' FIRST_SECTION='FileSystem' OUTPUT_FILE='../../docs/python-sdk/file-system.mdx' pydoc-markdown -m daytona_sdk.filesystem pydoc-markdown.yml",
-    "docs:git": "TITLE='Git Operations' FIRST_SECTION='Git' OUTPUT_FILE='../../docs/python-sdk/git.mdx' pydoc-markdown -m daytona_sdk.git pydoc-markdown.yml",
-    "docs:process": "TITLE='Process and Code Execution' FIRST_SECTION='Process' OUTPUT_FILE='../../docs/python-sdk/process.mdx' pydoc-markdown -m daytona_sdk.common.code_run_params -m daytona_sdk.process pydoc-markdown.yml",
-    "docs:lsp": "TITLE='Language Server Protocol' FIRST_SECTION='LspServer' OUTPUT_FILE='../../docs/python-sdk/lsp-server.mdx' pydoc-markdown -m daytona_sdk.lsp_server pydoc-markdown.yml",
-    "docs:errors": "TITLE='Errors' FIRST_SECTION='DaytonaError' OUTPUT_FILE='../../docs/python-sdk/errors.mdx' pydoc-markdown -m daytona_sdk.common.errors pydoc-markdown.yml"
+    "docs": "rm -rf ../../docs/python-sdk/* && npm run docs:daytona && npm run docs:sandbox && npm run docs:filesystem && npm run docs:git && npm run docs:process && npm run docs:lsp && npm run docs:errors && npm run docs:code_run_params && npm run docs:charts && npm run docs:execute_response",
+    "docs:daytona": "FIRST_SECTION='Daytona' OUTPUT_FILE='../../docs/python-sdk/daytona.mdx' pydoc-markdown -m daytona_sdk.daytona pydoc-markdown.yml",
+    "docs:sandbox": "FIRST_SECTION='Sandbox' OUTPUT_FILE='../../docs/python-sdk/sandbox.mdx' pydoc-markdown -m daytona_sdk.sandbox pydoc-markdown.yml",
+    "docs:filesystem": "FIRST_SECTION='FileSystem' OUTPUT_FILE='../../docs/python-sdk/file-system.mdx' pydoc-markdown -m daytona_sdk.filesystem pydoc-markdown.yml",
+    "docs:git": "FIRST_SECTION='Git' OUTPUT_FILE='../../docs/python-sdk/git.mdx' pydoc-markdown -m daytona_sdk.git pydoc-markdown.yml",
+    "docs:process": "FIRST_SECTION='Process' OUTPUT_FILE='../../docs/python-sdk/process.mdx' pydoc-markdown -m daytona_sdk.common.code_run_params -m daytona_sdk.process pydoc-markdown.yml",
+    "docs:lsp": "FIRST_SECTION='LspServer' OUTPUT_FILE='../../docs/python-sdk/lsp-server.mdx' pydoc-markdown -m daytona_sdk.lsp_server pydoc-markdown.yml",
+    "docs:errors": "FIRST_SECTION='DaytonaError' OUTPUT_FILE='../../docs/python-sdk/errors.mdx' pydoc-markdown -m daytona_sdk.common.errors pydoc-markdown.yml",
+    "docs:code_run_params": "FIRST_SECTION='CodeRunParams' OUTPUT_FILE='../../docs/python-sdk/code-run-params.mdx' pydoc-markdown -m daytona_sdk.common.code_run_params pydoc-markdown.yml",
+    "docs:charts": "FIRST_SECTION='Chart' OUTPUT_FILE='../../docs/python-sdk/charts.mdx' pydoc-markdown -m daytona_sdk.charts pydoc-markdown.yml",
+    "docs:execute_response": "FIRST_SECTION='ExecuteResponse' OUTPUT_FILE='../../docs/python-sdk/execute-response.mdx' pydoc-markdown -m daytona_sdk.common.execute_response pydoc-markdown.yml"
   }
 }

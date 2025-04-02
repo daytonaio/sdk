@@ -1,26 +1,28 @@
 import { ExecuteResponse as ClientExecuteResponse } from '@daytonaio/api-client'
-import { Chart } from './Chart'
+import { Chart } from './Charts'
 
 /**
- * Execution artifacts extracted from command output
+ * Artifacts from the command execution.
+ *
+ * @interface
+ * @property stdout - Standard output from the command, same as `result` in `ExecuteResponse`
+ * @property charts - List of chart metadata from matplotlib
  */
 export interface ExecutionArtifacts {
-  /**
-   * Standard output from the command
-   */
   stdout: string
-  /**
-   * Charts extracted from the output
-   */
   charts?: Chart[]
 }
 
 /**
- * Enhanced execution response that includes artifacts
+ * Response from the command execution.
+ *
+ * @interface
+ * @property exitCode - The exit code from the command execution
+ * @property result - The output from the command execution
+ * @property artifacts - Artifacts from the command execution
  */
 export interface ExecuteResponse extends ClientExecuteResponse {
-  /**
-   * Artifacts extracted from the command output
-   */
+  exitCode: number
+  result: string
   artifacts?: ExecutionArtifacts
 }

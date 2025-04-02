@@ -5,6 +5,15 @@ from typing import Any, List, Optional, Tuple, Union
 class ChartType(str, Enum):
     """
     Chart types
+
+    **Enum Members**:
+        - `LINE` ("line")
+        - `SCATTER` ("scatter")
+        - `BAR` ("bar")
+        - `PIE` ("pie")
+        - `BOX_AND_WHISKER` ("box_and_whisker")
+        - `COMPOSITE_CHART` ("composite_chart")
+        - `UNKNOWN` ("unknown")
     """
 
     LINE = "line"
@@ -17,7 +26,14 @@ class ChartType(str, Enum):
 
 
 class Chart:
-    """Represents a chart with metadata from matplotlib."""
+    """Represents a chart with metadata from matplotlib.
+
+    Attributes:
+        type (ChartType): The type of chart
+        title (str): The title of the chart
+        elements (List[Any]): The elements of the chart
+        png (Optional[str]): The PNG representation of the chart encoded in base64
+    """
 
     type: ChartType
     title: str
@@ -25,12 +41,6 @@ class Chart:
     png: Optional[str] = None
 
     def __init__(self, **kwargs):
-        """
-        Initialize a Chart object.
-
-        Args:
-            kwargs: Dictionary containing chart metadata
-        """
         super().__init__()
         self._metadata = kwargs
         self.type = kwargs.get("type")
@@ -43,6 +53,13 @@ class Chart:
 
 
 class Chart2D(Chart):
+    """Represents a 2D chart with metadata.
+
+    Attributes:
+        x_label (Optional[str]): The label of the x-axis
+        y_label (Optional[str]): The label of the y-axis
+    """
+
     x_label: Optional[str]
     y_label: Optional[str]
 
@@ -53,6 +70,13 @@ class Chart2D(Chart):
 
 
 class PointData:
+    """Represents a point in a 2D chart.
+
+    Attributes:
+        label (str): The label of the point
+        points (List[Tuple[Union[str, float], Union[str, float]]]): The points of the chart
+    """
+
     label: str
     points: List[Tuple[Union[str, float], Union[str, float]]]
 
@@ -62,6 +86,18 @@ class PointData:
 
 
 class PointChart(Chart2D):
+    """Represents a point chart with metadata.
+
+    Attributes:
+        x_ticks (List[Union[str, float]]): The ticks of the x-axis
+        x_tick_labels (List[str]): The labels of the x-axis
+        x_scale (str): The scale of the x-axis
+        y_ticks (List[Union[str, float]]): The ticks of the y-axis
+        y_tick_labels (List[str]): The labels of the y-axis
+        y_scale (str): The scale of the y-axis
+        elements (List[PointData]): The points of the chart
+    """
+
     x_ticks: List[Union[str, float]]
     x_tick_labels: List[str]
     x_scale: str
@@ -88,14 +124,34 @@ class PointChart(Chart2D):
 
 
 class LineChart(PointChart):
+    """Represents a line chart with metadata.
+
+    Attributes:
+        type (ChartType): The type of chart
+    """
+
     type: ChartType = ChartType.LINE
 
 
 class ScatterChart(PointChart):
+    """Represents a scatter chart with metadata.
+
+    Attributes:
+        type (ChartType): The type of chart
+    """
+
     type: ChartType = ChartType.SCATTER
 
 
 class BarData:
+    """Represents a bar in a bar chart.
+
+    Attributes:
+        label (str): The label of the bar
+        group (str): The group of the bar
+        value (str): The value of the bar
+    """
+
     label: str
     group: str
     value: str
@@ -107,6 +163,13 @@ class BarData:
 
 
 class BarChart(Chart2D):
+    """Represents a bar chart with metadata.
+
+    Attributes:
+        type (ChartType): The type of chart
+        elements (List[BarData]): The bars of the chart
+    """
+
     type: ChartType = ChartType.BAR
 
     elements: List[BarData]
@@ -117,6 +180,15 @@ class BarChart(Chart2D):
 
 
 class PieData:
+    """Represents a pie slice in a pie chart.
+
+    Attributes:
+        label (str): The label of the pie slice
+        angle (float): The angle of the pie slice
+        radius (float): The radius of the pie slice
+        autopct (float): The autopct value of the pie slice
+    """
+
     label: str
     angle: float
     radius: float
@@ -130,6 +202,13 @@ class PieData:
 
 
 class PieChart(Chart):
+    """Represents a pie chart with metadata.
+
+    Attributes:
+        type (ChartType): The type of chart
+        elements (List[PieData]): The pie slices of the chart
+    """
+
     type: ChartType = ChartType.PIE
 
     elements: List[PieData]
@@ -140,6 +219,18 @@ class PieChart(Chart):
 
 
 class BoxAndWhiskerData:
+    """Represents a box and whisker in a box and whisker chart.
+
+    Attributes:
+        label (str): The label of the box and whisker
+        min (float): The minimum value of the box and whisker
+        first_quartile (float): The first quartile of the box and whisker
+        median (float): The median of the box and whisker
+        third_quartile (float): The third quartile of the box and whisker
+        max (float): The maximum value of the box and whisker
+        outliers (List[float]): The outliers of the box and whisker
+    """
+
     label: str
     min: float
     first_quartile: float
@@ -159,6 +250,13 @@ class BoxAndWhiskerData:
 
 
 class BoxAndWhiskerChart(Chart2D):
+    """Represents a box and whisker chart with metadata.
+
+    Attributes:
+        type (ChartType): The type of chart
+        elements (List[BoxAndWhiskerData]): The box and whiskers of the chart
+    """
+
     type: ChartType = ChartType.BOX_AND_WHISKER
 
     elements: List[BoxAndWhiskerData]
@@ -169,6 +267,14 @@ class BoxAndWhiskerChart(Chart2D):
 
 
 class CompositeChart(Chart):
+    """Represents a composite chart with metadata. A composite chart is a chart
+    that contains multiple charts (subplots).
+
+    Attributes:
+        type (ChartType): The type of chart
+        elements (List[Chart]): The charts (subplots) of the composite chart
+    """
+
     type: ChartType = ChartType.COMPOSITE_CHART
 
     elements: List[Chart]
