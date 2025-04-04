@@ -439,7 +439,13 @@ Structured information about a Sandbox.
 - `state` _str_ - Current state of the Sandbox (e.g., "started", "stopped").
 - `error_reason` _Optional[str]_ - Error message if Sandbox is in error state.
 - `snapshot_state` _Optional[str]_ - Current state of Sandbox snapshot.
-- `snapshot_state_created_at` _Optional[datetime]_ - When the snapshot state was created.
+- `snapshot_created_at` _Optional[datetime]_ - When the snapshot was created.
+- `node_domain` _str_ - Domain name of the Sandbox node.
+- `region` _str_ - Region of the Sandbox node.
+- `class_name` _str_ - Sandbox class.
+- `updated_at` _str_ - When the Sandbox was last updated.
+- `last_snapshot` _Optional[str]_ - When the last snapshot was created.
+- `auto_stop_interval` _int_ - Auto-stop interval in minutes.
   
 
 **Example**:
