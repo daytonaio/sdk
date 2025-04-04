@@ -205,6 +205,7 @@ export class Daytona {
       baseOptions: {
         headers: {
           Authorization: `Bearer ${this.apiKey}`,
+          'x-Daytona-Source': 'typescript-sdk',
         },
       },
     })

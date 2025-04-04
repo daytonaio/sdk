@@ -115,7 +115,9 @@ class Process:
         """
         execute_request = ExecuteRequest(command=command, cwd=cwd, timeout=timeout)
 
-        response = self.toolbox_api.execute_command(workspace_id=self.instance.id, execute_request=execute_request)
+        response = self.toolbox_api.execute_command(
+            workspace_id=self.instance.id, execute_request=execute_request
+        )
 
         # Post-process the output to extract ExecutionArtifacts
         artifacts = Process._parse_output(response.result.splitlines())
@@ -130,7 +132,10 @@ class Process:
         )
 
     def code_run(
-        self, code: str, params: Optional[CodeRunParams] = None, timeout: Optional[int] = None
+        self,
+        code: str,
+        params: Optional[CodeRunParams] = None,
+        timeout: Optional[int] = None,
     ) -> ExecuteResponse:
         """Executes code in the Sandbox using the appropriate language runtime.
 
@@ -222,7 +227,9 @@ class Process:
             ```
         """
         request = CreateSessionRequest(sessionId=session_id)
-        self.toolbox_api.create_session(self.instance.id, create_session_request=request)
+        self.toolbox_api.create_session(
+            self.instance.id, create_session_request=request
+        )
 
     @intercept_errors(message_prefix="Failed to get session: ")
     def get_session(self, session_id: str) -> Session:
@@ -266,7 +273,9 @@ class Process:
                 print(f"Command {cmd.command} completed successfully")
             ```
         """
-        return self.toolbox_api.get_session_command(self.instance.id, session_id=session_id, command_id=command_id)
+        return self.toolbox_api.get_session_command(
+            self.instance.id, session_id=session_id, command_id=command_id
+        )
 
     @intercept_errors(message_prefix="Failed to execute session command: ")
     def execute_session_command(
@@ -349,7 +358,9 @@ class Process:
             print(f"Command output: {logs}")
             ```
         """
-        return self.toolbox_api.get_session_command_logs(self.instance.id, session_id=session_id, command_id=command_id)
+        return self.toolbox_api.get_session_command_logs(
+            self.instance.id, session_id=session_id, command_id=command_id
+        )
 
     @intercept_errors(message_prefix="Failed to get session command logs: ")
     async def get_session_command_logs_async(
@@ -375,7 +386,14 @@ class Process:
             f"{self.toolbox_api.api_client.configuration.host}/toolbox/{self.instance.id}"
             + f"/toolbox/process/session/{session_id}/command/{command_id}/logs?follow=true"
         )
-        headers = {"Authorization": self.toolbox_api.api_client.default_headers["Authorization"]}
+        headers = {
+            "Authorization": self.toolbox_api.api_client.default_headers[
+                "Authorization"
+            ],
+            "x-Daytona-Source": self.toolbox_api.api_client.default_headers[
+                "x-Daytona-Source"
+            ],
+        }
 
         async with httpx.AsyncClient(timeout=None) as client:
             async with client.stream("GET", url, headers=headers) as response:
@@ -388,7 +406,9 @@ class Process:
                         next_chunk = asyncio.create_task(anext(stream, None))
                     timeout = asyncio.create_task(asyncio.sleep(2))
 
-                    done, pending = await asyncio.wait([next_chunk, timeout], return_when=asyncio.FIRST_COMPLETED)
+                    done, pending = await asyncio.wait(
+                        [next_chunk, timeout], return_when=asyncio.FIRST_COMPLETED
+                    )
 
                     if next_chunk in done:
                         timeout.cancel()
