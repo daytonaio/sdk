@@ -11,10 +11,10 @@ from .daytona import (
     DaytonaConfig,
     DaytonaError,
     SandboxResources,
-    SessionExecuteRequest,
     SessionExecuteResponse,
 )
 from .lsp_server import LspLanguageId
+from .process import SessionExecuteRequest
 from .sandbox import Sandbox, SandboxState, SandboxTargetRegion
 
 CreateWorkspaceParams = deprecated_alias("CreateWorkspaceParams", "CreateSandboxParams")(CreateSandboxParams)
