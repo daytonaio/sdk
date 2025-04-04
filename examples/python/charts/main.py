@@ -77,7 +77,7 @@ plt.show()
 def main():
     daytona = Daytona()
     sandbox = daytona.create()
-    response = sandbox.process.code_run(code)
+    response = sandbox.process.code_run("python", code)
 
     if response.exit_code != 0:
         print(f"Error: {response.exit_code} {response.result}")

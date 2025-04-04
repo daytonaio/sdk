@@ -5,7 +5,8 @@ from ..common.code_run_params import CodeRunParams
 
 
 class SandboxTsCodeToolbox:
-    def get_run_command(self, code: str, params: Optional[CodeRunParams] = None) -> str:
+    @staticmethod
+    def get_run_command(code: str, params: Optional[CodeRunParams] = None) -> str:
         # Encode the provided code in base64
         base64_code = base64.b64encode(code.encode()).decode()
 

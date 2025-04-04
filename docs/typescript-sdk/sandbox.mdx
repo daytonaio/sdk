@@ -30,8 +30,7 @@ new Sandbox(
    id: string, 
    instance: SandboxInstance, 
    sandboxApi: WorkspaceApi, 
-   toolboxApi: ToolboxApi, 
-   codeToolbox: SandboxCodeToolbox): Sandbox
+   toolboxApi: ToolboxApi): Sandbox
 ```
 
 Creates a new Sandbox instance
@@ -42,7 +41,6 @@ Creates a new Sandbox instance
 - `instance` _SandboxInstance_ - The underlying Sandbox instance
 - `sandboxApi` _WorkspaceApi_ - API client for Sandbox operations
 - `toolboxApi` _ToolboxApi_ - API client for toolbox operations
-- `codeToolbox` _SandboxCodeToolbox_ - Language-specific toolbox implementation
 
 
 **Returns**:
@@ -421,33 +419,6 @@ or encounters an error.
 **Throws**:
 
 - `DaytonaError` - If the sandbox fails to stop within the timeout period.
-## SandboxCodeToolbox
-
-Interface defining methods that a code toolbox must implement
-
-### Methods
-
-#### getRunCommand()
-
-```ts
-getRunCommand(code: string, params?: CodeRunParams): string
-```
-
-Generates a command to run the provided code
-
-**Parameters**:
-
-- `code` _string_
-- `params?` _CodeRunParams_
-
-
-**Returns**:
-
-- `string`
-
-***
-
-
 ## SandboxInfo
 
 Structured information about a Sandbox

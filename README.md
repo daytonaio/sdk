@@ -28,7 +28,7 @@ const sandbox = await daytona.create({
 })
 
 // Run the code securely inside the sandbox
-const response = await sandbox.process.code_run('console.log("Hello World!")')
+const response = await sandbox.process.code_run("typescript", 'console.log("Hello World!")')
 console.log(response.result)
 ```
 
@@ -52,7 +52,7 @@ daytona = Daytona()
 sandbox = daytona.create()
 
 # Run the code securely inside the sandbox
-response = sandbox.process.code_run('print("Hello World!")')
+response = sandbox.process.code_run("python", 'print("Hello World!")')
 print(response.result)
 ```
 

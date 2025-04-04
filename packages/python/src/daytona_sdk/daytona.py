@@ -1,6 +1,5 @@
 import warnings
 from dataclasses import dataclass
-from enum import Enum
 from typing import Annotated, Dict, List, Optional
 
 from daytona_api_client import ApiClient, Configuration
@@ -12,36 +11,10 @@ from deprecated import deprecated
 from environs import Env
 from pydantic import BaseModel, Field, model_validator
 
-from ._utils.enum import to_enum
 from ._utils.timeout import with_timeout
-from .code_toolbox.sandbox_python_code_toolbox import SandboxPythonCodeToolbox
-from .code_toolbox.sandbox_ts_code_toolbox import SandboxTsCodeToolbox
 from .sandbox import Sandbox, SandboxTargetRegion
 
 Workspace = Sandbox
-
-
-@dataclass
-class CodeLanguage(Enum):
-    """Programming languages supported by Daytona
-
-    **Enum Members**:
-        - `PYTHON` ("python")
-        - `TYPESCRIPT` ("typescript")
-        - `JAVASCRIPT` ("javascript")
-    """
-
-    PYTHON = "python"
-    TYPESCRIPT = "typescript"
-    JAVASCRIPT = "javascript"
-
-    def __str__(self):
-        return self.value
-
-    def __eq__(self, other):
-        if isinstance(other, str):
-            return self.value == other
-        return super().__eq__(other)
 
 
 class DaytonaConfig(BaseModel):
@@ -75,9 +48,7 @@ class DaytonaConfig(BaseModel):
 
     @model_validator(mode="before")
     @classmethod
-    def __handle_deprecated_server_url(
-        cls, values
-    ):  # pylint: disable=unused-private-member
+    def __handle_deprecated_server_url(cls, values):  # pylint: disable=unused-private-member
         if "server_url" in values and values.get("server_url"):
             warnings.warn(
                 "'server_url' is deprecated and will be removed in a future version. Use 'api_url' instead.",
@@ -108,7 +79,6 @@ class SandboxResources:
             gpu=1
         )
         params = CreateSandboxParams(
-            language="python",
             resources=resources
         )
         ```
@@ -124,7 +94,6 @@ class CreateSandboxParams(BaseModel):
     """Parameters for creating a new Sandbox.
 
     Attributes:
-        language (Optional[CodeLanguage]): Programming language for the Sandbox ("python", "javascript", "typescript").
         Defaults to "python".
         id (Optional[str]): Custom identifier for the Sandbox. If not provided, a random ID will be generated.
         name (Optional[str]): Display name for the Sandbox. Defaults to Sandbox ID if not provided.
@@ -143,7 +112,6 @@ class CreateSandboxParams(BaseModel):
     Example:
         ```python
         params = CreateSandboxParams(
-            language="python",
             name="my-sandbox",
             env_vars={"DEBUG": "true"},
             resources=SandboxResources(cpu=2, memory=4),
@@ -153,7 +121,6 @@ class CreateSandboxParams(BaseModel):
         ```
     """
 
-    language: Optional[CodeLanguage] = None
     id: Optional[str] = None
     name: Optional[str] = None
     image: Optional[str] = None
@@ -177,9 +144,7 @@ class CreateSandboxParams(BaseModel):
 
     @model_validator(mode="before")
     @classmethod
-    def __handle_deprecated_timeout(
-        cls, values
-    ):  # pylint: disable=unused-private-member
+    def __handle_deprecated_timeout(cls, values):  # pylint: disable=unused-private-member
         if "timeout" in values and values.get("timeout"):
             warnings.warn(
                 "The `timeout` field is deprecated and will be removed in future versions. "
@@ -249,7 +214,6 @@ class Daytona:
 
         default_api_url = "https://app.daytona.io/api"
         default_target = SandboxTargetRegion.US
-        self.default_language = CodeLanguage.PYTHON
 
         if config is None or None in [config.api_key, config.api_url, config.target]:
             # Initialize env - it automatically reads from .env and .env.local
@@ -259,14 +223,10 @@ class Daytona:
             env.read_env(".env.local", override=True)
 
             self.api_key = env.str("DAYTONA_API_KEY", None)
-            self.api_url = env.str("DAYTONA_API_URL", None) or env.str(
-                "DAYTONA_SERVER_URL", default_api_url
-            )
+            self.api_url = env.str("DAYTONA_API_URL", None) or env.str("DAYTONA_SERVER_URL", default_api_url)
             self.target = env.str("DAYTONA_TARGET", default_target)
 
-            if env.str("DAYTONA_SERVER_URL", None) and not env.str(
-                "DAYTONA_API_URL", None
-            ):
+            if env.str("DAYTONA_SERVER_URL", None) and not env.str("DAYTONA_API_URL", None):
                 warnings.warn(
                     "Environment variable `DAYTONA_SERVER_URL` is deprecated and will be removed in future versions. "
                     + "Use `DAYTONA_API_URL` instead.",
@@ -298,11 +258,10 @@ class Daytona:
         timeout: Optional[float] = 60,
     ) -> Sandbox:
         """Creates Sandboxes with default or custom configurations. You can specify various parameters,
-        including language, image, resources, environment variables, and volumes for the Sandbox.
+        including image, resources, environment variables, and volumes for the Sandbox.
 
         Args:
-            params (Optional[CreateSandboxParams]): Parameters for Sandbox creation. If not provided,
-                   defaults to Python language.
+            params (Optional[CreateSandboxParams]): Parameters for Sandbox creation.
             timeout (Optional[float]): Timeout (in seconds) for sandbox creation. 0 means no timeout.
                 Default is 60 seconds.
 
@@ -321,7 +280,6 @@ class Daytona:
             Create a custom Sandbox:
             ```python
             params = CreateSandboxParams(
-                language="python",
                 name="my-sandbox",
                 image="debian:12.9",
                 env_vars={"DEBUG": "true"},
@@ -333,9 +291,7 @@ class Daytona:
         """
         # If no params provided, create default params for Python
         if params is None:
-            params = CreateSandboxParams(language=self.default_language)
-        if params.language is None:
-            params.language = self.default_language
+            params = CreateSandboxParams()
 
         effective_timeout = params.timeout if params.timeout else timeout
 
@@ -361,8 +317,7 @@ class Daytona:
         """Creates a new Sandbox and waits for it to start.
 
         Args:
-            params (Optional[CreateSandboxParams]): Parameters for Sandbox creation. If not provided,
-                   defaults to Python language.
+            params (Optional[CreateSandboxParams]): Parameters for Sandbox creation.
             timeout (Optional[float]): Timeout (in seconds) for sandbox creation. 0 means no timeout.
                 Default is 60 seconds.
 
@@ -372,8 +327,6 @@ class Daytona:
         Raises:
             DaytonaError: If timeout or auto_stop_interval is negative; If sandbox fails to start or times out
         """
-        code_toolbox = self._get_code_toolbox(params)
-
         if timeout < 0:
             raise DaytonaError("Timeout must be a non-negative number")
 
@@ -401,9 +354,7 @@ class Daytona:
             sandbox_data.disk = params.resources.disk
             sandbox_data.gpu = params.resources.gpu
 
-        response = self.sandbox_api.create_workspace(
-            sandbox_data, _request_timeout=timeout or None
-        )
+        response = self.sandbox_api.create_workspace(sandbox_data, _request_timeout=timeout or None)
         sandbox_info = Sandbox.to_sandbox_info(response)
         response.info = sandbox_info
 
@@ -412,7 +363,6 @@ class Daytona:
             response,
             self.sandbox_api,
             self.toolbox_api,
-            code_toolbox,
         )
 
         # # Wait for sandbox to start
@@ -423,34 +373,6 @@ class Daytona:
         #     pass
 
         return sandbox
-
-    def _get_code_toolbox(self, params: Optional[CreateSandboxParams] = None):
-        """Helper method to get the appropriate code toolbox based on language.
-
-        Args:
-            params (Optional[CreateSandboxParams]): Sandbox parameters. If not provided, defaults to Python toolbox.
-
-        Returns:
-            The appropriate code toolbox instance for the specified language.
-
-        Raises:
-            DaytonaError: If an unsupported language is specified.
-        """
-        if not params:
-            return SandboxPythonCodeToolbox()
-
-        enum_language = to_enum(CodeLanguage, params.language)
-        if enum_language is None:
-            raise DaytonaError(f"Unsupported language: {params.language}")
-        params.language = enum_language
-
-        match params.language:
-            case CodeLanguage.JAVASCRIPT | CodeLanguage.TYPESCRIPT:
-                return SandboxTsCodeToolbox()
-            case CodeLanguage.PYTHON:
-                return SandboxPythonCodeToolbox()
-            case _:
-                raise DaytonaError(f"Unsupported language: {params.language}")
 
     @intercept_errors(message_prefix="Failed to remove sandbox: ")
     def remove(self, sandbox: Sandbox, timeout: Optional[float] = 60) -> None:
@@ -471,9 +393,7 @@ class Daytona:
             daytona.remove(sandbox)  # Clean up when done
             ```
         """
-        return self.sandbox_api.delete_workspace(
-            sandbox.id, force=True, _request_timeout=timeout or None
-        )
+        return self.sandbox_api.delete_workspace(sandbox.id, force=True, _request_timeout=timeout or None)
 
     @deprecated(
         reason=(
@@ -518,14 +438,11 @@ class Daytona:
         sandbox_info = Sandbox.to_sandbox_info(sandbox_instance)
         sandbox_instance.info = sandbox_info
 
-        # Create and return sandbox with Python code toolbox as default
-        code_toolbox = SandboxPythonCodeToolbox()
         return Sandbox(
             sandbox_id,
             sandbox_instance,
             self.sandbox_api,
             self.toolbox_api,
-            code_toolbox,
         )
 
     @intercept_errors(message_prefix="Failed to list sandboxes: ")
@@ -554,36 +471,9 @@ class Daytona:
                 sandbox,
                 self.sandbox_api,
                 self.toolbox_api,
-                self._get_code_toolbox(
-                    CreateSandboxParams(
-                        language=self._validate_language_label(
-                            sandbox.labels.get("code-toolbox-language")
-                        )
-                    )
-                ),
             )
             for sandbox in sandboxes
         ]
-
-    def _validate_language_label(self, language: Optional[str]) -> CodeLanguage:
-        """Validates and normalizes the language label.
-
-        Args:
-            language (Optional[str]): The language label to validate.
-
-        Returns:
-            CodeLanguage: The validated language, defaults to "python" if None
-
-        Raises:
-            DaytonaError: If the language is not supported.
-        """
-        if not language:
-            return CodeLanguage.PYTHON
-
-        enum_language = to_enum(CodeLanguage, language)
-        if enum_language is None:
-            raise DaytonaError(f"Invalid code-toolbox-language: {language}")
-        return enum_language
 
     # def resize(self, sandbox: Sandbox, resources: SandboxResources) -> None:
     #     """Resizes a sandbox.
@@ -626,7 +516,6 @@ __all__ = [
     "Daytona",
     "DaytonaConfig",
     "CreateSandboxParams",
-    "CodeLanguage",
     "Sandbox",
     "SessionExecuteRequest",
     "SessionExecuteResponse",

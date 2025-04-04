@@ -1,12 +1,7 @@
-import { SandboxCodeToolbox } from '../Sandbox'
 import { CodeRunParams } from '../Process'
 
-export class SandboxTsCodeToolbox implements SandboxCodeToolbox {
-  public getDefaultImage(): string {
-    return 'daytonaio/sdk-typescript:v0.49.0-3'
-  }
-
-  public getRunCommand(code: string, params?: CodeRunParams): string {
+export class SandboxTsCodeToolbox {
+  public static getRunCommand(code: string, params?: CodeRunParams): string {
     const base64Code = Buffer.from(code).toString('base64')
     const envVars = params?.env
       ? Object.entries(params.env)
