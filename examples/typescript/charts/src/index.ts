@@ -19,7 +19,7 @@ async function main() {
   const sandbox = await daytona.create()
 
   try {
-    const response = await sandbox.process.codeRun(code)
+    const response = await sandbox.process.codeRun('python', code)
     if (response.exitCode !== 0) {
       console.error('Execution failed with exit code', response.exitCode)
       console.error('Output:', response.artifacts?.stdout)

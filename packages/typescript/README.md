@@ -30,7 +30,7 @@ const daytona = new Daytona()
 const sandbox = await daytona.create()
 
 // Run code in the sandbox
-const response = await sandbox.process.codeRun('console.log("Hello World!")')
+const response = await sandbox.process.codeRun('typescript', 'console.log("Hello World!")')
 console.log(response.result)
 
 // Clean up when done
@@ -86,11 +86,14 @@ const response = await sandbox.process.executeCommand('echo "Hello, World!"')
 console.log(response.result)
 
 // Run TypeScript code
-const response = await sandbox.process.codeRun(`
-const x = 10
-const y = 20
-console.log(\`Sum: \${x + y}\`)
-`)
+const response = await sandbox.process.codeRun(
+  'typescript',
+  `
+  const x = 10
+  const y = 20
+  console.log(\`Sum: \${x + y}\`)
+  `
+)
 console.log(response.result)
 ```
 
