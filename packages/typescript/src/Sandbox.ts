@@ -10,7 +10,7 @@ import {
 } from '@daytonaio/api-client'
 import { FileSystem } from './FileSystem'
 import { Git } from './Git'
-import { CodeRunParams, Process } from './Process'
+import { Process } from './Process'
 import { LspLanguageId, LspServer } from './LspServer'
 import { DaytonaError } from './errors/DaytonaError'
 
@@ -128,22 +128,12 @@ export interface SandboxInfo extends ApiSandboxInfo {
 }
 
 /**
- * Interface defining methods that a code toolbox must implement
- * @interface
- */
-export interface SandboxCodeToolbox {
-  /** Generates a command to run the provided code */
-  getRunCommand(code: string, params?: CodeRunParams): string
-}
-
-/**
  * Represents a Daytona Sandbox.
  *
  * @property {string} id - Unique identifier for the Sandbox
  * @property {SandboxInstance} instance - The underlying Sandbox instance
  * @property {SandboxApi} sandboxApi - API client for Sandbox operations
  * @property {ToolboxApi} toolboxApi - API client for toolbox operations
- * @property {SandboxCodeToolbox} codeToolbox - Language-specific toolbox implementation
  * @property {FileSystem} fs - File system operations interface
  * @property {Git} git - Git operations interface
  * @property {Process} process - Process execution interface
@@ -165,18 +155,16 @@ export class Sandbox {
    * @param {SandboxInstance} instance - The underlying Sandbox instance
    * @param {SandboxApi} sandboxApi - API client for Sandbox operations
    * @param {ToolboxApi} toolboxApi - API client for toolbox operations
-   * @param {SandboxCodeToolbox} codeToolbox - Language-specific toolbox implementation
    */
   constructor(
     public readonly id: string,
     public readonly instance: SandboxInstance,
     public readonly sandboxApi: SandboxApi,
-    public readonly toolboxApi: ToolboxApi,
-    private readonly codeToolbox: SandboxCodeToolbox
+    public readonly toolboxApi: ToolboxApi
   ) {
     this.fs = new FileSystem(instance, this.toolboxApi)
     this.git = new Git(this, this.toolboxApi, instance)
-    this.process = new Process(this.codeToolbox, this.toolboxApi, instance)
+    this.process = new Process(this.toolboxApi, instance)
   }
 
   /**

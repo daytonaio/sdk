@@ -5,7 +5,6 @@ from ._utils.deprecation import deprecated_alias
 from .charts import BarChart, BoxAndWhiskerChart, Chart, ChartType, CompositeChart, LineChart, PieChart, ScatterChart
 from .common.code_run_params import CodeRunParams
 from .daytona import (
-    CodeLanguage,
     CreateSandboxParams,
     Daytona,
     DaytonaConfig,
@@ -15,6 +14,7 @@ from .daytona import (
     SessionExecuteResponse,
 )
 from .lsp_server import LspLanguageId
+from .process import CodeLanguage
 from .sandbox import Sandbox, SandboxState, SandboxTargetRegion
 
 CreateWorkspaceParams = deprecated_alias("CreateWorkspaceParams", "CreateSandboxParams")(CreateSandboxParams)

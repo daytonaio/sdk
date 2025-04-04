@@ -84,12 +84,11 @@ def create(params: Optional[CreateSandboxParams] = None,
 ```
 
 Creates Sandboxes with default or custom configurations. You can specify various parameters,
-including language, image, resources, environment variables, and volumes for the Sandbox.
+including image, resources, environment variables, and volumes for the Sandbox.
 
 **Arguments**:
 
-- `params` _Optional[CreateSandboxParams]_ - Parameters for Sandbox creation. If not provided,
-  defaults to Python language.
+- `params` _Optional[CreateSandboxParams]_ - Parameters for Sandbox creation.
 - `timeout` _Optional[float]_ - Timeout (in seconds) for sandbox creation. 0 means no timeout.
   Default is 60 seconds.
   
@@ -114,7 +113,6 @@ sandbox = daytona.create()
   Create a custom Sandbox:
 ```python
 params = CreateSandboxParams(
-    language="python",
     name="my-sandbox",
     image="debian:12.9",
     env_vars={"DEBUG": "true"},
@@ -265,20 +263,6 @@ Stops a Sandbox and waits for it to be stopped.
 - `DaytonaError` - If timeout is negative; If Sandbox fails to stop or times out
 
 
-## CodeLanguage
-
-```python
-@dataclass
-class CodeLanguage(Enum)
-```
-
-Programming languages supported by Daytona
-
-**Enum Members**:
-    - `PYTHON` ("python")
-    - `TYPESCRIPT` ("typescript")
-    - `JAVASCRIPT` ("javascript")
-
 ## DaytonaConfig
 
 ```python
@@ -339,7 +323,6 @@ resources = SandboxResources(
     gpu=1
 )
 params = CreateSandboxParams(
-    language="python",
     resources=resources
 )
 ```
@@ -354,7 +337,6 @@ Parameters for creating a new Sandbox.
 
 **Attributes**:
 
-- `language` _Optional[CodeLanguage]_ - Programming language for the Sandbox ("python", "javascript", "typescript").
   Defaults to "python".
 - `id` _Optional[str]_ - Custom identifier for the Sandbox. If not provided, a random ID will be generated.
 - `name` _Optional[str]_ - Display name for the Sandbox. Defaults to Sandbox ID if not provided.
@@ -375,7 +357,6 @@ Parameters for creating a new Sandbox.
 
 ```python
 params = CreateSandboxParams(
-    language="python",
     name="my-sandbox",
     env_vars={"DEBUG": "true"},
     resources=SandboxResources(cpu=2, memory=4),

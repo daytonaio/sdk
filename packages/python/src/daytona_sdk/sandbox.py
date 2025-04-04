@@ -21,7 +21,6 @@ from .filesystem import FileSystem
 from .git import Git
 from .lsp_server import LspLanguageId, LspServer
 from .process import Process
-from .protocols import SandboxCodeToolbox
 
 
 @dataclass
@@ -149,7 +148,6 @@ class Sandbox:
     Attributes:
         id (str): Unique identifier for the Sandbox.
         instance (SandboxInstance): The underlying Sandbox instance.
-        code_toolbox (SandboxCodeToolbox): Language-specific toolbox implementation.
         fs (FileSystem): File system operations interface.
         git (Git): Git operations interface.
         process (Process): Process execution interface.
@@ -161,7 +159,6 @@ class Sandbox:
         instance: SandboxInstance,
         sandbox_api: SandboxApi,
         toolbox_api: ToolboxApi,
-        code_toolbox: SandboxCodeToolbox,
     ):
         """Initialize a new Sandbox instance.
 
@@ -170,17 +167,15 @@ class Sandbox:
             instance (SandboxInstance): The underlying Sandbox instance.
             sandbox_api (SandboxApi): API client for Sandbox operations.
             toolbox_api (ToolboxApi): API client for toolbox operations.
-            code_toolbox (SandboxCodeToolbox): Language-specific toolbox implementation.
         """
         self.id = id
         self.instance = instance
         self.sandbox_api = sandbox_api
         self.toolbox_api = toolbox_api
-        self._code_toolbox = code_toolbox
 
         self.fs = FileSystem(instance, toolbox_api)
         self.git = Git(self, toolbox_api, instance)
-        self.process = Process(code_toolbox, toolbox_api, instance)
+        self.process = Process(toolbox_api, instance)
 
     def info(self) -> SandboxInfo:
         """Gets structured information about the Sandbox.
@@ -222,9 +217,7 @@ class Sandbox:
     def get_workspace_root_dir(self) -> str:
         return self.get_user_root_dir()
 
-    def create_lsp_server(
-        self, language_id: LspLanguageId, path_to_project: str
-    ) -> LspServer:
+    def create_lsp_server(self, language_id: LspLanguageId, path_to_project: str) -> LspServer:
         """Creates a new Language Server Protocol (LSP) server instance.
 
         The LSP server provides language-specific features like code completion,
@@ -267,10 +260,7 @@ class Sandbox:
             ```
         """
         # Convert all values to strings and create the expected labels structure
-        string_labels = {
-            k: str(v).lower() if isinstance(v, bool) else str(v)
-            for k, v in labels.items()
-        }
+        string_labels = {k: str(v).lower() if isinstance(v, bool) else str(v) for k, v in labels.items()}
         labels_payload = {"labels": string_labels}
         return self.sandbox_api.replace_labels(self.id, labels_payload)
 
@@ -472,9 +462,7 @@ class Sandbox:
         provider_metadata = json.loads(self.instance.info.provider_metadata)
         node_domain = provider_metadata.get("nodeDomain", "")
         if not node_domain:
-            raise DaytonaError(
-                "Node domain not found in provider metadata. Please contact support."
-            )
+            raise DaytonaError("Node domain not found in provider metadata. Please contact support.")
 
         return f"https://{port}-{self.id}.{node_domain}"
 
