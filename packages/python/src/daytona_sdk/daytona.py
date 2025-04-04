@@ -286,6 +286,7 @@ class Daytona:
         configuration = Configuration(host=self.api_url)
         api_client = ApiClient(configuration)
         api_client.default_headers["Authorization"] = f"Bearer {self.api_key}"
+        api_client.default_headers["x-Daytona-Source"] = "python-sdk"
 
         # Initialize API clients with the api_client instance
         self.sandbox_api = SandboxApi(api_client)
