@@ -68,7 +68,13 @@ export interface SandboxResources {
  * @property {string} state - Current state of the Sandbox (e.g., "started", "stopped")
  * @property {string | null} errorReason - Error message if Sandbox is in error state
  * @property {string | null} snapshotState - Current state of Sandbox snapshot
- * @property {Date | null} snapshotStateCreatedAt - When the snapshot state was created
+ * @property {Date | null} snapshotCreatedAt - When the snapshot was created
+ * @property {string} nodeDomain - Domain name of the Sandbox node
+ * @property {string} region - Region of the Sandbox node
+ * @property {string} class - Sandbox class
+ * @property {string} updatedAt - When the Sandbox was last updated
+ * @property {string | null} lastSnapshot - When the last snapshot was created
+ * @property {number} autoStopInterval - Auto-stop interval in minutes
  *
  * @example
  * const sandbox = await daytona.create();
@@ -101,8 +107,8 @@ export interface SandboxInfo extends ApiSandboxInfo {
   errorReason: string | null
   /** Snapshot state */
   snapshotState: string | null
-  /** Snapshot state creation timestamp */
-  snapshotStateCreatedAt: Date | null
+  /** Snapshot creation timestamp */
+  snapshotCreatedAt: Date | null
   /** Node domain */
   nodeDomain: string
   /** Region */
@@ -403,14 +409,13 @@ export class Sandbox {
    */
   public static toSandboxInfo(instance: ApiSandbox): SandboxInfo {
     const providerMetadata = JSON.parse(instance.info?.providerMetadata || '{}')
-    const resourcesData = providerMetadata.resources || providerMetadata
 
     // Extract resources with defaults
     const resources: SandboxResources = {
-      cpu: String(resourcesData.cpu || '1'),
-      gpu: resourcesData.gpu ? String(resourcesData.gpu) : null,
-      memory: `${resourcesData.memory ?? 2}Gi`,
-      disk: `${resourcesData.disk ?? 10}Gi`,
+      cpu: String(instance.cpu || '1'),
+      gpu: instance.gpu ? String(instance.gpu) : null,
+      memory: `${instance.memory ?? 2}Gi`,
+      disk: `${instance.disk ?? 10}Gi`,
     }
 
     return {
@@ -423,19 +428,17 @@ export class Sandbox {
       public: instance.public || false,
       target: instance.target,
       resources,
-      state: providerMetadata.state || '',
-      errorReason: providerMetadata.errorReason || null,
-      snapshotState: providerMetadata.snapshotState || null,
-      snapshotStateCreatedAt: providerMetadata.snapshotStateCreatedAt
-        ? new Date(providerMetadata.snapshotStateCreatedAt)
-        : null,
+      state: instance.state || SandboxState.UNKNOWN,
+      errorReason: instance.errorReason || null,
+      snapshotState: instance.snapshotState || null,
+      snapshotCreatedAt: instance.snapshotCreatedAt ? new Date(instance.snapshotCreatedAt) : null,
+      autoStopInterval: instance.autoStopInterval || 15,
+      created: instance.info?.created || '',
       nodeDomain: providerMetadata.nodeDomain || '',
       region: providerMetadata.region || '',
       class: providerMetadata.class || '',
       updatedAt: providerMetadata.updatedAt || '',
       lastSnapshot: providerMetadata.lastSnapshot || null,
-      autoStopInterval: providerMetadata.autoStopInterval || 0,
-      created: instance.info?.created || '',
       providerMetadata: instance.info?.providerMetadata,
     }
   }

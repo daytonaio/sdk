@@ -90,7 +90,13 @@ class SandboxInfo(ApiSandboxInfo):
         state (str): Current state of the Sandbox (e.g., "started", "stopped").
         error_reason (Optional[str]): Error message if Sandbox is in error state.
         snapshot_state (Optional[str]): Current state of Sandbox snapshot.
-        snapshot_state_created_at (Optional[datetime]): When the snapshot state was created.
+        snapshot_created_at (Optional[datetime]): When the snapshot was created.
+        node_domain (str): Domain name of the Sandbox node.
+        region (str): Region of the Sandbox node.
+        class_name (str): Sandbox class.
+        updated_at (str): When the Sandbox was last updated.
+        last_snapshot (Optional[str]): When the last snapshot was created.
+        auto_stop_interval (int): Auto-stop interval in minutes.
 
     Example:
         ```python
@@ -113,7 +119,7 @@ class SandboxInfo(ApiSandboxInfo):
     state: SandboxState
     error_reason: Optional[str]
     snapshot_state: Optional[str]
-    snapshot_state_created_at: Optional[datetime]
+    snapshot_created_at: Optional[datetime]
     node_domain: str
     region: str
     class_name: str
@@ -358,8 +364,7 @@ class Sandbox:
         state = None
         while state != "started":
             response = self.sandbox_api.get_workspace(self.id)
-            provider_metadata = json.loads(response.info.provider_metadata)
-            state = provider_metadata.get("state", "")
+            state = response.state
 
             if state == "error":
                 raise DaytonaError(
@@ -411,8 +416,7 @@ class Sandbox:
         while state != "stopped":
             try:
                 response = self.sandbox_api.get_workspace(self.id)
-                provider_metadata = json.loads(response.info.provider_metadata)
-                state = provider_metadata.get("state")
+                state = response.state
 
                 if state == "error":
                     raise DaytonaError(
@@ -495,17 +499,15 @@ class Sandbox:
             SandboxInfo: The converted SandboxInfo object
         """
         provider_metadata = json.loads(instance.info.provider_metadata or "{}")
-        resources_data = provider_metadata.get("resources", provider_metadata)
 
         # Extract resources with defaults
         resources = SandboxResources(
-            cpu=str(resources_data.get("cpu", "1")),
-            gpu=str(resources_data.get("gpu")) if resources_data.get("gpu") else None,
-            memory=str(resources_data.get("memory", "2")) + "Gi",
-            disk=str(resources_data.get("disk", "10")) + "Gi",
+            cpu=str(instance.cpu or "1"),
+            gpu=str(instance.gpu) if instance.gpu else None,
+            memory=str(instance.memory or "2") + "Gi",
+            disk=str(instance.disk or "10") + "Gi",
         )
 
-        enum_state = to_enum(SandboxState, provider_metadata.get("state", ""))
         enum_target = to_enum(SandboxTargetRegion, instance.target)
 
         return SandboxInfo(
@@ -518,20 +520,20 @@ class Sandbox:
             public=instance.public,
             target=enum_target or instance.target,
             resources=resources,
-            state=enum_state or provider_metadata.get("state", ""),
+            state=instance.state,
             error_reason=instance.error_reason,
-            snapshot_state=provider_metadata.get("snapshotState"),
-            snapshot_state_created_at=(
-                datetime.fromisoformat(provider_metadata.get("snapshotStateCreatedAt"))
-                if provider_metadata.get("snapshotStateCreatedAt")
+            snapshot_state=instance.snapshot_state,
+            snapshot_created_at=(
+                datetime.fromisoformat(instance.snapshot_created_at)
+                if instance.snapshot_created_at
                 else None
             ),
+            auto_stop_interval=instance.auto_stop_interval,
+            created=instance.info.created or "",
             node_domain=provider_metadata.get("nodeDomain", ""),
             region=provider_metadata.get("region", ""),
             class_name=provider_metadata.get("class", ""),
             updated_at=provider_metadata.get("updatedAt", ""),
             last_snapshot=provider_metadata.get("lastSnapshot"),
-            auto_stop_interval=provider_metadata.get("autoStopInterval", 0),
-            created=instance.info.created or "",
             provider_metadata=instance.info.provider_metadata,
         )
