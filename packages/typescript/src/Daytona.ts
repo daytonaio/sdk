@@ -177,20 +177,20 @@ export class Daytona {
   constructor(config?: DaytonaConfig) {
     dotenv.config()
     dotenv.config({ path: '.env.local', override: true })
-    const apiKey = config?.apiKey || process.env.DAYTONA_API_KEY
+    const apiKey = config?.apiKey || process?.env?.DAYTONA_API_KEY
     if (!apiKey) {
       throw new DaytonaError('API key is required')
     }
     const apiUrl =
       config?.apiUrl ||
       config?.serverUrl ||
-      process.env.DAYTONA_API_URL ||
-      process.env.DAYTONA_SERVER_URL ||
+      process?.env?.DAYTONA_API_URL ||
+      process?.env?.DAYTONA_SERVER_URL ||
       'https://app.daytona.io/api'
-    const envTarget = process.env.DAYTONA_TARGET as SandboxTargetRegion
+    const envTarget = process?.env?.DAYTONA_TARGET as SandboxTargetRegion
     const target = config?.target || envTarget || SandboxTargetRegion.US
 
-    if (process.env.DAYTONA_SERVER_URL && !process.env.DAYTONA_API_URL) {
+    if (process?.env?.DAYTONA_SERVER_URL && !process?.env?.DAYTONA_API_URL) {
       console.warn(
         '[Deprecation Warning] Environment variable `DAYTONA_SERVER_URL` is deprecated and will be removed in future versions. Use `DAYTONA_API_URL` instead.'
       )
