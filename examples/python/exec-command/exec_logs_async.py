@@ -15,7 +15,7 @@ async def main():
             session_id,
             SessionExecuteRequest(
                 command='counter=1; while (( counter <= 3 )); do echo "Count: $counter"; ((counter++)); sleep 2; done',
-                var_async=True,
+                run_async=True,
             ),
         )
 
