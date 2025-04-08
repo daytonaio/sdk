@@ -10,7 +10,12 @@ hooks:
   pre-render:
     - mkdir -p "$(dirname "$OUTPUT_FILE")"
   post-render:
-    -  #@ f"sed -i '1i ---\\ntitle: \"\"\\n---\\n' \"{env.OUTPUT_FILE}\""
+    - |
+      sed -i.bak "1i\\
+      ---\\
+      title: \"$FIRST_SECTION\"\\
+      ---\\
+      " "$OUTPUT_FILE" && rm -f "$OUTPUT_FILE.bak"
     - ./scripts/docs-reorder-sections.sh "$OUTPUT_FILE" #@ env.FIRST_SECTION or ""
     - ./scripts/docs-code-block-indentation.sh "$OUTPUT_FILE"
 

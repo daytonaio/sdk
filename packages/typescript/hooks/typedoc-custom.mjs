@@ -8,13 +8,26 @@ import { MarkdownPageEvent } from 'typedoc-plugin-markdown'
 export function load(app) {
   // --- TITLE HACK ---
   app.renderer.markdownHooks.on('page.begin', () => {
+    // We'll add the title later in the END event
     return '---\ntitle: ""\n---\n'
   })
 
   // --- CONTENT HACKS ---
   app.renderer.on(MarkdownPageEvent.END, (page) => {
+
     if (!page.contents) return
 
+    let title = '';
+  
+    // Look for the first heading (## or ###)
+    const headingMatch = page.contents.match(/^#{2,3}\s+(.+)$/m);
+    if (headingMatch) {
+      title = headingMatch[1].trim();
+    }
+    
+    // Replace the empty title with the actual title
+    page.contents = page.contents.replace(/title: ""/, `title: "${title}"`);
+    
     page.contents = transformContent(page.contents)
     page.filename = transformFilename(page.filename)
   })
