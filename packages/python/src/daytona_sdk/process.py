@@ -386,14 +386,7 @@ class Process:
             f"{self.toolbox_api.api_client.configuration.host}/toolbox/{self.instance.id}"
             + f"/toolbox/process/session/{session_id}/command/{command_id}/logs?follow=true"
         )
-        headers = {
-            "Authorization": self.toolbox_api.api_client.default_headers[
-                "Authorization"
-            ],
-            "x-Daytona-Source": self.toolbox_api.api_client.default_headers[
-                "x-Daytona-Source"
-            ],
-        }
+        headers = self.toolbox_api.api_client.default_headers
 
         async with httpx.AsyncClient(timeout=None) as client:
             async with client.stream("GET", url, headers=headers) as response:
