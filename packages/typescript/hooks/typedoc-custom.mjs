@@ -9,7 +9,7 @@ export function load(app) {
   // --- TITLE HACK ---
   app.renderer.markdownHooks.on('page.begin', () => {
     // We'll add the title later in the END event
-    return '---\ntitle: ""\n---\n'
+    return '---\ntitle: ""\nhideTitleOnPage: true\n---\n'
   })
 
   // --- CONTENT HACKS ---

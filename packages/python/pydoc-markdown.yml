@@ -14,6 +14,7 @@ hooks:
       sed -i.bak "1i\\
       ---\\
       title: \"$FIRST_SECTION\"\\
+      hideTitleOnPage: true\\
       ---\\
       " "$OUTPUT_FILE" && rm -f "$OUTPUT_FILE.bak"
     - ./scripts/docs-reorder-sections.sh "$OUTPUT_FILE" #@ env.FIRST_SECTION or ""
