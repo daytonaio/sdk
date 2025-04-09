@@ -49,16 +49,24 @@ class DaytonaConfig(BaseModel):
 
     Attributes:
         api_key (Optional[str]): API key for authentication with the Daytona API. If not set, it must be provided
-        as environment variable DAYTONA_API_KEY.
-        api_url (Optional[str]): URL of the Daytona API. Defaults to 'https://app.daytona.io/api' if not set
-        here and not set in environment variable DAYTONA_API_URL.
-        server_url (Optional[str]): Deprecated. Use `api_url` instead. This property will be removed in future versions.
-        target (Optional[SandboxTargetRegion]): Target environment for Sandbox. Defaults to 'us' if not set here
-        and not set in environment variable DAYTONA_TARGET.
+            via the environment variable `DAYTONA_API_KEY`, or a JWT token must be provided instead.
+        jwt_token (Optional[str]): JWT token for authentication with the Daytona API. If not set, it must be provided
+            via the environment variable `DAYTONA_JWT_TOKEN`, or an API key must be provided instead.
+        organization_id (Optional[str]): Organization ID used for JWT-based authentication. Required if a JWT token
+            is provided, and must be set either here or in the environment variable `DAYTONA_ORGANIZATION_ID`.
+        api_url (Optional[str]): URL of the Daytona API. Defaults to `'https://app.daytona.io/api'` if not set
+            here or in the environment variable `DAYTONA_API_URL`.
+        server_url (Optional[str]): Deprecated. Use `api_url` instead. This property will be removed
+            in a future version.
+        target (Optional[SandboxTargetRegion]): Target environment for the Sandbox. Defaults to `'us'` if not set here
+            or in the environment variable `DAYTONA_TARGET`.
 
     Example:
         ```python
         config = DaytonaConfig(api_key="your-api-key")
+        ```
+        ```python
+        config = DaytonaConfig(jwt_token="your-jwt-token", organization_id="your-organization-id")
         ```
     """
 
@@ -72,6 +80,8 @@ class DaytonaConfig(BaseModel):
         ),
     ]
     target: Optional[SandboxTargetRegion] = None
+    jwt_token: Optional[str] = None
+    organization_id: Optional[str] = None
 
     @model_validator(mode="before")
     @classmethod
@@ -259,6 +269,8 @@ class Daytona:
             env.read_env(".env.local", override=True)
 
             self.api_key = env.str("DAYTONA_API_KEY", None)
+            self.jwt_token = env.str("DAYTONA_JWT_TOKEN", None)
+            self.organization_id = env.str("DAYTONA_ORGANIZATION_ID", None)
             self.api_url = env.str("DAYTONA_API_URL", None) or env.str(
                 "DAYTONA_SERVER_URL", default_api_url
             )
@@ -276,17 +288,27 @@ class Daytona:
 
         if config:
             self.api_key = config.api_key or self.api_key
+            self.jwt_token = config.jwt_token or self.jwt_token
+            self.organization_id = config.organization_id or self.organization_id
             self.api_url = config.api_url or self.api_url
             self.target = config.target or self.target
 
-        if not self.api_key:
-            raise DaytonaError("API key is required")
+        if not self.api_key and not self.jwt_token:
+            raise DaytonaError("API key or JWT token is required")
 
         # Create API configuration without api_key
         configuration = Configuration(host=self.api_url)
         api_client = ApiClient(configuration)
-        api_client.default_headers["Authorization"] = f"Bearer {self.api_key}"
-        api_client.default_headers["x-Daytona-Source"] = "python-sdk"
+        api_client.default_headers[
+            "Authorization"
+        ] = f"Bearer {self.api_key or self.jwt_token}"
+        api_client.default_headers["X-Daytona-Source"] = "python-sdk"
+        if not self.api_key:
+            if not self.organization_id:
+                raise DaytonaError("Organization ID is required when using JWT token")
+            api_client.default_headers[
+                "X-Daytona-Organization-ID"
+            ] = self.organization_id
 
         # Initialize API clients with the api_client instance
         self.sandbox_api = SandboxApi(api_client)

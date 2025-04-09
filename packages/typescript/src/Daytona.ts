@@ -16,6 +16,10 @@ import dotenv from 'dotenv'
  *
  * @interface
  * @property {string} apiKey - API key for authentication with the Daytona API
+ * @property {string} jwtToken - JWT token for authentication with the Daytona API. If not set, it must be provided
+ * via the environment variable `DAYTONA_JWT_TOKEN`, or an API key must be provided instead.
+ * @property {string} organizationId - Organization ID used for JWT-based authentication. Required if a JWT token
+ * is provided, and must be set either here or in the environment variable `DAYTONA_ORGANIZATION_ID`.
  * @property {string} apiUrl - URL of the Daytona API. Defaults to 'https://app.daytona.io/api'
  * if not set here and not set in environment variable DAYTONA_API_URL.
  * @property {CreateSandboxTargetEnum} target - Target location for Sandboxes
@@ -31,6 +35,10 @@ import dotenv from 'dotenv'
 export interface DaytonaConfig {
   /** API key for authentication with the Daytona API */
   apiKey?: string
+  /** JWT token for authentication with the Daytona API */
+  jwtToken?: string
+  /** Organization ID for authentication with the Daytona API */
+  organizationId?: string
   /** URL of the Daytona API.
    */
   apiUrl?: string
@@ -165,7 +173,9 @@ export class Daytona {
   private readonly sandboxApi: SandboxApi
   private readonly toolboxApi: ToolboxApi
   private readonly target: SandboxTargetRegion
-  private readonly apiKey: string
+  private readonly apiKey?: string
+  private readonly jwtToken?: string
+  private readonly organizationId?: string
   private readonly apiUrl: string
 
   /**
@@ -178,8 +188,10 @@ export class Daytona {
     dotenv.config()
     dotenv.config({ path: '.env.local', override: true })
     const apiKey = config?.apiKey || process?.env?.DAYTONA_API_KEY
-    if (!apiKey) {
-      throw new DaytonaError('API key is required')
+    const jwtToken = config?.jwtToken || process?.env?.DAYTONA_JWT_TOKEN
+    const organizationId = config?.organizationId || process?.env?.DAYTONA_ORGANIZATION_ID
+    if (!apiKey && !jwtToken) {
+      throw new DaytonaError('API key or JWT token is required')
     }
     const apiUrl =
       config?.apiUrl ||
@@ -197,15 +209,26 @@ export class Daytona {
     }
 
     this.apiKey = apiKey
+    this.jwtToken = jwtToken
+    this.organizationId = organizationId
     this.apiUrl = apiUrl
     this.target = target
+
+    const orgHeader: Record<string, string> = {}
+    if (!this.apiKey) {
+      if (!this.organizationId) {
+        throw new DaytonaError('Organization ID is required when using JWT token')
+      }
+      orgHeader['X-Daytona-Organization-ID'] = this.organizationId
+    }
 
     const configuration = new Configuration({
       basePath: this.apiUrl,
       baseOptions: {
         headers: {
-          Authorization: `Bearer ${this.apiKey}`,
-          'x-Daytona-Source': 'typescript-sdk',
+          Authorization: `Bearer ${this.apiKey || this.jwtToken}`,
+          'X-Daytona-Source': 'typescript-sdk',
+          ...orgHeader,
         },
       },
     })

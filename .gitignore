@@ -12,8 +12,8 @@ build
 .tmp
 
 # Environment variables
-.env.local
 .env.*
+!.env.example
 
 # IDE and Editor files
 .idea/
