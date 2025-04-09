@@ -13,7 +13,7 @@ hooks:
     - |
       sed -i.bak "1i\\
       ---\\
-      title: \"$FIRST_SECTION\"\\
+      title: \"$(basename "$OUTPUT_FILE" .mdx | awk '{for(i=1;i<=NF;i++){ $i=toupper(substr($i,1,1)) substr($i,2) }}1' FS='-' OFS='')\"\\
       hideTitleOnPage: true\\
       ---\\
       " "$OUTPUT_FILE" && rm -f "$OUTPUT_FILE.bak"
