@@ -25,7 +25,7 @@ from .protocols import SandboxCodeToolbox
 
 
 @dataclass
-class SandboxTargetRegion(Enum):
+class SandboxTargetRegion(str, Enum):
     """Target regions for Sandboxes
 
     **Enum Members**:
