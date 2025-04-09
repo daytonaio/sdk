@@ -1,7 +1,10 @@
 import { Command, Session, SessionExecuteRequest, SessionExecuteResponse, ToolboxApi } from '@daytonaio/api-client'
-import { SandboxCodeToolbox, SandboxInstance } from './Sandbox'
+import { SandboxInstance } from './Sandbox'
 import { ExecuteResponse } from './types/ExecuteResponse'
 import { ArtifactParser } from './utils/ArtifactParser'
+import { SandboxPythonCodeToolbox } from './code-toolbox/SandboxPythonCodeToolbox'
+import { DaytonaError } from './errors/DaytonaError'
+import { SandboxTsCodeToolbox } from './code-toolbox/SandboxTsCodeToolbox'
 
 /**
  * Parameters for code execution.
@@ -18,16 +21,21 @@ export class CodeRunParams {
 }
 
 /**
+ * Supported programming languages for code execution
+ */
+export enum CodeLanguage {
+  PYTHON = 'python',
+  TYPESCRIPT = 'typescript',
+  JAVASCRIPT = 'javascript',
+}
+
+/**
  * Handles process and code execution within a Sandbox.
  *
  * @class
  */
 export class Process {
-  constructor(
-    private readonly codeToolbox: SandboxCodeToolbox,
-    private readonly toolboxApi: ToolboxApi,
-    private readonly instance: SandboxInstance
-  ) {}
+  constructor(private readonly toolboxApi: ToolboxApi, private readonly instance: SandboxInstance) {}
 
   /**
    * Executes a shell command in the Sandbox.
@@ -76,6 +84,7 @@ export class Process {
   /**
    * Executes code in the Sandbox using the appropriate language runtime.
    *
+   * @param {"python" | "typescript" | "javascript"} language - Programming language for the code.
    * @param {string} code - Code to execute
    * @param {CodeRunParams} params - Parameters for code execution
    * @param {number} [timeout] - Maximum time in seconds to wait for execution to complete
@@ -86,16 +95,21 @@ export class Process {
    *
    * @example
    * // Run TypeScript code
-   * const response = await process.codeRun(`
-   *   const x = 10;
-   *   const y = 20;
-   *   console.log(\`Sum: \${x + y}\`);
-   * `);
+   * const response = await sandbox.process.codeRun(
+   *   'typescript',
+   *   `
+   *     const x = 10;
+   *     const y = 20;
+   *     console.log(\`Sum: \${x + y}\`);
+   *   `
+   *  );
    * console.log(response.artifacts.stdout);  // Prints: Sum: 30
    *
    * @example
    * // Run Python code with matplotlib
-   * const response = await process.codeRun(`
+   * const response = await sandbox.process.codeRun(
+   *   'python',
+   *   `
    * import matplotlib.pyplot as plt
    * import numpy as np
    *
@@ -109,7 +123,8 @@ export class Process {
    * plt.ylabel('Y-axis (amplitude)')
    * plt.grid(True)
    * plt.show()
-   * `);
+   * `
+   * );
    *
    * if (response.artifacts?.charts) {
    *   const chart = response.artifacts.charts[0];
@@ -131,8 +146,13 @@ export class Process {
    *   }
    * }
    */
-  public async codeRun(code: string, params?: CodeRunParams, timeout?: number): Promise<ExecuteResponse> {
-    const runCommand = this.codeToolbox.getRunCommand(code, params)
+  public async codeRun(
+    language: 'python' | 'typescript' | 'javascript',
+    code: string,
+    params?: CodeRunParams,
+    timeout?: number
+  ): Promise<ExecuteResponse> {
+    const runCommand = this.getCodeRunCommand(language as CodeLanguage, code, params)
     return this.executeCommand(runCommand, undefined, timeout)
   }
 
@@ -347,5 +367,29 @@ export class Process {
    */
   public async deleteSession(sessionId: string): Promise<void> {
     await this.toolboxApi.deleteSession(this.instance.id, sessionId)
+  }
+
+  /**
+   * Gets the appropriate code toolbox based on language.
+   *
+   * @private
+   * @param {CodeLanguage} [language] - Programming language for the toolbox
+   * @param {string} code - Code to execute
+   * @param {CodeRunParams} [params] - Parameters for code execution
+   * @returns {string} The appropriate code run command
+   * @throws {DaytonaError} - `DaytonaError` - When an unsupported language is specified
+   */
+  private getCodeRunCommand(language: CodeLanguage, code: string, params?: CodeRunParams): string {
+    switch (language) {
+      case CodeLanguage.JAVASCRIPT:
+      case CodeLanguage.TYPESCRIPT:
+        return SandboxTsCodeToolbox.getRunCommand(code, params)
+      case CodeLanguage.PYTHON:
+        return SandboxPythonCodeToolbox.getRunCommand(code, params)
+      default:
+        throw new DaytonaError(
+          `Unsupported language: ${language}, supported languages: ${Object.values(CodeLanguage).join(', ')}`
+        )
+    }
   }
 }

@@ -12,22 +12,19 @@ Handles process and code execution within a Sandbox.
 
 **Attributes**:
 
-- `code_toolbox` _SandboxPythonCodeToolbox_ - Language-specific code execution toolbox.
 - `toolbox_api` _ToolboxApi_ - API client for Sandbox operations.
 - `instance` _SandboxInstance_ - The Sandbox instance this process belongs to.
 
 #### Process.\_\_init\_\_
 
 ```python
-def __init__(code_toolbox: SandboxPythonCodeToolbox, toolbox_api: ToolboxApi,
-             instance: SandboxInstance)
+def __init__(toolbox_api: ToolboxApi, instance: SandboxInstance)
 ```
 
 Initialize a new Process instance.
 
 **Arguments**:
 
-- `code_toolbox` _SandboxPythonCodeToolbox_ - Language-specific code execution toolbox.
 - `toolbox_api` _ToolboxApi_ - API client for Sandbox operations.
 - `instance` _SandboxInstance_ - The Sandbox instance this process belongs to.
 
@@ -77,7 +74,8 @@ result = sandbox.process.exec("sleep 10", timeout=5)
 #### Process.code\_run
 
 ```python
-def code_run(code: str,
+def code_run(language: Literal["python", "typescript", "javascript"],
+             code: str,
              params: Optional[CodeRunParams] = None,
              timeout: Optional[int] = None) -> ExecuteResponse
 ```
@@ -86,6 +84,7 @@ Executes code in the Sandbox using the appropriate language runtime.
 
 **Arguments**:
 
+- `language` _Literal["python", "typescript", "javascript"]_ - Programming language to use.
 - `code` _str_ - Code to execute.
 - `params` _Optional[CodeRunParams]_ - Parameters for code execution.
 - `timeout` _Optional[int]_ - Maximum time in seconds to wait for the code
@@ -105,11 +104,14 @@ Executes code in the Sandbox using the appropriate language runtime.
 
 ```python
 # Run Python code
-response = sandbox.process.code_run('''
-    x = 10
-    y = 20
-    print(f"Sum: {x + y}")
-''')
+response = sandbox.process.code_run(
+    language="python",
+    code='''
+x = 10
+y = 20
+print(f"Sum: {x + y}")
+    '''
+)
 print(response.artifacts.stdout)  # Prints: Sum: 30
 ```
   
@@ -132,7 +134,7 @@ print(response.artifacts.stdout)  # Prints: Sum: 30
            plt.show()
            '''
 
-           response = sandbox.process.code_run(code)
+           response = sandbox.process.code_run("python", code)
            chart = response.artifacts.charts[0]
 
            print(f"Type: {chart.type}")
@@ -412,4 +414,18 @@ Parameters for code execution.
 
 - `argv` _Optional[List[str]]_ - Command line arguments
 - `env` _Optional[Dict[str, str]]_ - Environment variables
+
+## CodeLanguage
+
+```python
+@dataclass
+class CodeLanguage(str, Enum)
+```
+
+Programming languages supported by Daytona
+
+**Enum Members**:
+    - `PYTHON` ("python")
+    - `TYPESCRIPT` ("typescript")
+    - `JAVASCRIPT` ("javascript")
 

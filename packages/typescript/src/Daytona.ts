@@ -1,4 +1,3 @@
-import { SandboxPythonCodeToolbox } from './code-toolbox/SandboxPythonCodeToolbox'
 import { Sandbox, SandboxInstance, Sandbox as Workspace } from './Sandbox'
 import {
   Configuration,
@@ -6,7 +5,6 @@ import {
   ToolboxApi,
   CreateWorkspaceTargetEnum as SandboxTargetRegion,
 } from '@daytonaio/api-client'
-import { SandboxTsCodeToolbox } from './code-toolbox/SandboxTsCodeToolbox'
 import axios, { AxiosError } from 'axios'
 import { DaytonaError } from './errors/DaytonaError'
 import dotenv from 'dotenv'
@@ -51,15 +49,6 @@ export interface DaytonaConfig {
 }
 
 /**
- * Supported programming languages for code execution
- */
-export enum CodeLanguage {
-  PYTHON = 'python',
-  TYPESCRIPT = 'typescript',
-  JAVASCRIPT = 'javascript',
-}
-
-/**
  * Resource allocation for a Sandbox.
  *
  * @interface
@@ -93,7 +82,6 @@ export interface SandboxResources {
  * @property {string} [id] - Optional Sandbox ID. If not provided, a random ID will be generated
  * @property {string} [image] - Optional Docker image to use for the Sandbox
  * @property {string} [user] - Optional os user to use for the Sandbox
- * @property {CodeLanguage | string} [language] - Programming language for direct code execution
  * @property {Record<string, string>} [envVars] - Optional environment variables to set in the Sandbox
  * @property {Record<string, string>} [labels] - Sandbox labels
  * @property {boolean} [public] - Is the Sandbox port preview public
@@ -105,7 +93,6 @@ export interface SandboxResources {
  *
  * @example
  * const params: CreateSandboxParams = {
- *     language: 'typescript',
  *     envVars: { NODE_ENV: 'development' },
  *     resources: {
  *         cpu: 2,
@@ -122,8 +109,6 @@ export type CreateSandboxParams = {
   image?: string
   /** Optional os user to use for the Sandbox */
   user?: string
-  /** Programming language for direct code execution */
-  language?: CodeLanguage | string
   /** Optional environment variables to set in the sandbox */
   envVars?: Record<string, string>
   /** Sandbox labels */
@@ -257,7 +242,7 @@ export class Daytona {
 
   /**
    * Creates Sandboxes with default or custom configurations. You can specify various parameters,
-   * including language, image, resources, environment variables, and volumes for the Sandbox.
+   * including image, resources, environment variables, and volumes for the Sandbox.
    *
    * @param {CreateSandboxParams} [params] - Parameters for Sandbox creation
    * @param {number} [timeout] - Timeout in seconds (0 means no timeout, default is 60)
@@ -270,7 +255,6 @@ export class Daytona {
    * @example
    * // Create a custom sandbox
    * const params: CreateSandboxParams = {
-   *     language: 'typescript',
    *     image: 'node:18',
    *     envVars: {
    *         NODE_ENV: 'development',
@@ -288,12 +272,7 @@ export class Daytona {
     // const startTime = Date.now();
 
     if (params == null) {
-      params = { language: 'python' }
-    }
-
-    const labels = params.labels || {}
-    if (params.language) {
-      labels['code-toolbox-language'] = params.language
+      params = {}
     }
 
     // remove this when params.timeout is removed
@@ -308,8 +287,6 @@ export class Daytona {
     ) {
       throw new DaytonaError('autoStopInterval must be a non-negative integer')
     }
-
-    const codeToolbox = this.getCodeToolbox(params.language as CodeLanguage)
 
     try {
       const response = await this.sandboxApi.createWorkspace(
@@ -342,8 +319,7 @@ export class Daytona {
         sandboxInstance.id!,
         sandboxInstance as SandboxInstance,
         this.sandboxApi,
-        this.toolboxApi,
-        codeToolbox
+        this.toolboxApi
       )
 
       // if (!params.async) {
@@ -376,12 +352,10 @@ export class Daytona {
   public async get(sandboxId: string): Promise<Sandbox> {
     const response = await this.sandboxApi.getWorkspace(sandboxId)
     const sandboxInstance = response.data
-    const language = sandboxInstance.labels && sandboxInstance.labels['code-toolbox-language']
-    const codeToolbox = this.getCodeToolbox(language as CodeLanguage)
     const sandboxInfo = Sandbox.toSandboxInfo(sandboxInstance)
     sandboxInstance.info = sandboxInfo
 
-    return new Sandbox(sandboxId, sandboxInstance as SandboxInstance, this.sandboxApi, this.toolboxApi, codeToolbox)
+    return new Sandbox(sandboxId, sandboxInstance as SandboxInstance, this.sandboxApi, this.toolboxApi)
   }
 
   /**
@@ -398,17 +372,10 @@ export class Daytona {
   public async list(): Promise<Sandbox[]> {
     const response = await this.sandboxApi.listWorkspaces()
     return response.data.map((sandbox) => {
-      const language = sandbox.labels?.['code-toolbox-language'] as CodeLanguage
       const sandboxInfo = Sandbox.toSandboxInfo(sandbox)
       sandbox.info = sandboxInfo
 
-      return new Sandbox(
-        sandbox.id,
-        sandbox as SandboxInstance,
-        this.sandboxApi,
-        this.toolboxApi,
-        this.getCodeToolbox(language)
-      )
+      return new Sandbox(sandbox.id, sandbox as SandboxInstance, this.sandboxApi, this.toolboxApi)
     })
   }
 
@@ -481,28 +448,5 @@ export class Daytona {
    */
   public async getCurrentSandbox(sandboxId: string): Promise<Sandbox> {
     return await this.get(sandboxId)
-  }
-
-  /**
-   * Gets the appropriate code toolbox based on language.
-   *
-   * @private
-   * @param {CodeLanguage} [language] - Programming language for the toolbox
-   * @returns {SandboxCodeToolbox} The appropriate code toolbox instance
-   * @throws {DaytonaError} - `DaytonaError` - When an unsupported language is specified
-   */
-  private getCodeToolbox(language?: CodeLanguage) {
-    switch (language) {
-      case CodeLanguage.JAVASCRIPT:
-      case CodeLanguage.TYPESCRIPT:
-        return new SandboxTsCodeToolbox()
-      case CodeLanguage.PYTHON:
-      case undefined:
-        return new SandboxPythonCodeToolbox()
-      default:
-        throw new DaytonaError(
-          `Unsupported language: ${language}, supported languages: ${Object.values(CodeLanguage).join(', ')}`
-        )
-    }
   }
 }

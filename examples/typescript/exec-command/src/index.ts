@@ -2,7 +2,7 @@ import { Daytona, Sandbox } from '@daytonaio/sdk'
 
 async function basicExec(sandbox: Sandbox) {
   //  run some python code directly
-  const codeResult = await sandbox.process.codeRun('console.log("Hello World from code!")')
+  const codeResult = await sandbox.process.codeRun('typescript', 'console.log("Hello World from code!")')
   if (codeResult.exitCode !== 0) {
     console.error('Error running code:', codeResult.exitCode)
   } else {

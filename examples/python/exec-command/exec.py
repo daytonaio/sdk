@@ -8,7 +8,7 @@ params = CreateSandboxParams(
 sandbox = daytona.create(params)
 
 # Run the code securely inside the sandbox
-response = sandbox.process.code_run('print("Hello World!")')
+response = sandbox.process.code_run("python", 'print("Hello World!")')
 if response.exit_code != 0:
     print(f"Error: {response.exit_code} {response.result}")
 else:

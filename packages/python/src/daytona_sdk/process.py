@@ -1,7 +1,9 @@
 import asyncio
 import json
 import time
-from typing import Callable, List, Optional
+from dataclasses import dataclass
+from enum import Enum
+from typing import Callable, List, Literal, Optional
 
 import httpx
 from daytona_api_client import (
@@ -13,38 +15,52 @@ from daytona_api_client import (
     SessionExecuteResponse,
     ToolboxApi,
 )
+from daytona_sdk._utils.enum import to_enum
 from daytona_sdk._utils.errors import intercept_errors
 
 from .charts import parse_chart
 from .code_toolbox.sandbox_python_code_toolbox import SandboxPythonCodeToolbox
+from .code_toolbox.sandbox_ts_code_toolbox import SandboxTsCodeToolbox
 from .common.code_run_params import CodeRunParams
+from .common.errors import DaytonaError
 from .common.execute_response import ExecuteResponse, ExecutionArtifacts
 from .protocols import SandboxInstance
+
+
+@dataclass
+class CodeLanguage(str, Enum):
+    """Programming languages supported by Daytona
+
+    **Enum Members**:
+        - `PYTHON` ("python")
+        - `TYPESCRIPT` ("typescript")
+        - `JAVASCRIPT` ("javascript")
+    """
+
+    PYTHON = "python"
+    TYPESCRIPT = "typescript"
+    JAVASCRIPT = "javascript"
 
 
 class Process:
     """Handles process and code execution within a Sandbox.
 
     Attributes:
-        code_toolbox (SandboxPythonCodeToolbox): Language-specific code execution toolbox.
         toolbox_api (ToolboxApi): API client for Sandbox operations.
         instance (SandboxInstance): The Sandbox instance this process belongs to.
     """
 
     def __init__(
         self,
-        code_toolbox: SandboxPythonCodeToolbox,
         toolbox_api: ToolboxApi,
         instance: SandboxInstance,
     ):
         """Initialize a new Process instance.
 
         Args:
-            code_toolbox (SandboxPythonCodeToolbox): Language-specific code execution toolbox.
             toolbox_api (ToolboxApi): API client for Sandbox operations.
             instance (SandboxInstance): The Sandbox instance this process belongs to.
         """
-        self.code_toolbox = code_toolbox
         self.toolbox_api = toolbox_api
         self.instance = instance
 
@@ -133,6 +149,7 @@ class Process:
 
     def code_run(
         self,
+        language: Literal["python", "typescript", "javascript"],
         code: str,
         params: Optional[CodeRunParams] = None,
         timeout: Optional[int] = None,
@@ -140,6 +157,7 @@ class Process:
         """Executes code in the Sandbox using the appropriate language runtime.
 
         Args:
+            language (Literal["python", "typescript", "javascript"]): Programming language to use.
             code (str): Code to execute.
             params (Optional[CodeRunParams]): Parameters for code execution.
             timeout (Optional[int]): Maximum time in seconds to wait for the code
@@ -155,11 +173,14 @@ class Process:
         Example:
             ```python
             # Run Python code
-            response = sandbox.process.code_run('''
-                x = 10
-                y = 20
-                print(f"Sum: {x + y}")
-            ''')
+            response = sandbox.process.code_run(
+                language="python",
+                code='''
+            x = 10
+            y = 20
+            print(f"Sum: {x + y}")
+                '''
+            )
             print(response.artifacts.stdout)  # Prints: Sum: 30
             ```
 
@@ -182,7 +203,7 @@ class Process:
             plt.show()
             '''
 
-            response = sandbox.process.code_run(code)
+            response = sandbox.process.code_run("python", code)
             chart = response.artifacts.charts[0]
 
             print(f"Type: {chart.type}")
@@ -202,7 +223,10 @@ class Process:
                     print(f"\tPoints: {element.points}")
             ```
         """
-        command = self.code_toolbox.get_run_command(code, params)
+        language_enum = to_enum(CodeLanguage, language)
+        if language_enum is None:
+            raise DaytonaError(f"Unsupported language: {language}, must be one of: {', '.join(CodeLanguage)}")
+        command = self._get_code_run_command(language_enum, code, params)
         return self.exec(command, timeout=timeout)
 
     @intercept_errors(message_prefix="Failed to create session: ")
@@ -458,3 +482,19 @@ class Process:
             ```
         """
         self.toolbox_api.delete_session(self.instance.id, session_id=session_id)
+
+    def _get_code_run_command(self, language: CodeLanguage, code: str, params: Optional[CodeRunParams] = None):
+        """Get the appropriate code run command for the given language and parameters.
+
+        Args:
+            language (CodeLanguage): The programming language to use.
+            code (str): The code to execute.
+            params (Optional[CodeRunParams]): Parameters for code execution.
+        """
+        match language.value:
+            case CodeLanguage.JAVASCRIPT | CodeLanguage.TYPESCRIPT:
+                return SandboxTsCodeToolbox.get_run_command(code, params)
+            case CodeLanguage.PYTHON:
+                return SandboxPythonCodeToolbox.get_run_command(code, params)
+            case _:
+                raise DaytonaError(f"Unsupported language: {language}")

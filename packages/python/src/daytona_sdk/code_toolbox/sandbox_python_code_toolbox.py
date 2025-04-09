@@ -6,12 +6,13 @@ from ..common.code_run_params import CodeRunParams
 
 
 class SandboxPythonCodeToolbox:
-    def get_run_command(self, code: str, params: Optional[CodeRunParams] = None) -> str:
+    @staticmethod
+    def get_run_command(code: str, params: Optional[CodeRunParams] = None) -> str:
         # Encode the provided code in base64
         base64_code = base64.b64encode(code.encode()).decode()
 
         # Override plt.show() method if matplotlib is imported
-        if self._is_matplotlib_imported(code):
+        if SandboxPythonCodeToolbox._is_matplotlib_imported(code):
             code_wrapper = base64.b64decode(PYTHON_CODE_WRAPPER.encode()).decode()
             code_wrapper = code_wrapper.replace("{encoded_code}", base64_code)
             base64_code = base64.b64encode(code_wrapper.encode()).decode()

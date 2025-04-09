@@ -24,7 +24,7 @@ daytona = Daytona()
 sandbox = daytona.create()
 
 # Run code in the sandbox
-response = sandbox.process.code_run('print("Hello World!")')
+response = sandbox.process.code_run("python", 'print("Hello World!")')
 print(response.result)
 
 # Clean up when done
@@ -81,11 +81,14 @@ response = sandbox.process.exec('echo "Hello, World!"')
 print(response.result)
 
 # Run Python code
-response = sandbox.process.code_run('''
+response = sandbox.process.code_run(
+    "python",
+    '''
 x = 10
 y = 20
 print(f"Sum: {x + y}")
-''')
+    '''
+)
 print(response.result)
 ```
 

@@ -63,7 +63,7 @@ create(params?: CreateSandboxParams, timeout?: number): Promise<Sandbox>
 ```
 
 Creates Sandboxes with default or custom configurations. You can specify various parameters,
-including language, image, resources, environment variables, and volumes for the Sandbox.
+including image, resources, environment variables, and volumes for the Sandbox.
 
 **Parameters**:
 
@@ -85,7 +85,6 @@ const sandbox = await daytona.create();
 ```ts
 // Create a custom sandbox
 const params: CreateSandboxParams = {
-    language: 'typescript',
     image: 'node:18',
     envVars: {
         NODE_ENV: 'development',
@@ -282,16 +281,6 @@ await daytona.stop(sandbox);
 ***
 
 
-## CodeLanguage
-
-Supported programming languages for code execution
-
-**Enum Members**:
-
-- `JAVASCRIPT` ("javascript")
-- `PYTHON` ("python")
-- `TYPESCRIPT` ("typescript")
-
 ## CreateSandboxParams
 
 Parameters for creating a new Sandbox.
@@ -304,7 +293,6 @@ Parameters for creating a new Sandbox.
 - `id?` _string_ - Optional Sandbox ID. If not provided, a random ID will be generated
 - `image?` _string_ - Optional Docker image to use for the Sandbox
 - `labels?` _Record\<string, string\>_ - Sandbox labels
-- `language?` _string_ - Programming language for direct code execution
 - `public?` _boolean_ - Is the Sandbox port preview public
 - `resources?` _SandboxResources_ - Resource allocation for the Sandbox
 - `target?` _string_ - Target location for the Sandbox
@@ -319,7 +307,6 @@ Parameters for creating a new Sandbox.
 
 ```ts
 const params: CreateSandboxParams = {
-    language: 'typescript',
     envVars: { NODE_ENV: 'development' },
     resources: {
         cpu: 2,

@@ -36,15 +36,11 @@ Handles process and code execution within a Sandbox.
 #### new Process()
 
 ```ts
-new Process(
-   codeToolbox: SandboxCodeToolbox, 
-   toolboxApi: ToolboxApi, 
-   instance: SandboxInstance): Process
+new Process(toolboxApi: ToolboxApi, instance: SandboxInstance): Process
 ```
 
 **Parameters**:
 
-- `codeToolbox` _SandboxCodeToolbox_
 - `toolboxApi` _ToolboxApi_
 - `instance` _SandboxInstance_
 
@@ -59,6 +55,7 @@ new Process(
 
 ```ts
 codeRun(
+   language: "python" | "typescript" | "javascript", 
    code: string, 
    params?: CodeRunParams, 
 timeout?: number): Promise<ExecuteResponse>
@@ -68,6 +65,7 @@ Executes code in the Sandbox using the appropriate language runtime.
 
 **Parameters**:
 
+- `language` _Programming language for the code._ - `"python"` | `"typescript"` | `"javascript"`
 - `code` _string_ - Code to execute
 - `params?` _CodeRunParams_ - Parameters for code execution
 - `timeout?` _number_ - Maximum time in seconds to wait for execution to complete
@@ -84,17 +82,22 @@ Executes code in the Sandbox using the appropriate language runtime.
 
 ```ts
 // Run TypeScript code
-const response = await process.codeRun(`
-  const x = 10;
-  const y = 20;
-  console.log(\`Sum: \${x + y}\`);
-`);
+const response = await sandbox.process.codeRun(
+  'typescript',
+  `
+    const x = 10;
+    const y = 20;
+    console.log(\`Sum: \${x + y}\`);
+  `
+ );
 console.log(response.artifacts.stdout);  // Prints: Sum: 30
 ```
 
 ```ts
 // Run Python code with matplotlib
-const response = await process.codeRun(`
+const response = await sandbox.process.codeRun(
+  'python',
+  `
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -108,7 +111,8 @@ plt.xlabel('X-axis (seconds)')
 plt.ylabel('Y-axis (amplitude)')
 plt.grid(True)
 plt.show()
-`);
+`
+);
 
 if (response.artifacts?.charts) {
   const chart = response.artifacts.charts[0];
@@ -427,3 +431,17 @@ sessions.forEach(session => {
   });
 });
 ```
+
+***
+
+
+## CodeLanguage
+
+Supported programming languages for code execution
+
+**Enum Members**:
+
+- `JAVASCRIPT` ("javascript")
+- `PYTHON` ("python")
+- `TYPESCRIPT` ("typescript")
+

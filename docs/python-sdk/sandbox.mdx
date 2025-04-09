@@ -14,7 +14,6 @@ Represents a Daytona Sandbox.
 
 - `id` _str_ - Unique identifier for the Sandbox.
 - `instance` _SandboxInstance_ - The underlying Sandbox instance.
-- `code_toolbox` _SandboxCodeToolbox_ - Language-specific toolbox implementation.
 - `fs` _FileSystem_ - File system operations interface.
 - `git` _Git_ - Git operations interface.
 - `process` _Process_ - Process execution interface.
@@ -23,7 +22,7 @@ Represents a Daytona Sandbox.
 
 ```python
 def __init__(id: str, instance: SandboxInstance, sandbox_api: SandboxApi,
-             toolbox_api: ToolboxApi, code_toolbox: SandboxCodeToolbox)
+             toolbox_api: ToolboxApi)
 ```
 
 Initialize a new Sandbox instance.
@@ -34,7 +33,6 @@ Initialize a new Sandbox instance.
 - `instance` _SandboxInstance_ - The underlying Sandbox instance.
 - `sandbox_api` _SandboxApi_ - API client for Sandbox operations.
 - `toolbox_api` _ToolboxApi_ - API client for toolbox operations.
-- `code_toolbox` _SandboxCodeToolbox_ - Language-specific toolbox implementation.
 
 #### Sandbox.info
 
