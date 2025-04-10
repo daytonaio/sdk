@@ -10,7 +10,13 @@ hooks:
   pre-render:
     - mkdir -p "$(dirname "$OUTPUT_FILE")"
   post-render:
-    -  #@ f"sed -i '1i ---\\ntitle: \"\"\\n---\\n' \"{env.OUTPUT_FILE}\""
+    - |
+      sed -i.bak "1i\\
+      ---\\
+      title: \"$(basename "$OUTPUT_FILE" .mdx | awk '{for(i=1;i<=NF;i++){ $i=toupper(substr($i,1,1)) substr($i,2) }}1' FS='-' OFS='')\"\\
+      hideTitleOnPage: true\\
+      ---\\
+      " "$OUTPUT_FILE" && rm -f "$OUTPUT_FILE.bak"
     - ./scripts/docs-reorder-sections.sh "$OUTPUT_FILE" #@ env.FIRST_SECTION or ""
     - ./scripts/docs-code-block-indentation.sh "$OUTPUT_FILE"
 

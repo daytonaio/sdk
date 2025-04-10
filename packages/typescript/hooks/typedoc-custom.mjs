@@ -8,13 +8,31 @@ import { MarkdownPageEvent } from 'typedoc-plugin-markdown'
 export function load(app) {
   // --- TITLE HACK ---
   app.renderer.markdownHooks.on('page.begin', () => {
-    return '---\ntitle: ""\n---\n'
+    // We'll add the title later in the END event
+    return '---\ntitle: ""\nhideTitleOnPage: true\n---\n'
   })
 
   // --- CONTENT HACKS ---
   app.renderer.on(MarkdownPageEvent.END, (page) => {
     if (!page.contents) return
 
+    // Extract title from filename and capitalize first letter of each word
+    let title = '';
+    if (page.filename) {
+      const filename = page.filename;
+      // Get the last part of the filename (after the last dot)
+      const baseFilename = filename.split('/').pop()?.replace(/\.md$/, '').split('.').pop() || '';
+      // Split into words and capitalize each word
+      const words = baseFilename.split(/[-_]/);
+      title = words.map(word => {
+        if (word.length === 0) return '';
+        return word.charAt(0).toUpperCase() + word.slice(1);
+      }).join('');
+    }
+    
+    // Replace the empty title with the actual title
+    page.contents = page.contents.replace(/title: ""/, `title: "${title}"`);
+    
     page.contents = transformContent(page.contents)
     page.filename = transformFilename(page.filename)
   })
