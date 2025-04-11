@@ -41,7 +41,7 @@
   // Add this to automatically source the venv in new terminals
   "onCreateCommand": {
     "install-deps": "git config --global --add safe.directory ${containerWorkspaceFolder} && yarn",
-    "copy-env": "cp -n .env .env.local"
+    "env": "test -f .env.local || touch .env.local"
   },
   // Comment out to connect as root instead. More info: https://aka.ms/vscode-remote/containers/non-root.
   "remoteUser": "daytona",

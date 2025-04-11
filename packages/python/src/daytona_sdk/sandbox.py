@@ -5,7 +5,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Annotated, Dict, Optional
 
-from daytona_api_client import ToolboxApi
+from daytona_api_client import PortPreviewUrl, ToolboxApi
 from daytona_api_client import Workspace as ApiSandbox
 from daytona_api_client import WorkspaceApi as SandboxApi
 from daytona_api_client import WorkspaceInfo as ApiSandboxInfo
@@ -459,24 +459,26 @@ class Sandbox:
         self.instance.auto_stop_interval = interval
 
     @intercept_errors(message_prefix="Failed to get preview link: ")
-    def get_preview_link(self, port: int) -> str:
-        """Gets the preview link for the sandbox at a specific port. If the port is not open,
-        it will open it and return the link.
+    def get_preview_link(self, port: int) -> PortPreviewUrl:
+        """Retrieves the preview link for the sandbox at the specified port. If the port is closed,
+        it will be opened automatically. For private sandboxes, a token is included to grant access
+        to the URL.
 
         Args:
-            port (int): The port to open the preview link on
+            port (int): The port to open the preview link on.
 
         Returns:
-            The preview link for the sandbox at the specified port
-        """
-        provider_metadata = json.loads(self.instance.info.provider_metadata)
-        node_domain = provider_metadata.get("nodeDomain", "")
-        if not node_domain:
-            raise DaytonaError(
-                "Node domain not found in provider metadata. Please contact support."
-            )
+            PortPreviewUrl: The response object for the preview link, which includes the `url`
+            and the `token` (to access private sandboxes).
 
-        return f"https://{port}-{self.id}.{node_domain}"
+        Example:
+            ```python
+            preview_link = sandbox.get_preview_link(3000)
+            print(f"Preview URL: {preview_link.url}")
+            print(f"Token: {preview_link.token}")
+            ```
+        """
+        return self.sandbox_api.get_port_preview_url(self.id, port)
 
     @intercept_errors(message_prefix="Failed to archive sandbox: ")
     def archive(self) -> None:
