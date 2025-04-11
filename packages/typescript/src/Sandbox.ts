@@ -7,6 +7,7 @@ import {
   CreateNodeClassEnum as SandboxClass,
   CreateNodeRegionEnum as SandboxTargetRegion,
   Workspace as ApiWorkspace,
+  PortPreviewUrl,
 } from '@daytonaio/api-client'
 import { FileSystem } from './FileSystem'
 import { Git } from './Git'
@@ -471,20 +472,21 @@ export class Sandbox {
   }
 
   /**
-   * Gets the preview link for the sandbox at a specific port. If the port is not open, it will open it and return the link.
-   * @param {number} port - The port to open the preview link on
-   * @returns {string} The preview link for the sandbox at the specified port
-   * @throws {DaytonaError} If the node domain is not found in the provider metadata
+   * Retrieves the preview link for the sandbox at the specified port. If the port is closed,
+   * it will be opened automatically. For private sandboxes, a token is included to grant access
+   * to the URL.
+   *
+   * @param {number} port - The port to open the preview link on.
+   * @returns {PortPreviewUrl} The response object for the preview link, which includes the `url`
+   * and the `token` (to access private sandboxes).
+   *
+   * @example
+   * const previewLink = await sandbox.getPreviewLink(3000);
+   * console.log(`Preview URL: ${previewLink.url}`);
+   * console.log(`Token: ${previewLink.token}`);
    */
-  public getPreviewLink(port: number): string {
-    const providerMetadata = JSON.parse(this.instance.info?.providerMetadata || '{}')
-    const nodeDomain = providerMetadata.nodeDomain || ''
-    if (!nodeDomain) {
-      throw new DaytonaError(
-        'Cannot get preview link. Node domain not found in provider metadata. Please contact support.'
-      )
-    }
-    return `https://${port}-${this.id}.${nodeDomain}`
+  public async getPreviewLink(port: number): Promise<PortPreviewUrl> {
+    return (await this.sandboxApi.getPortPreviewUrl(this.id, port)).data
   }
 
   /**

@@ -3,7 +3,7 @@ set -e
 
 # Upgrade basic tools
 python3 -m ensurepip --upgrade
-python3 -m pip install --upgrade pip setuptools wheel black
+python3 -m pip install --upgrade pip setuptools wheel "black<24.0.0,>=23.1.0"
 
 # Install dependencies
 echo "Installing Python packages..."
