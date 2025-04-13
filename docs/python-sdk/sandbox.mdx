@@ -2,6 +2,7 @@
 title: "Sandbox"
 hideTitleOnPage: true
 ---
+
 ## Sandbox
 
 ```python
@@ -374,11 +375,12 @@ Converts an API Sandbox instance to a SandboxInfo object.
 
 - `SandboxInfo` - The converted SandboxInfo object
 
+
 ## SandboxTargetRegion
 
 ```python
 @dataclass
-class SandboxTargetRegion(Enum)
+class SandboxTargetRegion(str, Enum)
 ```
 
 Target regions for Sandboxes
