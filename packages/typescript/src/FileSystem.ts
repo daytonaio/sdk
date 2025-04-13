@@ -1,5 +1,6 @@
 import { FileInfo, Match, ReplaceRequest, ReplaceResult, SearchFilesResponse, ToolboxApi } from '@daytonaio/api-client'
 import { SandboxInstance } from './Sandbox'
+import { DaytonaError } from './errors/DaytonaError'
 
 /**
  * Parameters for setting file permissions in the Sandbox.
@@ -277,6 +278,18 @@ export class FileSystem {
    * await fs.uploadFiles(files);
    */
   public async uploadFiles(files: FileUpload[]): Promise<void> {
-    await Promise.all(files.map((file) => this.uploadFile(file.path, file.content)))
+    const results = await Promise.allSettled(files.map((file) => this.uploadFile(file.path, file.content)))
+
+    const failedUploads = results
+      .map((result, index) => ({
+        path: files[index].path,
+        error: result.status === 'rejected' ? result.reason : undefined,
+      }))
+      .filter(({ error }) => error !== undefined)
+
+    if (failedUploads.length > 0) {
+      const errorMessage = failedUploads.map(({ path, error }) => `\nFailed to upload '${path}': ${error}`).join('')
+      throw new DaytonaError(errorMessage)
+    }
   }
 }
