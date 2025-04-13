@@ -34,6 +34,7 @@ export class Process {
    *
    * @param {string} command - Shell command to execute
    * @param {string} [cwd] - Working directory for command execution. If not specified, uses the Sandbox root directory
+   * @param {Record<string, string>} [env] - Environment variables to set for the command
    * @param {number} [timeout] - Maximum time in seconds to wait for the command to complete. 0 means wait indefinitely.
    * @returns {Promise<ExecuteResponse>} Command execution results containing:
    *                                    - exitCode: The command's exit status
@@ -53,7 +54,22 @@ export class Process {
    * // Command with timeout
    * const result = await process.executeCommand('sleep 10', undefined, 5);
    */
-  public async executeCommand(command: string, cwd?: string, timeout?: number): Promise<ExecuteResponse> {
+  public async executeCommand(
+    command: string,
+    cwd?: string,
+    env?: Record<string, string>,
+    timeout?: number
+  ): Promise<ExecuteResponse> {
+    const envVars = env
+      ? Object.entries(env)
+          .map(([key, value]) => `${key}=${value}`)
+          .join(' ')
+      : undefined
+    if (envVars) {
+      const base64Cmd = Buffer.from(command).toString('base64')
+      command = `sh -c '${envVars} sh -c "echo '${base64Cmd}' | base64 -d | sh"'`
+    }
+
     const response = await this.toolboxApi.executeCommand(this.instance.id, {
       command,
       timeout,
@@ -133,7 +149,7 @@ export class Process {
    */
   public async codeRun(code: string, params?: CodeRunParams, timeout?: number): Promise<ExecuteResponse> {
     const runCommand = this.codeToolbox.getRunCommand(code, params)
-    return this.executeCommand(runCommand, undefined, timeout)
+    return this.executeCommand(runCommand, undefined, undefined, timeout)
   }
 
   /**
