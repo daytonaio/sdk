@@ -343,6 +343,47 @@ await fs.uploadFile('/app/config.json', configFile);
 
 ***
 
+#### uploadFiles()
+
+```ts
+uploadFiles(files: FileUpload[]): Promise<void>
+```
+
+Uploads multiple files to the Sandbox. The parent directories must exist.
+If files already exist at the destination paths, they will be overwritten.
+
+**Parameters**:
+
+- `files` _FileUpload\[\]_ - Array of files to upload
+
+
+**Returns**:
+
+- `Promise<void>`
+
+**Example:**
+
+```ts
+// Upload multiple text files
+const files = [
+  {
+    path: '/app/data/file1.txt',
+    content: new File(['Content of file 1'], 'file1.txt')
+  },
+  {
+    path: '/app/data/file2.txt',
+    content: new File(['Content of file 2'], 'file2.txt')
+  },
+  {
+    path: '/app/config/settings.json',
+    content: new File(['{"key": "value"}'], 'settings.json')
+  }
+];
+await fs.uploadFiles(files);
+```
+
+***
+
 
 ## FilePermissionsParams
 
@@ -353,6 +394,8 @@ Parameters for setting file permissions in the Sandbox.
 - `group?` _string_ - Group owner of the file
 - `mode?` _string_ - File mode/permissions in octal format (e.g. "644")
 - `owner?` _string_ - User owner of the file
+    
+
 
 
 
@@ -365,3 +408,11 @@ const permissions: FilePermissionsParams = {
   group: 'users'
 };
 ```
+## FileUpload
+
+Represents a file to be uploaded to the Sandbox.
+
+**Properties**:
+
+- `content` _File_ - File to upload
+- `path` _string_ - Absolute destination path in the Sandbox

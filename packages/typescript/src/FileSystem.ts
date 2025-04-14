@@ -1,5 +1,6 @@
 import { FileInfo, Match, ReplaceRequest, ReplaceResult, SearchFilesResponse, ToolboxApi } from '@daytonaio/api-client'
 import { SandboxInstance } from './Sandbox'
+import { DaytonaError } from './errors/DaytonaError'
 
 /**
  * Parameters for setting file permissions in the Sandbox.
@@ -23,6 +24,20 @@ export type FilePermissionsParams = {
   mode?: string
   /** User owner of the file */
   owner?: string
+}
+
+/**
+ * Represents a file to be uploaded to the Sandbox.
+ *
+ * @interface
+ * @property {string} path - Absolute destination path in the Sandbox
+ * @property {File} content - File to upload
+ */
+export interface FileUpload {
+  /** Absolute destination path in the Sandbox */
+  path: string
+  /** File to upload */
+  content: File
 }
 
 /**
@@ -235,5 +250,46 @@ export class FileSystem {
   public async uploadFile(path: string, file: File): Promise<void> {
     const response = await this.toolboxApi.uploadFile(this.instance.id, path, undefined, file)
     return response.data
+  }
+
+  /**
+   * Uploads multiple files to the Sandbox. The parent directories must exist.
+   * If files already exist at the destination paths, they will be overwritten.
+   *
+   * @param {FileUpload[]} files - Array of files to upload
+   * @returns {Promise<void>}
+   *
+   * @example
+   * // Upload multiple text files
+   * const files = [
+   *   {
+   *     path: '/app/data/file1.txt',
+   *     content: new File(['Content of file 1'], 'file1.txt')
+   *   },
+   *   {
+   *     path: '/app/data/file2.txt',
+   *     content: new File(['Content of file 2'], 'file2.txt')
+   *   },
+   *   {
+   *     path: '/app/config/settings.json',
+   *     content: new File(['{"key": "value"}'], 'settings.json')
+   *   }
+   * ];
+   * await fs.uploadFiles(files);
+   */
+  public async uploadFiles(files: FileUpload[]): Promise<void> {
+    const results = await Promise.allSettled(files.map((file) => this.uploadFile(file.path, file.content)))
+
+    const failedUploads = results
+      .map((result, index) => ({
+        path: files[index].path,
+        error: result.status === 'rejected' ? result.reason : undefined,
+      }))
+      .filter(({ error }) => error !== undefined)
+
+    if (failedUploads.length > 0) {
+      const errorMessage = failedUploads.map(({ path, error }) => `\nFailed to upload '${path}': ${error}`).join('')
+      throw new DaytonaError(errorMessage)
+    }
   }
 }

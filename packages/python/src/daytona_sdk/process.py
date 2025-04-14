@@ -1,7 +1,9 @@
 import asyncio
+import base64
 import json
+import shlex
 import time
-from typing import Callable, List, Optional
+from typing import Callable, Dict, List, Optional
 
 import httpx
 from daytona_api_client import (
@@ -82,6 +84,7 @@ class Process:
         self,
         command: str,
         cwd: Optional[str] = None,
+        env: Optional[Dict[str, str]] = None,
         timeout: Optional[int] = None,
     ) -> ExecuteResponse:
         """Execute a shell command in the Sandbox.
@@ -90,6 +93,7 @@ class Process:
             command (str): Shell command to execute.
             cwd (Optional[str]): Working directory for command execution. If not
                 specified, uses the Sandbox root directory.
+            env (Optional[Dict[str, str]]): Environment variables to set for the command.
             timeout (Optional[int]): Maximum time in seconds to wait for the command
                 to complete. 0 means wait indefinitely.
 
@@ -113,6 +117,15 @@ class Process:
             result = sandbox.process.exec("sleep 10", timeout=5)
             ```
         """
+        if env is not None:
+            env_vars = " ".join(
+                f"{key}={shlex.quote(shlex.quote(value))}" for key, value in env.items()
+            )
+            base64_cmd = base64.b64encode(command.encode()).decode()
+            command = (
+                f"""sh -c '{env_vars} sh -c "echo '{base64_cmd}' | base64 -d | sh"' """
+            )
+
         execute_request = ExecuteRequest(command=command, cwd=cwd, timeout=timeout)
 
         response = self.toolbox_api.execute_command(

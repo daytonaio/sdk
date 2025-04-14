@@ -1,3 +1,5 @@
+from concurrent.futures import ThreadPoolExecutor
+from dataclasses import dataclass
 from typing import List
 
 from daytona_api_client import (
@@ -11,6 +13,19 @@ from daytona_api_client import (
 from daytona_sdk._utils.errors import intercept_errors
 
 from .protocols import SandboxInstance
+
+
+@dataclass
+class FileUpload:
+    """Represents a file to be uploaded to the Sandbox.
+
+    Attributes:
+        path (str): Absolute destination path in the Sandbox.
+        content (bytes): File contents as a bytes object.
+    """
+
+    path: str
+    content: bytes
 
 
 class FileSystem:
@@ -358,3 +373,42 @@ class FileSystem:
             ```
         """
         self.toolbox_api.upload_file(self.instance.id, path=path, file=file)
+
+    @intercept_errors(message_prefix="Failed to upload files: ")
+    def upload_files(self, files: List[FileUpload]) -> None:
+        """Uploads multiple files to the Sandbox. The parent directories must exist.
+        If files already exist at the destination paths, they will be overwritten.
+
+        Args:
+            files (List[FileUpload]): List of files to upload.
+
+        Example:
+            ```python
+            # Upload multiple text files
+            files = [
+                FileUpload(
+                    path="/workspace/data/file1.txt",
+                    content=b"Content of file 1"
+                ),
+                FileUpload(
+                    path="/workspace/data/file2.txt",
+                    content=b"Content of file 2"
+                ),
+                FileUpload(
+                    path="/workspace/config/settings.json",
+                    content=b'{"key": "value"}'
+                )
+            ]
+            sandbox.fs.upload_files(files)
+            ```
+        """
+
+        def upload_file(file: FileUpload) -> None:
+            self.toolbox_api.upload_file(
+                self.instance.id, path=file.path, file=file.content
+            )
+
+        with ThreadPoolExecutor() as executor:
+            futures = [executor.submit(upload_file, file) for file in files]
+            for future in futures:
+                future.result()

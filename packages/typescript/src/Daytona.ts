@@ -1,15 +1,15 @@
-import { SandboxPythonCodeToolbox } from './code-toolbox/SandboxPythonCodeToolbox'
-import { Sandbox, SandboxInstance, Sandbox as Workspace } from './Sandbox'
 import {
   Configuration,
   WorkspaceApi as SandboxApi,
-  ToolboxApi,
   CreateWorkspaceTargetEnum as SandboxTargetRegion,
+  ToolboxApi,
 } from '@daytonaio/api-client'
-import { SandboxTsCodeToolbox } from './code-toolbox/SandboxTsCodeToolbox'
 import axios, { AxiosError } from 'axios'
-import { DaytonaError } from './errors/DaytonaError'
 import dotenv from 'dotenv'
+import { SandboxPythonCodeToolbox } from './code-toolbox/SandboxPythonCodeToolbox'
+import { SandboxTsCodeToolbox } from './code-toolbox/SandboxTsCodeToolbox'
+import { DaytonaError } from './errors/DaytonaError'
+import { Sandbox, SandboxInstance, Sandbox as Workspace } from './Sandbox'
 
 /**
  * Configuration options for initializing the Daytona client.
@@ -245,6 +245,12 @@ export class Daytona {
           errorMessage = 'Operation timed out'
         } else {
           errorMessage = error.response?.data?.message || error.response?.data || error.message || String(error)
+        }
+
+        try {
+          errorMessage = JSON.stringify(errorMessage)
+        } catch {
+          errorMessage = String(errorMessage)
         }
 
         throw new DaytonaError(errorMessage)
