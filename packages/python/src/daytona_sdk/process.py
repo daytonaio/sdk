@@ -1,7 +1,6 @@
 import asyncio
 import base64
 import json
-import shlex
 import time
 from typing import Callable, Dict, List, Optional
 
@@ -117,15 +116,22 @@ class Process:
             result = sandbox.process.exec("sleep 10", timeout=5)
             ```
         """
-        if env is not None:
-            env_vars = " ".join(
-                f"{key}={shlex.quote(shlex.quote(value))}" for key, value in env.items()
-            )
-            base64_cmd = base64.b64encode(command.encode()).decode()
-            command = (
-                f"""sh -c '{env_vars} sh -c "echo '{base64_cmd}' | base64 -d | sh"' """
-            )
+        base64_user_cmd = base64.b64encode(command.encode()).decode()
+        command = f"echo '{base64_user_cmd}' | base64 -d | sh"
 
+        if env and len(env.items()) > 0:
+            safe_env_exports = (
+                ";".join(
+                    [
+                        f"export {key}=$(echo '{base64.b64encode(value.encode()).decode()}' | base64 -d)"
+                        for key, value in env.items()
+                    ]
+                )
+                + ";"
+            )
+            command = f"{safe_env_exports} {command}"
+
+        command = f'sh -c "{command}"'
         execute_request = ExecuteRequest(command=command, cwd=cwd, timeout=timeout)
 
         response = self.toolbox_api.execute_command(
@@ -216,7 +222,7 @@ class Process:
             ```
         """
         command = self.code_toolbox.get_run_command(code, params)
-        return self.exec(command, timeout=timeout)
+        return self.exec(command, env=params.env if params else None, timeout=timeout)
 
     @intercept_errors(message_prefix="Failed to create session: ")
     def create_session(self, session_id: str) -> None:

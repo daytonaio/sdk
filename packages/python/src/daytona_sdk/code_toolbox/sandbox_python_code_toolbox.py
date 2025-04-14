@@ -16,11 +16,6 @@ class SandboxPythonCodeToolbox:
             code_wrapper = code_wrapper.replace("{encoded_code}", base64_code)
             base64_code = base64.b64encode(code_wrapper.encode()).decode()
 
-        # Build environment variables string
-        env_vars = ""
-        if params and params.env:
-            env_vars = " ".join(f"{key}='{value}'" for key, value in params.env.items())
-
         # Build command-line arguments string
         argv = ""
         if params and params.argv:
@@ -29,7 +24,7 @@ class SandboxPythonCodeToolbox:
         # Execute the bootstrapper code directly
         # Use -u flag to ensure unbuffered output for real-time error reporting
         return (
-            f""" sh -c '{env_vars} python3 -u -c "exec(__import__(\\\"base64\\\")"""
+            f""" sh -c 'python3 -u -c "exec(__import__(\\\"base64\\\")"""
             f""".b64decode(\\\"{base64_code}\\\").decode())" {argv}' """
         )
 
