@@ -261,7 +261,17 @@ class Daytona:
         default_target = SandboxTargetRegion.US
         self.default_language = CodeLanguage.PYTHON
 
-        if config is None or None in [config.api_key, config.api_url, config.target]:
+        if config is None or (
+            not all([config.api_key, config.api_url, config.target])
+            and not all(
+                [
+                    config.jwt_token,
+                    config.organization_id,
+                    config.api_url,
+                    config.target,
+                ]
+            )
+        ):
             # Initialize env - it automatically reads from .env and .env.local
             env = Env()
             env.read_env()  # reads .env
@@ -287,9 +297,14 @@ class Daytona:
                 )
 
         if config:
-            self.api_key = config.api_key or self.api_key
-            self.jwt_token = config.jwt_token or self.jwt_token
-            self.organization_id = config.organization_id or self.organization_id
+            if not config.api_key and config.jwt_token:
+                self.api_key = None
+            else:
+                self.api_key = config.api_key or getattr(self, "api_key", None)
+            self.jwt_token = config.jwt_token or getattr(self, "jwt_token", None)
+            self.organization_id = config.organization_id or getattr(
+                self, "organization_id", None
+            )
             self.api_url = config.api_url or self.api_url
             self.target = config.target or self.target
 
