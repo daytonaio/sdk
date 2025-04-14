@@ -187,7 +187,7 @@ export class Daytona {
   constructor(config?: DaytonaConfig) {
     dotenv.config()
     dotenv.config({ path: '.env.local', override: true })
-    const apiKey = config?.apiKey || process?.env?.DAYTONA_API_KEY
+    const apiKey = !config?.apiKey && config?.jwtToken ? undefined : config?.apiKey || process?.env?.DAYTONA_API_KEY
     const jwtToken = config?.jwtToken || process?.env?.DAYTONA_JWT_TOKEN
     const organizationId = config?.organizationId || process?.env?.DAYTONA_ORGANIZATION_ID
     if (!apiKey && !jwtToken) {
