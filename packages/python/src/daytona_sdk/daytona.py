@@ -1,12 +1,17 @@
 import warnings
 from dataclasses import dataclass
 from enum import Enum
-from typing import Annotated, Dict, List, Optional
+from typing import Annotated, Dict, List, Optional, Union
+import time
 
 from daytona_api_client import ApiClient, Configuration
 from daytona_api_client import CreateWorkspace as CreateSandbox
 from daytona_api_client import SessionExecuteRequest, SessionExecuteResponse, ToolboxApi
 from daytona_api_client import WorkspaceApi as SandboxApi
+from daytona_api_client import ImagesApi
+from daytona_api_client import BuildImage
+from daytona_api_client import ImageState
+from daytona_api_client import ObjectStorageApi
 from daytona_sdk._utils.errors import DaytonaError, intercept_errors
 from deprecated import deprecated
 from environs import Env
@@ -17,6 +22,8 @@ from ._utils.timeout import with_timeout
 from .code_toolbox.sandbox_python_code_toolbox import SandboxPythonCodeToolbox
 from .code_toolbox.sandbox_ts_code_toolbox import SandboxTsCodeToolbox
 from .sandbox import Sandbox, SandboxTargetRegion
+from .image import Image
+from .object_storage import ObjectStorage
 
 Workspace = Sandbox
 
@@ -328,6 +335,8 @@ class Daytona:
         # Initialize API clients with the api_client instance
         self.sandbox_api = SandboxApi(api_client)
         self.toolbox_api = ToolboxApi(api_client)
+        self.image_api = ImagesApi(api_client)
+        self.object_storage_api = ObjectStorageApi(api_client)
 
     @intercept_errors(message_prefix="Failed to create sandbox: ")
     def create(
@@ -657,6 +666,46 @@ class Daytona:
             DaytonaError: If timeout is negative; If Sandbox fails to stop or times out
         """
         sandbox.stop(timeout)
+
+    def build_image(self, image: Image) -> None:
+        """Builds a Docker image.
+
+        Args:
+            image (Image): The image to build.
+        """
+        push_access_creds = self.object_storage_api.get_push_access()
+        object_storage = ObjectStorage(
+            "http://host.docker.internal:9000", # TODO: use push_access_creds.storage_url instead
+            push_access_creds.access_key,
+            push_access_creds.secret,
+            push_access_creds.session_token,
+        )
+
+        context_hashes = []
+        for context in image._contexts:
+            context_hash = object_storage.upload(context[0], push_access_creds.organization_id, context[1])
+            context_hashes.append(context_hash)
+
+        built_image = self.image_api.build_image(
+            BuildImage(
+                name=image.name(),
+                dockerfile=image.dockerfile(),
+                propagate=image.propagate(),
+                contextHashes=context_hashes,
+            )
+        )
+
+        print(f"Built image: {built_image}")
+
+        while built_image.state != ImageState.ACTIVE:
+            print(f"Building image {built_image.name} ({built_image.state})")
+            time.sleep(1)
+            built_image = next((img for img in self.image_api.get_all_images().items if img.name == built_image.name), None)
+
+        print(f"Built image {built_image.name} ({built_image.state})")
+        print(f'sleeping for 10 seconds to ensure image is propagated')
+        time.sleep(10)
+        print(f'done sleeping')
 
 
 # Export these at module level

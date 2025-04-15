@@ -1,7 +1,7 @@
 import json
 import time
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 from typing import Annotated, Dict, Optional
 
@@ -526,7 +526,7 @@ class Sandbox:
             error_reason=instance.error_reason,
             snapshot_state=instance.snapshot_state,
             snapshot_created_at=(
-                datetime.fromisoformat(instance.snapshot_created_at)
+                Sandbox.__parse_iso_z(instance.snapshot_created_at)
                 if instance.snapshot_created_at
                 else None
             ),
@@ -539,3 +539,11 @@ class Sandbox:
             last_snapshot=provider_metadata.get("lastSnapshot"),
             provider_metadata=instance.info.provider_metadata,
         )
+
+    @staticmethod
+    def __parse_iso_z(date_str: str) -> datetime:
+        try:
+            return datetime.strptime(date_str, "%Y-%m-%dT%H:%M:%S.%fZ").replace(tzinfo=timezone.utc)
+        except ValueError:
+            # If there are no fractional seconds
+            return datetime.strptime(date_str, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
