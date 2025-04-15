@@ -60,23 +60,27 @@ export class Process {
     env?: Record<string, string>,
     timeout?: number
   ): Promise<ExecuteResponse> {
-    const envVars = env
-      ? Object.entries(env)
-          .map(([key, value]) => `${key}=${value}`)
-          .join(' ')
-      : undefined
-    if (envVars) {
-      const base64Cmd = Buffer.from(command).toString('base64')
-      command = `sh -c '${envVars} sh -c "echo '${base64Cmd}' | base64 -d | sh"'`
+    const base64UserCmd = Buffer.from(command).toString('base64')
+    command = `echo '${base64UserCmd}' | base64 -d | sh`
+
+    if (env && Object.keys(env).length > 0) {
+      const safeEnvExports =
+        Object.entries(env)
+          .map(([key, value]) => {
+            const encodedValue = Buffer.from(value).toString('base64')
+            return `export ${key}=$(echo '${encodedValue}' | base64 -d)`
+          })
+          .join(';') + ';'
+      command = `${safeEnvExports} ${command}`
     }
+
+    command = `sh -c "${command}"`
 
     const response = await this.toolboxApi.executeCommand(this.instance.id, {
       command,
       timeout,
       cwd,
     })
-
-    // console.log(response)
 
     // Parse artifacts from the output
     const artifacts = ArtifactParser.parseArtifacts(response.data.result)
@@ -149,7 +153,7 @@ export class Process {
    */
   public async codeRun(code: string, params?: CodeRunParams, timeout?: number): Promise<ExecuteResponse> {
     const runCommand = this.codeToolbox.getRunCommand(code, params)
-    return this.executeCommand(runCommand, undefined, undefined, timeout)
+    return this.executeCommand(runCommand, undefined, params?.env, timeout)
   }
 
   /**

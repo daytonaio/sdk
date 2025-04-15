@@ -17,19 +17,12 @@ export class SandboxPythonCodeToolbox implements SandboxCodeToolbox {
       base64Code = Buffer.from(code_wrapper).toString('base64')
     }
 
-    // Build environment variables string
-    const envVars = params?.env
-      ? Object.entries(params.env)
-          .map(([key, value]) => `${key}='${value}'`)
-          .join(' ')
-      : ''
-
     // Build command-line arguments string
     const argv = params?.argv ? params.argv.join(' ') : ''
 
     // Execute the bootstrapper code directly
     // Use -u flag to ensure unbuffered output for real-time error reporting
-    return `sh -c '${envVars} python3 -u -c "exec(__import__(\\\"base64\\\").b64decode(\\\"${base64Code}\\\").decode())" ${argv}'`
+    return `sh -c 'python3 -u -c "exec(__import__(\\\"base64\\\").b64decode(\\\"${base64Code}\\\").decode())" ${argv}'`
   }
 
   /**

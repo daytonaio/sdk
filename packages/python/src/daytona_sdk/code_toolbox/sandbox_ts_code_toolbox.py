@@ -9,11 +9,6 @@ class SandboxTsCodeToolbox:
         # Encode the provided code in base64
         base64_code = base64.b64encode(code.encode()).decode()
 
-        # Build environment variables string
-        env_vars = ""
-        if params and params.env:
-            env_vars = " ".join(f"{key}='{value}'" for key, value in params.env.items())
-
         # Build command-line arguments string
         argv = ""
         if params and params.argv:
@@ -21,7 +16,7 @@ class SandboxTsCodeToolbox:
 
         # Combine everything into the final command for TypeScript
         return (
-            f""" sh -c 'echo {base64_code} | base64 --decode | {env_vars} npx ts-node -O """
+            f""" sh -c 'echo {base64_code} | base64 --decode | npx ts-node -O """
             f""""{{\\\"module\\\":\\\"CommonJS\\\"}}" -e "$(cat)" x {argv} 2>&1 | grep -vE """
-            f""""npm notice|npm warn exec"' """
+            f""""npm notice"' """
         )
