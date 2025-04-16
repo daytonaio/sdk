@@ -185,6 +185,8 @@ export class Daytona {
    * @throws {DaytonaError} - `DaytonaError` - When API key is missing
    */
   constructor(config?: DaytonaConfig) {
+    this.remove = this.delete.bind(this)
+
     dotenv.config()
     dotenv.config({ path: '.env.local', override: true })
     const apiKey = !config?.apiKey && config?.jwtToken ? undefined : config?.apiKey || process?.env?.DAYTONA_API_KEY
@@ -449,19 +451,22 @@ export class Daytona {
   }
 
   /**
-   * Removes a Sandbox.
+   * Deletes a Sandbox.
    *
-   * @param {Sandbox} sandbox - The Sandbox to remove
+   * @param {Sandbox} sandbox - The Sandbox to delete
    * @param {number} timeout - Timeout in seconds (0 means no timeout, default is 60)
    * @returns {Promise<void>}
    *
    * @example
    * const sandbox = await daytona.get('my-sandbox-id');
-   * await daytona.remove(sandbox);
+   * await daytona.delete(sandbox);
    */
-  public async remove(sandbox: Sandbox, timeout: number = 60) {
+  public async delete(sandbox: Sandbox, timeout: number = 60) {
     await this.sandboxApi.deleteWorkspace(sandbox.id, true, undefined, { timeout: timeout * 1000 })
   }
+
+  /** @hidden */
+  public remove!: (sandbox: Sandbox, timeout?: number) => Promise<void>
 
   /**
    * Gets the Sandbox by ID.

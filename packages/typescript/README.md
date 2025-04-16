@@ -34,7 +34,7 @@ const response = await sandbox.process.codeRun('console.log("Hello World!")')
 console.log(response.result)
 
 // Clean up when done
-await daytona.remove(sandbox)
+await daytona.delete(sandbox)
 ```
 
 ## Configuration

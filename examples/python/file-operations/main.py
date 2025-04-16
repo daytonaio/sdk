@@ -56,4 +56,4 @@ print("Search results:", search_results)
 # Delete the file
 sandbox.fs.delete_file(new_file_path)
 
-daytona.remove(sandbox)
+daytona.delete(sandbox)

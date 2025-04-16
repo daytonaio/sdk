@@ -85,9 +85,7 @@ class DaytonaConfig(BaseModel):
 
     @model_validator(mode="before")
     @classmethod
-    def __handle_deprecated_server_url(
-        cls, values
-    ):  # pylint: disable=unused-private-member
+    def __handle_deprecated_server_url(cls, values):  # pylint: disable=unused-private-member
         if "server_url" in values and values.get("server_url"):
             warnings.warn(
                 "'server_url' is deprecated and will be removed in a future version. Use 'api_url' instead.",
@@ -187,9 +185,7 @@ class CreateSandboxParams(BaseModel):
 
     @model_validator(mode="before")
     @classmethod
-    def __handle_deprecated_timeout(
-        cls, values
-    ):  # pylint: disable=unused-private-member
+    def __handle_deprecated_timeout(cls, values):  # pylint: disable=unused-private-member
         if "timeout" in values and values.get("timeout"):
             warnings.warn(
                 "The `timeout` field is deprecated and will be removed in future versions. "
@@ -281,14 +277,10 @@ class Daytona:
             self.api_key = env.str("DAYTONA_API_KEY", None)
             self.jwt_token = env.str("DAYTONA_JWT_TOKEN", None)
             self.organization_id = env.str("DAYTONA_ORGANIZATION_ID", None)
-            self.api_url = env.str("DAYTONA_API_URL", None) or env.str(
-                "DAYTONA_SERVER_URL", default_api_url
-            )
+            self.api_url = env.str("DAYTONA_API_URL", None) or env.str("DAYTONA_SERVER_URL", default_api_url)
             self.target = env.str("DAYTONA_TARGET", default_target)
 
-            if env.str("DAYTONA_SERVER_URL", None) and not env.str(
-                "DAYTONA_API_URL", None
-            ):
+            if env.str("DAYTONA_SERVER_URL", None) and not env.str("DAYTONA_API_URL", None):
                 warnings.warn(
                     "Environment variable `DAYTONA_SERVER_URL` is deprecated and will be removed in future versions. "
                     + "Use `DAYTONA_API_URL` instead.",
@@ -302,9 +294,7 @@ class Daytona:
             else:
                 self.api_key = config.api_key or getattr(self, "api_key", None)
             self.jwt_token = config.jwt_token or getattr(self, "jwt_token", None)
-            self.organization_id = config.organization_id or getattr(
-                self, "organization_id", None
-            )
+            self.organization_id = config.organization_id or getattr(self, "organization_id", None)
             self.api_url = config.api_url or self.api_url
             self.target = config.target or self.target
 
@@ -314,16 +304,12 @@ class Daytona:
         # Create API configuration without api_key
         configuration = Configuration(host=self.api_url)
         api_client = ApiClient(configuration)
-        api_client.default_headers[
-            "Authorization"
-        ] = f"Bearer {self.api_key or self.jwt_token}"
+        api_client.default_headers["Authorization"] = f"Bearer {self.api_key or self.jwt_token}"
         api_client.default_headers["X-Daytona-Source"] = "python-sdk"
         if not self.api_key:
             if not self.organization_id:
                 raise DaytonaError("Organization ID is required when using JWT token")
-            api_client.default_headers[
-                "X-Daytona-Organization-ID"
-            ] = self.organization_id
+            api_client.default_headers["X-Daytona-Organization-ID"] = self.organization_id
 
         # Initialize API clients with the api_client instance
         self.sandbox_api = SandboxApi(api_client)
@@ -439,9 +425,7 @@ class Daytona:
             sandbox_data.disk = params.resources.disk
             sandbox_data.gpu = params.resources.gpu
 
-        response = self.sandbox_api.create_workspace(
-            sandbox_data, _request_timeout=timeout or None
-        )
+        response = self.sandbox_api.create_workspace(sandbox_data, _request_timeout=timeout or None)
         sandbox_info = Sandbox.to_sandbox_info(response)
         response.info = sandbox_info
 
@@ -491,27 +475,27 @@ class Daytona:
                 raise DaytonaError(f"Unsupported language: {params.language}")
 
     @intercept_errors(message_prefix="Failed to remove sandbox: ")
-    def remove(self, sandbox: Sandbox, timeout: Optional[float] = 60) -> None:
-        """Removes a Sandbox.
+    def delete(self, sandbox: Sandbox, timeout: Optional[float] = 60) -> None:
+        """Deletes a Sandbox.
 
         Args:
-            sandbox (Sandbox): The Sandbox instance to remove.
-            timeout (Optional[float]): Timeout (in seconds) for sandbox removal. 0 means no timeout.
+            sandbox (Sandbox): The Sandbox instance to delete.
+            timeout (Optional[float]): Timeout (in seconds) for sandbox deletion. 0 means no timeout.
                 Default is 60 seconds.
 
         Raises:
-            DaytonaError: If sandbox fails to remove or times out
+            DaytonaError: If sandbox fails to delete or times out
 
         Example:
             ```python
             sandbox = daytona.create()
             # ... use sandbox ...
-            daytona.remove(sandbox)  # Clean up when done
+            daytona.delete(sandbox)  # Clean up when done
             ```
         """
-        return self.sandbox_api.delete_workspace(
-            sandbox.id, force=True, _request_timeout=timeout or None
-        )
+        return self.sandbox_api.delete_workspace(sandbox.id, force=True, _request_timeout=timeout or None)
+
+    remove = delete
 
     @deprecated(
         reason=(
@@ -594,9 +578,7 @@ class Daytona:
                 self.toolbox_api,
                 self._get_code_toolbox(
                     CreateSandboxParams(
-                        language=self._validate_language_label(
-                            sandbox.labels.get("code-toolbox-language")
-                        )
+                        language=self._validate_language_label(sandbox.labels.get("code-toolbox-language"))
                     )
                 ),
             )
