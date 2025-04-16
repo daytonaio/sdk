@@ -8,6 +8,14 @@ hideTitleOnPage: true
 
 Main class for interacting with the Daytona API.
 
+**Properties**:
+
+- `volume` _VolumeService_ - Service for managing Daytona Volumes
+    
+
+
+
+
 Provides methods for creating, managing, and interacting with Daytona Sandboxes.
 Can be initialized either with explicit configuration or using environment variables.
 
@@ -279,10 +287,6 @@ Stops a Sandbox.
 const sandbox = await daytona.get('my-sandbox-id');
 await daytona.stop(sandbox);
 ```
-
-***
-
-
 ## CodeLanguage
 
 Supported programming languages for code execution

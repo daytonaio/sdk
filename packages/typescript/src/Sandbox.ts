@@ -14,6 +14,7 @@ import { Git } from './Git'
 import { CodeRunParams, Process } from './Process'
 import { LspLanguageId, LspServer } from './LspServer'
 import { DaytonaError } from './errors/DaytonaError'
+import { SandboxVolumeService } from './Volume'
 
 /** @deprecated Use SandboxInfo instead. This type will be removed in a future version. */
 type WorkspaceInfo = SandboxInfo
@@ -148,6 +149,7 @@ export interface SandboxCodeToolbox {
  * @property {FileSystem} fs - File system operations interface
  * @property {Git} git - Git operations interface
  * @property {Process} process - Process execution interface
+ * @property {SandboxVolumeService} volume - Service for managing volumes in the Sandbox
  *
  * @class
  */
@@ -158,6 +160,8 @@ export class Sandbox {
   public readonly git: Git
   /** Process and code execution operations */
   public readonly process: Process
+  /** Volume operations for the Sandbox */
+  public readonly volume: SandboxVolumeService
 
   /**
    * Creates a new Sandbox instance
@@ -178,6 +182,7 @@ export class Sandbox {
     this.fs = new FileSystem(instance, this.toolboxApi)
     this.git = new Git(this, this.toolboxApi, instance)
     this.process = new Process(this.codeToolbox, this.toolboxApi, instance)
+    this.volume = new SandboxVolumeService(instance, this.toolboxApi)
   }
 
   /**

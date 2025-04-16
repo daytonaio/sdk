@@ -5,7 +5,12 @@ from typing import Annotated, Dict, List, Optional
 
 from daytona_api_client import ApiClient, Configuration
 from daytona_api_client import CreateWorkspace as CreateSandbox
-from daytona_api_client import SessionExecuteRequest, SessionExecuteResponse, ToolboxApi
+from daytona_api_client import (
+    SessionExecuteRequest,
+    SessionExecuteResponse,
+    ToolboxApi,
+    VolumesApi,
+)
 from daytona_api_client import WorkspaceApi as SandboxApi
 from daytona_sdk._utils.errors import DaytonaError, intercept_errors
 from deprecated import deprecated
@@ -17,6 +22,7 @@ from ._utils.timeout import with_timeout
 from .code_toolbox.sandbox_python_code_toolbox import SandboxPythonCodeToolbox
 from .code_toolbox.sandbox_ts_code_toolbox import SandboxTsCodeToolbox
 from .sandbox import Sandbox, SandboxTargetRegion
+from .volume import VolumeService
 
 Workspace = Sandbox
 
@@ -210,6 +216,7 @@ class Daytona:
         api_key (str): API key for authentication.
         api_url (str): URL of the Daytona API.
         target (str): Default target location for Sandboxes.
+        volume (VolumeService): Service for managing volumes.
 
     Example:
         Using environment variables:
@@ -328,6 +335,9 @@ class Daytona:
         # Initialize API clients with the api_client instance
         self.sandbox_api = SandboxApi(api_client)
         self.toolbox_api = ToolboxApi(api_client)
+
+        # Initialize volume service
+        self.volume = VolumeService(VolumesApi(api_client))
 
     @intercept_errors(message_prefix="Failed to create sandbox: ")
     def create(

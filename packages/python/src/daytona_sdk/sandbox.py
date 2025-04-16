@@ -22,6 +22,7 @@ from .git import Git
 from .lsp_server import LspLanguageId, LspServer
 from .process import Process
 from .protocols import SandboxCodeToolbox
+from .volume import SandboxVolumeService
 
 
 @dataclass
@@ -153,6 +154,7 @@ class Sandbox:
         fs (FileSystem): File system operations interface.
         git (Git): Git operations interface.
         process (Process): Process execution interface.
+        volume (SandboxVolumeService): Service for managing volumes in the Sandbox.
     """
 
     def __init__(
@@ -181,6 +183,7 @@ class Sandbox:
         self.fs = FileSystem(instance, toolbox_api)
         self.git = Git(self, toolbox_api, instance)
         self.process = Process(code_toolbox, toolbox_api, instance)
+        self.volume = SandboxVolumeService(instance, toolbox_api)
 
     def info(self) -> SandboxInfo:
         """Gets structured information about the Sandbox.
