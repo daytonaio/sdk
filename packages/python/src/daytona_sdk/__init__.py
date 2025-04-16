@@ -26,6 +26,7 @@ from .daytona import (
 from .filesystem import FileUpload
 from .lsp_server import LspLanguageId
 from .sandbox import Sandbox, SandboxState, SandboxTargetRegion
+from .image import Image
 
 CreateWorkspaceParams = deprecated_alias(
     "CreateWorkspaceParams", "CreateSandboxParams"
@@ -68,4 +69,5 @@ __all__ = [
     "BoxAndWhiskerChart",
     "CompositeChart",
     "FileUpload",
+    "Image",
 ]
