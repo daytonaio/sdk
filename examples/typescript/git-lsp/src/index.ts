@@ -52,7 +52,7 @@ async function main() {
     console.error('Error creating sandbox:', error)
   } finally {
     //  cleanup
-    await daytona.remove(sandbox)
+    await daytona.delete(sandbox)
   }
 }
 

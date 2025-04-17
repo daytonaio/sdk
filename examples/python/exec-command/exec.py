@@ -21,4 +21,4 @@ if response.exit_code != 0:
 else:
     print(response.result)
 
-daytona.remove(sandbox)
+daytona.delete(sandbox)

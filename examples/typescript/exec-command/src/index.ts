@@ -86,7 +86,7 @@ async function main() {
     console.error('Error executing commands:', error)
   } finally {
     //  cleanup
-    await daytona.remove(sandbox)
+    await daytona.delete(sandbox)
   }
 }
 

@@ -103,6 +103,33 @@ const sandbox = await daytona.create(params, 40);
 
 ***
 
+#### delete()
+
+```ts
+delete(sandbox: Sandbox, timeout: number): Promise<void>
+```
+
+Deletes a Sandbox.
+
+**Parameters**:
+
+- `sandbox` _Sandbox_ - The Sandbox to delete
+- `timeout` _number = 60_ - Timeout in seconds (0 means no timeout, default is 60)
+
+
+**Returns**:
+
+- `Promise<void>`
+
+**Example:**
+
+```ts
+const sandbox = await daytona.get('my-sandbox-id');
+await daytona.delete(sandbox);
+```
+
+***
+
 #### get()
 
 ```ts
@@ -197,33 +224,6 @@ const sandboxes = await daytona.list();
 for (const sandbox of sandboxes) {
     console.log(`${sandbox.id}: ${sandbox.instance.state}`);
 }
-```
-
-***
-
-#### remove()
-
-```ts
-remove(sandbox: Sandbox, timeout: number): Promise<void>
-```
-
-Removes a Sandbox.
-
-**Parameters**:
-
-- `sandbox` _Sandbox_ - The Sandbox to remove
-- `timeout` _number = 60_ - Timeout in seconds (0 means no timeout, default is 60)
-
-
-**Returns**:
-
-- `Promise<void>`
-
-**Example:**
-
-```ts
-const sandbox = await daytona.get('my-sandbox-id');
-await daytona.remove(sandbox);
 ```
 
 ***

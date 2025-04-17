@@ -95,7 +95,7 @@ def main():
 
             print_chart(chart)
 
-    daytona.remove(sandbox)
+    daytona.delete(sandbox)
 
 
 def print_chart(chart: Chart):

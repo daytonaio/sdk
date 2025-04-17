@@ -51,7 +51,7 @@ def main():
         print("Error creating sandbox:", error)
     finally:
         # Cleanup
-        daytona.remove(sandbox)
+        daytona.delete(sandbox)
 
 
 if __name__ == "__main__":

@@ -38,5 +38,5 @@ print("Total sandboxes count:", len(sandboxes))
 pprint(vars(sandboxes[0].info()))
 
 print("Removing sandbox")
-daytona.remove(sandbox)
+daytona.delete(sandbox)
 print("Sandbox removed")

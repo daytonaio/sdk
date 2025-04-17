@@ -222,9 +222,7 @@ class Sandbox:
     def get_workspace_root_dir(self) -> str:
         return self.get_user_root_dir()
 
-    def create_lsp_server(
-        self, language_id: LspLanguageId, path_to_project: str
-    ) -> LspServer:
+    def create_lsp_server(self, language_id: LspLanguageId, path_to_project: str) -> LspServer:
         """Creates a new Language Server Protocol (LSP) server instance.
 
         The LSP server provides language-specific features like code completion,
@@ -267,10 +265,7 @@ class Sandbox:
             ```
         """
         # Convert all values to strings and create the expected labels structure
-        string_labels = {
-            k: str(v).lower() if isinstance(v, bool) else str(v)
-            for k, v in labels.items()
-        }
+        string_labels = {k: str(v).lower() if isinstance(v, bool) else str(v) for k, v in labels.items()}
         labels_payload = {"labels": string_labels}
         return self.sandbox_api.replace_labels(self.id, labels_payload)
 
@@ -323,6 +318,10 @@ class Sandbox:
         """
         self.sandbox_api.stop_workspace(self.id, _request_timeout=timeout or None)
         self.wait_for_sandbox_stop()
+
+    def delete(self) -> None:
+        """Deletes the Sandbox."""
+        self.sandbox_api.delete_workspace(self.id, force=True)
 
     @deprecated(
         reason=(
@@ -526,9 +525,7 @@ class Sandbox:
             error_reason=instance.error_reason,
             snapshot_state=instance.snapshot_state,
             snapshot_created_at=(
-                datetime.fromisoformat(instance.snapshot_created_at)
-                if instance.snapshot_created_at
-                else None
+                datetime.fromisoformat(instance.snapshot_created_at) if instance.snapshot_created_at else None
             ),
             auto_stop_interval=instance.auto_stop_interval,
             created=instance.info.created or "",

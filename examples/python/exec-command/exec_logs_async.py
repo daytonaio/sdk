@@ -35,7 +35,7 @@ async def main():
         print(f"Error: {e}")
     finally:
         print("Cleaning up sandbox...")
-        daytona.remove(sandbox)
+        daytona.delete(sandbox)
 
 
 if __name__ == "__main__":

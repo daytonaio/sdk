@@ -33,7 +33,7 @@ async function main() {
     console.error('Execution error:', error)
   } finally {
     //  cleanup
-    await daytona.remove(sandbox)
+    await daytona.delete(sandbox)
   }
 }
 

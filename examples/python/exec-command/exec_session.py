@@ -41,4 +41,4 @@ print(sessions)
 # And of course you can delete the session at any time
 sandbox.process.delete_session(exec_session_id)
 
-daytona.remove(sandbox)
+daytona.delete(sandbox)

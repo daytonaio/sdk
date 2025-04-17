@@ -28,7 +28,7 @@ response = sandbox.process.code_run('print("Hello World!")')
 print(response.result)
 
 # Clean up when done
-daytona.remove(sandbox)
+daytona.delete(sandbox)
 ```
 
 ## Configuration
