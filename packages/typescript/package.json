@@ -34,7 +34,7 @@
     "typescript": "^5.0.0"
   },
   "dependencies": {
-    "@daytonaio/api-client": "^0.16.0",
+    "@daytonaio/api-client": "file:/home/daytona/daytona-ai-saas/libs/api-client",
     "uuid": "^11.0.3",
     "@dotenvx/dotenvx": "^1.25.1"
   }
