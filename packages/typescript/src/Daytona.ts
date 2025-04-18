@@ -516,4 +516,74 @@ export class Daytona {
         )
     }
   }
+
+  /**
+   * Creates a persistent volume.
+   *
+   * @param {Record<string, string>} createVolumeDto - DTO with volume name. Example: {"name": "data-vol"}
+   * @param {number} [timeout=60] - Timeout in seconds for volume creation (0 means no timeout)
+   * @returns {Promise<Record<string, any>>} Information about the created volume
+   *
+   * @example
+   * const volume = await daytona.createVolume({ name: "data-vol" });
+   * console.log(`Created volume: ${volume.name}`);
+   */
+  public async createVolume(createVolumeDto: Record<string, string>, timeout: number = 60): Promise<Record<string, any>> {
+    return this.sandboxApi.createVolume(createVolumeDto, undefined, {
+      timeout: timeout * 1000,
+    })
+  }
+
+  /**
+   * Deletes a persistent volume.
+   *
+   * @param {string} volumeId - ID of the volume to delete
+   * @param {number} [timeout=60] - Timeout in seconds for volume deletion (0 means no timeout)
+   * @returns {Promise<void>}
+   *
+   * @example
+   * await daytona.deleteVolume("vol-123456");
+   */
+  public async deleteVolume(volumeId: string, timeout: number = 60): Promise<void> {
+    await this.sandboxApi.deleteVolume(volumeId, undefined, {
+      timeout: timeout * 1000,
+    })
+  }
+
+  /**
+   * Gets information about a specific volume.
+   *
+   * @param {string} volumeId - ID of the volume to retrieve
+   * @param {number} [timeout=60] - Timeout in seconds for retrieving volume info (0 means no timeout)
+   * @returns {Promise<Record<string, any>>} Information about the specified volume
+   *
+   * @example
+   * const volume = await daytona.getVolume("vol-123456");
+   * console.log(`Volume: ${volume.name}, Size: ${volume.size}GB`);
+   */
+  public async getVolume(volumeId: string, timeout: number = 60): Promise<Record<string, any>> {
+    return this.sandboxApi.getVolume(volumeId, undefined, {
+      timeout: timeout * 1000,
+    })
+  }
+
+  /**
+   * Lists all persistent volumes.
+   *
+   * @param {boolean} [includeDeleted=false] - Whether to include deleted volumes in the list
+   * @param {number} [timeout=60] - Timeout in seconds for listing volumes (0 means no timeout)
+   * @returns {Promise<Record<string, any>[]>} List of all available volumes
+   *
+   * @example
+   * const volumes = await daytona.listVolumes();
+   * for (const volume of volumes) {
+   *     console.log(`${volume.id}: ${volume.name}`);
+   * }
+   */
+  public async listVolumes(includeDeleted: boolean = false, timeout: number = 60): Promise<Record<string, any>[]> {
+    const response = await this.sandboxApi.listVolumes(includeDeleted, undefined, {
+      timeout: timeout * 1000,
+    })
+    return response.data
+  }
 }

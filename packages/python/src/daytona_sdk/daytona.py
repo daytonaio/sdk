@@ -147,6 +147,8 @@ class CreateSandboxParams(BaseModel):
         auto_stop_interval (Optional[int]): Interval in minutes after which Sandbox will
             automatically stop if no Sandbox event occurs during that time. Default is 15 minutes.
             0 means no auto-stop.
+        volumes (Optional[List[Dict[str, str]]]): List of volumes to mount in the Sandbox.
+            Each volume has 'volumeId' and 'mountPath' properties.
 
     Example:
         ```python
@@ -155,7 +157,10 @@ class CreateSandboxParams(BaseModel):
             name="my-sandbox",
             env_vars={"DEBUG": "true"},
             resources=SandboxResources(cpu=2, memory=4),
-            auto_stop_interval=20
+            auto_stop_interval=20,
+            volumes=[
+                {"volumeId": "vol-123456", "mountPath": "/data"}
+            ]
         )
         sandbox = daytona.create(params, 50)
         ```
@@ -181,7 +186,8 @@ class CreateSandboxParams(BaseModel):
             ),
         ),
     ]
-    auto_stop_interval: Optional[int] = None
+    auto_stop_interval: Optional[int] = None    
+    volumes: Optional[List[Dict[str, str]]] = None
 
     @model_validator(mode="before")
     @classmethod
@@ -350,7 +356,10 @@ class Daytona:
                 image="debian:12.9",
                 env_vars={"DEBUG": "true"},
                 resources=SandboxResources(cpu=2, memory=4096),
-                auto_stop_interval=0
+                auto_stop_interval=0,
+                volumes=[
+                    {"volumeId": "vol-123456", "mountPath": "/data"}
+                ]
             )
             sandbox = daytona.create(params, 40)
             ```
@@ -417,6 +426,7 @@ class Daytona:
             public=params.public,
             target=str(target) if target else None,
             auto_stop_interval=params.auto_stop_interval,
+            volumes=params.volumes,
         )
 
         if params.resources:
@@ -639,6 +649,92 @@ class Daytona:
             DaytonaError: If timeout is negative; If Sandbox fails to stop or times out
         """
         sandbox.stop(timeout)
+
+    @intercept_errors(message_prefix="Failed to create volume: ")
+    def create_volume(self, create_volume_dto: Dict[str, str], timeout: Optional[float] = 60) -> Dict:
+        """Creates a persistent volume.
+
+        Args:
+            create_volume_dto (Dict[str, str]): DTO with volume name. Example: {"name": "data-vol"}
+            timeout (Optional[float]): Timeout (in seconds) for volume creation. 0 means no timeout.
+                Default is 60 seconds.
+
+        Returns:
+            Dict: Information about the created volume.
+
+        Raises:
+            DaytonaError: If volume creation fails or times out
+
+        Example:
+            ```python
+            volume = daytona.create_volume({"name": "data-vol"})
+            print(f"Created volume: {volume['name']}")
+            ```
+        """
+        return self.sandbox_api.create_volume(create_volume_dto=create_volume_dto, _request_timeout=timeout or None)
+
+    @intercept_errors(message_prefix="Failed to delete volume: ")
+    def delete_volume(self, volume_id: str, timeout: Optional[float] = 60) -> None:
+        """Deletes a persistent volume.
+
+        Args:
+            volume_id (str): ID of the volume to delete.
+            timeout (Optional[float]): Timeout (in seconds) for volume deletion. 0 means no timeout.
+                Default is 60 seconds.
+
+        Raises:
+            DaytonaError: If volume deletion fails or times out
+
+        Example:
+            ```python
+            daytona.delete_volume("vol-123456")
+            ```
+        """
+        return self.sandbox_api.delete_volume(volume_id=volume_id, _request_timeout=timeout or None)
+
+    @intercept_errors(message_prefix="Failed to get volume: ")
+    def get_volume(self, volume_id: str, timeout: Optional[float] = 60) -> Dict:
+        """Gets information about a specific volume.
+
+        Args:
+            volume_id (str): ID of the volume to retrieve.
+            timeout (Optional[float]): Timeout (in seconds) for retrieving volume info. 0 means no timeout.
+                Default is 60 seconds.
+
+        Returns:
+            Dict: Information about the specified volume.
+
+        Raises:
+            DaytonaError: If retrieving volume information fails or times out
+
+        Example:
+            ```python
+            volume = daytona.get_volume("vol-123456")
+            print(f"Volume: {volume['name']}, Size: {volume['size']}GB")
+            ```
+        """
+        return self.sandbox_api.get_volume(volume_id=volume_id, _request_timeout=timeout or None)
+
+    @intercept_errors(message_prefix="Failed to list volumes: ")
+    def list_volumes(self, include_deleted: bool = False, timeout: Optional[float] = 60) -> List[Dict]:
+        """Lists all persistent volumes.
+
+        Args:
+            include_deleted (bool): Whether to include deleted volumes in the list. Default is False.
+            timeout (Optional[float]): Timeout (in seconds) for listing volumes. 0 means no timeout.
+                Default is 60 seconds.
+
+        Returns:
+            List[Dict]: List of all available volumes.
+
+        Example:
+            ```python
+            volumes = daytona.list_volumes()
+            for volume in volumes:
+                print(f"{volume['id']}: {volume['name']}")
+            ```
+        """
+        return self.sandbox_api.list_volumes(include_deleted=include_deleted, _request_timeout=timeout or None)
 
 
 # Export these at module level
