@@ -238,7 +238,7 @@ Gets structured information about the Sandbox.
 
 ```ts
 const info = await sandbox.info();
-console.log(`Sandbox ${info.name}:`);
+console.log(`Sandbox ${info.id}:`);
 console.log(`State: ${info.state}`);
 console.log(`Resources: ${info.resources.cpu} CPU, ${info.resources.memory} RAM`);
 ```
@@ -470,14 +470,12 @@ Structured information about a Sandbox
 - `image` _string_ - Docker image used for the Sandbox
 - `labels` _Record\<string, string\>_ - Custom labels attached to the Sandbox
 - `lastSnapshot` _null \| string_ - When the last snapshot was created
-- `name` _string_ - Display name of the Sandbox
-    
 - `nodeDomain` _string_ - Domain name of the Sandbox node
 - ~~`providerMetadata?`~~ _string_ - **_Deprecated_** - Use `state`, `nodeDomain`, `region`, `class`, `updatedAt`, `lastSnapshot`, `resources`, `autoStopInterval` instead.
 - `public` _boolean_ - Whether the Sandbox is publicly accessible
 - `region` _CreateNodeRegionEnum_ - Region of the Sandbox node
 - `resources` _SandboxResources_ - Resource allocations for the Sandbox
-- `snapshotCreatedAt` _null \| Date_ - When the snapshot was created
+- `snapshotCreatedAt` _null \| string_ - When the snapshot was created
 - `snapshotState` _null \| string_ - Current state of Sandbox snapshot
 - `state` _WorkspaceState_ - Current state of the Sandbox (e.g., "started", "stopped")
 - `target` _string_ - Target environment where the Sandbox runs
@@ -496,13 +494,13 @@ resources, and current state.
 ```ts
 const sandbox = await daytona.create();
 const info = await sandbox.info();
-console.log(`Sandbox ${info.name} is ${info.state}`);
+console.log(`Sandbox ${info.id} is ${info.state}`);
 console.log(`Resources: ${info.resources.cpu} CPU, ${info.resources.memory} RAM`);
 ```
 
 **Extends:**
 
-- `WorkspaceInfo`
+- `Omit`\<`ApiSandboxInfo`, `"name"`\>
 ## SandboxInstance
 
 **Extends:**

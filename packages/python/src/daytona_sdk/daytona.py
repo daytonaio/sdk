@@ -1,3 +1,4 @@
+import json
 import warnings
 from dataclasses import dataclass
 from enum import Enum
@@ -85,7 +86,9 @@ class DaytonaConfig(BaseModel):
 
     @model_validator(mode="before")
     @classmethod
-    def __handle_deprecated_server_url(cls, values):  # pylint: disable=unused-private-member
+    def __handle_deprecated_server_url(
+        cls, values
+    ):  # pylint: disable=unused-private-member
         if "server_url" in values and values.get("server_url"):
             warnings.warn(
                 "'server_url' is deprecated and will be removed in a future version. Use 'api_url' instead.",
@@ -134,8 +137,6 @@ class CreateSandboxParams(BaseModel):
     Attributes:
         language (Optional[CodeLanguage]): Programming language for the Sandbox ("python", "javascript", "typescript").
         Defaults to "python".
-        id (Optional[str]): Custom identifier for the Sandbox. If not provided, a random ID will be generated.
-        name (Optional[str]): Display name for the Sandbox. Defaults to Sandbox ID if not provided.
         image (Optional[str]): Custom Docker image to use for the Sandbox.
         os_user (Optional[str]): OS user for the Sandbox.
         env_vars (Optional[Dict[str, str]]): Environment variables to set in the Sandbox.
@@ -152,7 +153,6 @@ class CreateSandboxParams(BaseModel):
         ```python
         params = CreateSandboxParams(
             language="python",
-            name="my-sandbox",
             env_vars={"DEBUG": "true"},
             resources=SandboxResources(cpu=2, memory=4),
             auto_stop_interval=20
@@ -162,8 +162,6 @@ class CreateSandboxParams(BaseModel):
     """
 
     language: Optional[CodeLanguage] = None
-    id: Optional[str] = None
-    name: Optional[str] = None
     image: Optional[str] = None
     os_user: Optional[str] = None
     env_vars: Optional[Dict[str, str]] = None
@@ -185,7 +183,9 @@ class CreateSandboxParams(BaseModel):
 
     @model_validator(mode="before")
     @classmethod
-    def __handle_deprecated_timeout(cls, values):  # pylint: disable=unused-private-member
+    def __handle_deprecated_timeout(
+        cls, values
+    ):  # pylint: disable=unused-private-member
         if "timeout" in values and values.get("timeout"):
             warnings.warn(
                 "The `timeout` field is deprecated and will be removed in future versions. "
@@ -277,10 +277,14 @@ class Daytona:
             self.api_key = env.str("DAYTONA_API_KEY", None)
             self.jwt_token = env.str("DAYTONA_JWT_TOKEN", None)
             self.organization_id = env.str("DAYTONA_ORGANIZATION_ID", None)
-            self.api_url = env.str("DAYTONA_API_URL", None) or env.str("DAYTONA_SERVER_URL", default_api_url)
+            self.api_url = env.str("DAYTONA_API_URL", None) or env.str(
+                "DAYTONA_SERVER_URL", default_api_url
+            )
             self.target = env.str("DAYTONA_TARGET", default_target)
 
-            if env.str("DAYTONA_SERVER_URL", None) and not env.str("DAYTONA_API_URL", None):
+            if env.str("DAYTONA_SERVER_URL", None) and not env.str(
+                "DAYTONA_API_URL", None
+            ):
                 warnings.warn(
                     "Environment variable `DAYTONA_SERVER_URL` is deprecated and will be removed in future versions. "
                     + "Use `DAYTONA_API_URL` instead.",
@@ -294,7 +298,9 @@ class Daytona:
             else:
                 self.api_key = config.api_key or getattr(self, "api_key", None)
             self.jwt_token = config.jwt_token or getattr(self, "jwt_token", None)
-            self.organization_id = config.organization_id or getattr(self, "organization_id", None)
+            self.organization_id = config.organization_id or getattr(
+                self, "organization_id", None
+            )
             self.api_url = config.api_url or self.api_url
             self.target = config.target or self.target
 
@@ -304,12 +310,16 @@ class Daytona:
         # Create API configuration without api_key
         configuration = Configuration(host=self.api_url)
         api_client = ApiClient(configuration)
-        api_client.default_headers["Authorization"] = f"Bearer {self.api_key or self.jwt_token}"
+        api_client.default_headers[
+            "Authorization"
+        ] = f"Bearer {self.api_key or self.jwt_token}"
         api_client.default_headers["X-Daytona-Source"] = "python-sdk"
         if not self.api_key:
             if not self.organization_id:
                 raise DaytonaError("Organization ID is required when using JWT token")
-            api_client.default_headers["X-Daytona-Organization-ID"] = self.organization_id
+            api_client.default_headers[
+                "X-Daytona-Organization-ID"
+            ] = self.organization_id
 
         # Initialize API clients with the api_client instance
         self.sandbox_api = SandboxApi(api_client)
@@ -346,7 +356,6 @@ class Daytona:
             ```python
             params = CreateSandboxParams(
                 language="python",
-                name="my-sandbox",
                 image="debian:12.9",
                 env_vars={"DEBUG": "true"},
                 resources=SandboxResources(cpu=2, memory=4096),
@@ -363,14 +372,7 @@ class Daytona:
 
         effective_timeout = params.timeout if params.timeout else timeout
 
-        try:
-            return self._create(params, effective_timeout)
-        except Exception as e:
-            try:
-                self.sandbox_api.delete_workspace(params.id, force=True)
-            except Exception:
-                pass
-            raise e
+        return self._create(params, effective_timeout)
 
     @with_timeout(
         error_message=lambda self, timeout: (
@@ -408,8 +410,6 @@ class Daytona:
 
         # Create sandbox using dictionary
         sandbox_data = CreateSandbox(
-            id=params.id,
-            name=params.name if params.name else params.id,
             image=params.image,
             user=params.os_user,
             env=params.env_vars if params.env_vars else {},
@@ -425,7 +425,9 @@ class Daytona:
             sandbox_data.disk = params.resources.disk
             sandbox_data.gpu = params.resources.gpu
 
-        response = self.sandbox_api.create_workspace(sandbox_data, _request_timeout=timeout or None)
+        response = self.sandbox_api.create_workspace(
+            sandbox_data, _request_timeout=timeout or None
+        )
         sandbox_info = Sandbox.to_sandbox_info(response)
         response.info = sandbox_info
 
@@ -493,7 +495,9 @@ class Daytona:
             daytona.delete(sandbox)  # Clean up when done
             ```
         """
-        return self.sandbox_api.delete_workspace(sandbox.id, force=True, _request_timeout=timeout or None)
+        return self.sandbox_api.delete_workspace(
+            sandbox.id, force=True, _request_timeout=timeout or None
+        )
 
     remove = delete
 
@@ -550,21 +554,53 @@ class Daytona:
             code_toolbox,
         )
 
-    @intercept_errors(message_prefix="Failed to list sandboxes: ")
-    def list(self) -> List[Sandbox]:
-        """Lists all Sandboxes.
+    @intercept_errors(message_prefix="Failed to find sandbox: ")
+    def find_one(
+        self, sandbox_id: Optional[str] = None, labels: Optional[Dict[str, str]] = None
+    ) -> Sandbox:
+        """Finds a Sandbox by its ID or labels.
+
+        Args:
+            sandbox_id (Optional[str]): The ID of the Sandbox to retrieve.
+            labels (Optional[Dict[str, str]]): Labels to filter Sandboxes.
 
         Returns:
-            List[Sandbox]: List of all available Sandbox instances.
+            Sandbox: First Sandbox that matches the ID or labels.
+
+        Raises:
+            DaytonaError: If no Sandbox is found.
 
         Example:
             ```python
-            sandboxes = daytona.list()
+            sandbox = daytona.find_one(labels={"my-label": "my-value"})
+            print(sandbox.info())
+            ```
+        """
+        if sandbox_id:
+            return self.get_current_sandbox(sandbox_id)
+        sandboxes = self.list(labels)
+        if len(sandboxes) == 0:
+            raise DaytonaError(f"No sandbox found with labels {labels}")
+        return sandboxes[0]
+
+    @intercept_errors(message_prefix="Failed to list sandboxes: ")
+    def list(self, labels: Optional[Dict[str, str]] = None) -> List[Sandbox]:
+        """Lists Sandboxes filtered by labels.
+
+        Args:
+            labels (Optional[Dict[str, str]]): Labels to filter Sandboxes.
+
+        Returns:
+            List[Sandbox]: List of Sandbox instances that match the labels.
+
+        Example:
+            ```python
+            sandboxes = daytona.list(labels={"my-label": "my-value"})
             for sandbox in sandboxes:
                 print(f"{sandbox.id}: {sandbox.status}")
             ```
         """
-        sandboxes = self.sandbox_api.list_workspaces()
+        sandboxes = self.sandbox_api.list_workspaces(labels=json.dumps(labels))
 
         for sandbox in sandboxes:
             sandbox_info = Sandbox.to_sandbox_info(sandbox)
@@ -578,7 +614,9 @@ class Daytona:
                 self.toolbox_api,
                 self._get_code_toolbox(
                     CreateSandboxParams(
-                        language=self._validate_language_label(sandbox.labels.get("code-toolbox-language"))
+                        language=self._validate_language_label(
+                            sandbox.labels.get("code-toolbox-language")
+                        )
                     )
                 ),
             )

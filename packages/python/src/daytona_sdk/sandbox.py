@@ -1,7 +1,6 @@
 import json
 import time
 from dataclasses import dataclass
-from datetime import datetime
 from enum import Enum
 from typing import Annotated, Dict, Optional
 
@@ -79,7 +78,6 @@ class SandboxInfo(ApiSandboxInfo):
 
     Attributes:
         id (str): Unique identifier for the Sandbox.
-        name (str): Display name of the Sandbox.
         image (str): Docker image used for the Sandbox.
         user (str): OS user running in the Sandbox.
         env (Dict[str, str]): Environment variables set in the Sandbox.
@@ -90,7 +88,7 @@ class SandboxInfo(ApiSandboxInfo):
         state (str): Current state of the Sandbox (e.g., "started", "stopped").
         error_reason (Optional[str]): Error message if Sandbox is in error state.
         snapshot_state (Optional[str]): Current state of Sandbox snapshot.
-        snapshot_created_at (Optional[datetime]): When the snapshot was created.
+        snapshot_created_at (Optional[str]): When the snapshot was created.
         node_domain (str): Domain name of the Sandbox node.
         region (str): Region of the Sandbox node.
         class_name (str): Sandbox class.
@@ -102,13 +100,19 @@ class SandboxInfo(ApiSandboxInfo):
         ```python
         sandbox = daytona.create()
         info = sandbox.info()
-        print(f"Sandbox {info.name} is {info.state}")
+        print(f"Sandbox {info.id} is {info.state}")
         print(f"Resources: {info.resources.cpu} CPU, {info.resources.memory} RAM")
         ```
     """
 
     id: str
-    name: str
+    name: Annotated[
+        str,
+        Field(
+            default="",
+            deprecated="The `name` field is deprecated.",
+        ),
+    ]
     image: str
     user: str
     env: Dict[str, str]
@@ -119,7 +123,7 @@ class SandboxInfo(ApiSandboxInfo):
     state: SandboxState
     error_reason: Optional[str]
     snapshot_state: Optional[str]
-    snapshot_created_at: Optional[datetime]
+    snapshot_created_at: Optional[str]
     node_domain: str
     region: str
     class_name: str
@@ -192,7 +196,7 @@ class Sandbox:
         Example:
             ```python
             info = sandbox.info()
-            print(f"Sandbox {info.name}:")
+            print(f"Sandbox {info.id}:")
             print(f"State: {info.state}")
             print(f"Resources: {info.resources.cpu} CPU, {info.resources.memory} RAM")
             ```
@@ -222,7 +226,9 @@ class Sandbox:
     def get_workspace_root_dir(self) -> str:
         return self.get_user_root_dir()
 
-    def create_lsp_server(self, language_id: LspLanguageId, path_to_project: str) -> LspServer:
+    def create_lsp_server(
+        self, language_id: LspLanguageId, path_to_project: str
+    ) -> LspServer:
         """Creates a new Language Server Protocol (LSP) server instance.
 
         The LSP server provides language-specific features like code completion,
@@ -265,7 +271,10 @@ class Sandbox:
             ```
         """
         # Convert all values to strings and create the expected labels structure
-        string_labels = {k: str(v).lower() if isinstance(v, bool) else str(v) for k, v in labels.items()}
+        string_labels = {
+            k: str(v).lower() if isinstance(v, bool) else str(v)
+            for k, v in labels.items()
+        }
         labels_payload = {"labels": string_labels}
         return self.sandbox_api.replace_labels(self.id, labels_payload)
 
@@ -513,7 +522,6 @@ class Sandbox:
 
         return SandboxInfo(
             id=instance.id,
-            name=instance.name,
             image=instance.image,
             user=instance.user,
             env=instance.env or {},
@@ -524,9 +532,7 @@ class Sandbox:
             state=instance.state,
             error_reason=instance.error_reason,
             snapshot_state=instance.snapshot_state,
-            snapshot_created_at=(
-                datetime.fromisoformat(instance.snapshot_created_at) if instance.snapshot_created_at else None
-            ),
+            snapshot_created_at=instance.snapshot_created_at,
             auto_stop_interval=instance.auto_stop_interval,
             created=instance.info.created or "",
             node_domain=provider_metadata.get("nodeDomain", ""),

@@ -116,7 +116,6 @@ sandbox = daytona.create()
 ```python
 params = CreateSandboxParams(
     language="python",
-    name="my-sandbox",
     image="debian:12.9",
     env_vars={"DEBUG": "true"},
     resources=SandboxResources(cpu=2, memory=4096),
@@ -205,24 +204,62 @@ sandbox = daytona.get_current_sandbox("my-sandbox-id")
 print(sandbox.status)
 ```
 
-#### Daytona.list
+#### Daytona.find\_one
 
 ```python
-@intercept_errors(message_prefix="Failed to list sandboxes: ")
-def list() -> List[Sandbox]
+@intercept_errors(message_prefix="Failed to find sandbox: ")
+def find_one(sandbox_id: Optional[str] = None,
+             labels: Optional[Dict[str, str]] = None) -> Sandbox
 ```
 
-Lists all Sandboxes.
+Finds a Sandbox by its ID or labels.
+
+**Arguments**:
+
+- `sandbox_id` _Optional[str]_ - The ID of the Sandbox to retrieve.
+- `labels` _Optional[Dict[str, str]]_ - Labels to filter Sandboxes.
+  
 
 **Returns**:
 
-- `List[Sandbox]` - List of all available Sandbox instances.
+- `Sandbox` - First Sandbox that matches the ID or labels.
+  
+
+**Raises**:
+
+- `DaytonaError` - If no Sandbox is found.
   
 
 **Example**:
 
 ```python
-sandboxes = daytona.list()
+sandbox = daytona.find_one(labels={"my-label": "my-value"})
+print(sandbox.info())
+```
+
+#### Daytona.list
+
+```python
+@intercept_errors(message_prefix="Failed to list sandboxes: ")
+def list(labels: Optional[Dict[str, str]] = None) -> List[Sandbox]
+```
+
+Lists Sandboxes filtered by labels.
+
+**Arguments**:
+
+- `labels` _Optional[Dict[str, str]]_ - Labels to filter Sandboxes.
+  
+
+**Returns**:
+
+- `List[Sandbox]` - List of Sandbox instances that match the labels.
+  
+
+**Example**:
+
+```python
+sandboxes = daytona.list(labels={"my-label": "my-value"})
 for sandbox in sandboxes:
     print(f"{sandbox.id}: {sandbox.status}")
 ```
@@ -357,8 +394,6 @@ Parameters for creating a new Sandbox.
 
 - `language` _Optional[CodeLanguage]_ - Programming language for the Sandbox ("python", "javascript", "typescript").
   Defaults to "python".
-- `id` _Optional[str]_ - Custom identifier for the Sandbox. If not provided, a random ID will be generated.
-- `name` _Optional[str]_ - Display name for the Sandbox. Defaults to Sandbox ID if not provided.
 - `image` _Optional[str]_ - Custom Docker image to use for the Sandbox.
 - `os_user` _Optional[str]_ - OS user for the Sandbox.
 - `env_vars` _Optional[Dict[str, str]]_ - Environment variables to set in the Sandbox.
@@ -377,7 +412,6 @@ Parameters for creating a new Sandbox.
 ```python
 params = CreateSandboxParams(
     language="python",
-    name="my-sandbox",
     env_vars={"DEBUG": "true"},
     resources=SandboxResources(cpu=2, memory=4),
     auto_stop_interval=20

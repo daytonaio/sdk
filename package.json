@@ -29,7 +29,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@daytonaio/api-client": "^0.16.0",
+    "@daytonaio/api-client": "^0.17.1",
     "@dotenvx/dotenvx": "^1.25.1"
   },
   "devDependencies": {
