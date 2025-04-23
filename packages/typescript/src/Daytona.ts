@@ -90,7 +90,6 @@ export interface SandboxResources {
  * Parameters for creating a new Sandbox.
  *
  * @interface
- * @property {string} [id] - Optional Sandbox ID. If not provided, a random ID will be generated
  * @property {string} [image] - Optional Docker image to use for the Sandbox
  * @property {string} [user] - Optional os user to use for the Sandbox
  * @property {CodeLanguage | string} [language] - Programming language for direct code execution
@@ -116,8 +115,6 @@ export interface SandboxResources {
  * const sandbox = await daytona.create(params, 50);
  */
 export type CreateSandboxParams = {
-  /** Optional Sandbox ID. If not provided, a random ID will be generated */
-  id?: string
   /** Optional Docker image to use for the Sandbox */
   image?: string
   /** Optional os user to use for the Sandbox */
@@ -143,6 +140,18 @@ export type CreateSandboxParams = {
   timeout?: number
   /** Auto-stop interval in minutes (0 means disabled) (must be a non-negative integer) */
   autoStopInterval?: number
+}
+
+/**
+ * Filter for Sandboxes.
+ *
+ * @interface
+ * @property {string} [id] - The ID of the Sandbox to retrieve
+ * @property {Record<string, string>} [labels] - Labels to filter Sandboxes
+ */
+export type SandboxFilter = {
+  id?: string
+  labels?: Record<string, string>
 }
 
 /**
@@ -322,8 +331,6 @@ export class Daytona {
     try {
       const response = await this.sandboxApi.createWorkspace(
         {
-          id: params.id,
-          name: params.id,
           image: params.image,
           user: params.user,
           env: params.envVars || {},
@@ -344,10 +351,13 @@ export class Daytona {
 
       const sandboxInstance = response.data
       const sandboxInfo = Sandbox.toSandboxInfo(sandboxInstance)
-      sandboxInstance.info = sandboxInfo
+      sandboxInstance.info = {
+        ...sandboxInfo,
+        name: '',
+      }
 
       const sandbox = new Sandbox(
-        sandboxInstance.id!,
+        sandboxInstance.id,
         sandboxInstance as SandboxInstance,
         this.sandboxApi,
         this.toolboxApi,
@@ -361,7 +371,6 @@ export class Daytona {
 
       return sandbox
     } catch (error) {
-      void this.sandboxApi.deleteWorkspace(params.id!, true).catch(() => {})
       if (error instanceof DaytonaError && error.message.includes('Operation timed out')) {
         throw new DaytonaError(
           `Failed to create and start sandbox within ${effectiveTimeout} seconds. Operation timed out.`
@@ -387,28 +396,62 @@ export class Daytona {
     const language = sandboxInstance.labels && sandboxInstance.labels['code-toolbox-language']
     const codeToolbox = this.getCodeToolbox(language as CodeLanguage)
     const sandboxInfo = Sandbox.toSandboxInfo(sandboxInstance)
-    sandboxInstance.info = sandboxInfo
+    sandboxInstance.info = {
+      ...sandboxInfo,
+      name: '',
+    }
 
     return new Sandbox(sandboxId, sandboxInstance as SandboxInstance, this.sandboxApi, this.toolboxApi, codeToolbox)
   }
 
   /**
-   * Lists all Sandboxes.
+   * Finds a Sandbox by its ID or labels.
    *
-   * @returns {Promise<Sandbox[]>} Array of Sandboxes
+   * @param {SandboxFilter} filter - Filter for Sandboxes
+   * @returns {Promise<Sandbox>} First Sandbox that matches the ID or labels.
    *
    * @example
-   * const sandboxes = await daytona.list();
+   * const sandbox = await daytona.findOne({ labels: { 'my-label': 'my-value' } });
+   * console.log(`Sandbox: ${await sandbox.info()}`);
+   */
+  public async findOne(filter: SandboxFilter): Promise<Sandbox> {
+    if (filter.id) {
+      return this.get(filter.id)
+    }
+
+    const sandboxes = await this.list(filter.labels)
+    if (sandboxes.length === 0) {
+      throw new DaytonaError(`No sandbox found with labels ${JSON.stringify(filter.labels)}`)
+    }
+    return sandboxes[0]
+  }
+
+  /**
+   * Lists all Sandboxes filtered by labels.
+   *
+   * @param {Record<string, string>} [labels] - Labels to filter Sandboxes
+   * @returns {Promise<Sandbox[]>} Array of Sandboxes that match the labels.
+   *
+   * @example
+   * const sandboxes = await daytona.list({ 'my-label': 'my-value' });
    * for (const sandbox of sandboxes) {
    *     console.log(`${sandbox.id}: ${sandbox.instance.state}`);
    * }
    */
-  public async list(): Promise<Sandbox[]> {
-    const response = await this.sandboxApi.listWorkspaces()
+  public async list(labels?: Record<string, string>): Promise<Sandbox[]> {
+    console.log('labels', labels)
+    const response = await this.sandboxApi.listWorkspaces(
+      undefined,
+      undefined,
+      labels ? JSON.stringify(labels) : undefined
+    )
     return response.data.map((sandbox) => {
       const language = sandbox.labels?.['code-toolbox-language'] as CodeLanguage
       const sandboxInfo = Sandbox.toSandboxInfo(sandbox)
-      sandbox.info = sandboxInfo
+      sandbox.info = {
+        ...sandboxInfo,
+        name: '',
+      }
 
       return new Sandbox(
         sandbox.id,

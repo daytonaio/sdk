@@ -130,6 +130,32 @@ await daytona.delete(sandbox);
 
 ***
 
+#### findOne()
+
+```ts
+findOne(filter: SandboxFilter): Promise<Sandbox>
+```
+
+Finds a Sandbox by its ID or labels.
+
+**Parameters**:
+
+- `filter` _SandboxFilter_ - Filter for Sandboxes
+
+
+**Returns**:
+
+- `Promise<Sandbox>` - First Sandbox that matches the ID or labels.
+
+**Example:**
+
+```ts
+const sandbox = await daytona.findOne({ labels: { 'my-label': 'my-value' } });
+console.log(`Sandbox: ${await sandbox.info()}`);
+```
+
+***
+
 #### get()
 
 ```ts
@@ -208,19 +234,24 @@ Use `getCurrentSandbox` instead. This method will be removed in a future version
 #### list()
 
 ```ts
-list(): Promise<Sandbox[]>
+list(labels?: Record<string, string>): Promise<Sandbox[]>
 ```
 
-Lists all Sandboxes.
+Lists all Sandboxes filtered by labels.
+
+**Parameters**:
+
+- `labels?` _Record\<string, string\>_ - Labels to filter Sandboxes
+
 
 **Returns**:
 
-- `Promise<Sandbox[]>` - Array of Sandboxes
+- `Promise<Sandbox[]>` - Array of Sandboxes that match the labels.
 
 **Example:**
 
 ```ts
-const sandboxes = await daytona.list();
+const sandboxes = await daytona.list({ 'my-label': 'my-value' });
 for (const sandbox of sandboxes) {
     console.log(`${sandbox.id}: ${sandbox.instance.state}`);
 }
@@ -302,7 +333,6 @@ Parameters for creating a new Sandbox.
 - `async?` _boolean_ - If true, will not wait for the Sandbox to be ready before returning
 - `autoStopInterval?` _number_ - Auto-stop interval in minutes (0 means disabled)
 - `envVars?` _Record\<string, string\>_ - Optional environment variables to set in the Sandbox
-- `id?` _string_ - Optional Sandbox ID. If not provided, a random ID will be generated
 - `image?` _string_ - Optional Docker image to use for the Sandbox
 - `labels?` _Record\<string, string\>_ - Sandbox labels
 - `language?` _string_ - Programming language for direct code execution
@@ -360,6 +390,14 @@ const config: DaytonaConfig = {
 };
 const daytona = new Daytona(config);
 ```
+## SandboxFilter
+
+Filter for Sandboxes.
+
+**Properties**:
+
+- `id?` _string_ - The ID of the Sandbox to retrieve
+- `labels?` _Record\<string, string\>_ - Labels to filter Sandboxes
 ## SandboxResources
 
 Resource allocation for a Sandbox.

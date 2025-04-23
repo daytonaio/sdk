@@ -58,7 +58,6 @@ export interface SandboxResources {
  *
  * @interface
  * @property {string} id - Unique identifier for the Sandbox
- * @property {string} name - Display name of the Sandbox
  * @property {string} image - Docker image used for the Sandbox
  * @property {string} user - OS user running in the Sandbox
  * @property {Record<string, string>} env - Environment variables set in the Sandbox
@@ -69,7 +68,7 @@ export interface SandboxResources {
  * @property {string} state - Current state of the Sandbox (e.g., "started", "stopped")
  * @property {string | null} errorReason - Error message if Sandbox is in error state
  * @property {string | null} snapshotState - Current state of Sandbox snapshot
- * @property {Date | null} snapshotCreatedAt - When the snapshot was created
+ * @property {string | null} snapshotCreatedAt - When the snapshot was created
  * @property {string} nodeDomain - Domain name of the Sandbox node
  * @property {string} region - Region of the Sandbox node
  * @property {string} class - Sandbox class
@@ -80,14 +79,12 @@ export interface SandboxResources {
  * @example
  * const sandbox = await daytona.create();
  * const info = await sandbox.info();
- * console.log(`Sandbox ${info.name} is ${info.state}`);
+ * console.log(`Sandbox ${info.id} is ${info.state}`);
  * console.log(`Resources: ${info.resources.cpu} CPU, ${info.resources.memory} RAM`);
  */
-export interface SandboxInfo extends ApiSandboxInfo {
+export interface SandboxInfo extends Omit<ApiSandboxInfo, 'name'> {
   /** Unique identifier */
   id: string
-  /** Sandbox name */
-  name: string
   /** Docker image */
   image: string
   /** OS user */
@@ -108,8 +105,8 @@ export interface SandboxInfo extends ApiSandboxInfo {
   errorReason: string | null
   /** Snapshot state */
   snapshotState: string | null
-  /** Snapshot creation timestamp */
-  snapshotCreatedAt: Date | null
+  /** Snapshot creation time */
+  snapshotCreatedAt: string | null
   /** Node domain */
   nodeDomain: string
   /** Region */
@@ -381,7 +378,7 @@ export class Sandbox {
    *
    * @example
    * const info = await sandbox.info();
-   * console.log(`Sandbox ${info.name}:`);
+   * console.log(`Sandbox ${info.id}:`);
    * console.log(`State: ${info.state}`);
    * console.log(`Resources: ${info.resources.cpu} CPU, ${info.resources.memory} RAM`);
    */
@@ -421,7 +418,6 @@ export class Sandbox {
 
     return {
       id: instance.id,
-      name: instance.name,
       image: instance.image,
       user: instance.user,
       env: instance.env || {},
@@ -432,7 +428,7 @@ export class Sandbox {
       state: instance.state || SandboxState.UNKNOWN,
       errorReason: instance.errorReason || null,
       snapshotState: instance.snapshotState || null,
-      snapshotCreatedAt: instance.snapshotCreatedAt ? new Date(instance.snapshotCreatedAt) : null,
+      snapshotCreatedAt: instance.snapshotCreatedAt || null,
       autoStopInterval: instance.autoStopInterval || 15,
       created: instance.info?.created || '',
       nodeDomain: providerMetadata.nodeDomain || '',
