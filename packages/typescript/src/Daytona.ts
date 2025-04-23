@@ -439,7 +439,6 @@ export class Daytona {
    * }
    */
   public async list(labels?: Record<string, string>): Promise<Sandbox[]> {
-    console.log('labels', labels)
     const response = await this.sandboxApi.listWorkspaces(
       undefined,
       undefined,
