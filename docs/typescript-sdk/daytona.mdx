@@ -7,9 +7,16 @@ hideTitleOnPage: true
 ## Daytona
 
 Main class for interacting with the Daytona API.
-
 Provides methods for creating, managing, and interacting with Daytona Sandboxes.
 Can be initialized either with explicit configuration or using environment variables.
+
+**Properties**:
+
+- `volume` _VolumeService_ - Service for managing Daytona Volumes
+    
+
+
+
 
 **Examples:**
 
@@ -310,10 +317,6 @@ Stops a Sandbox.
 const sandbox = await daytona.get('my-sandbox-id');
 await daytona.stop(sandbox);
 ```
-
-***
-
-
 ## CodeLanguage
 
 Supported programming languages for code execution
@@ -341,6 +344,7 @@ Parameters for creating a new Sandbox.
 - `target?` _string_ - Target location for the Sandbox
 - `timeout?` _number_ - Timeout in seconds for the Sandbox to be ready (0 means no timeout)
 - `user?` _string_ - Optional os user to use for the Sandbox
+- `volumes?` _VolumeMount\[\]_ - List of volumes to mount in the Sandbox
     
 
 
@@ -408,6 +412,8 @@ Resource allocation for a Sandbox.
 - `disk?` _number_ - Disk space allocation for the Sandbox in GB
 - `gpu?` _number_ - GPU allocation for the Sandbox in units
 - `memory?` _number_ - Memory allocation for the Sandbox in GB
+    
+
 
 
 
@@ -420,3 +426,19 @@ const resources: SandboxResources = {
     disk: 20    // 20GB disk
 };
 ```
+## VolumeMount
+
+Represents a volume mount for a Sandbox.
+
+**Properties**:
+
+- `mountPath` _string_ - Path on the Sandbox to mount the Volume
+    
+- `volumeId` _string_ - ID of the Volume to mount
+    
+
+
+
+**Extends:**
+
+- `WorkspaceVolume`

@@ -1,6 +1,6 @@
 {
   "private": true,
-  "version": "0.10.2",
+  "version": "0.0.0-dev",
   "scripts": {
     "generate-api-clients": "sh ./hack/generate-api-clients.sh",
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -29,7 +29,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@daytonaio/api-client": "^0.17.1",
+    "@daytonaio/api-client": "^0.18.0-alpha.0",
     "@dotenvx/dotenvx": "^1.25.1"
   },
   "devDependencies": {

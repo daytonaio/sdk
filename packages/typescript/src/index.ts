@@ -1,5 +1,5 @@
 export { CodeLanguage, Daytona } from './Daytona'
-export type { CreateSandboxParams, DaytonaConfig, SandboxResources } from './Daytona'
+export type { CreateSandboxParams, DaytonaConfig, SandboxResources, VolumeMount } from './Daytona'
 export { FileSystem } from './FileSystem'
 export { Git } from './Git'
 export { LspLanguageId } from './LspServer'
