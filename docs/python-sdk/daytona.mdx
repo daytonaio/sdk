@@ -303,6 +303,28 @@ Stops a Sandbox and waits for it to be stopped.
 
 - `DaytonaError` - If timeout is negative; If Sandbox fails to stop or times out
 
+#### Daytona.create\_image
+
+```python
+@intercept_errors(message_prefix="Failed to build image: ")
+@with_timeout(error_message=lambda self, timeout: (
+    f"Failed to build image within {timeout} seconds timeout period."))
+def create_image(name: str,
+                 image: Image,
+                 *,
+                 verbose: bool = False,
+                 timeout: Optional[float] = 0) -> None
+```
+
+Creates and registers a new image from the given Image definition.
+
+**Arguments**:
+
+- `name` _str_ - The name of the image to create.
+- `image` _Image_ - The Image instance.
+- `verbose` _bool_ - Default is false. Whether to log progress information upon each state change of the image.
+- `timeout` _Optional[float]_ - Default is no timeout. Timeout in seconds (0 means no timeout).
+
 
 ## CodeLanguage
 

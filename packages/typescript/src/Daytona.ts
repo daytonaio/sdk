@@ -1,5 +1,8 @@
 import {
   Configuration,
+  ImagesApi,
+  ImageState,
+  ObjectStorageApi,
   WorkspaceApi as SandboxApi,
   CreateWorkspaceTargetEnum as SandboxTargetRegion,
   ToolboxApi,
@@ -11,6 +14,8 @@ import dotenv from 'dotenv'
 import { SandboxPythonCodeToolbox } from './code-toolbox/SandboxPythonCodeToolbox'
 import { SandboxTsCodeToolbox } from './code-toolbox/SandboxTsCodeToolbox'
 import { DaytonaError, DaytonaNotFoundError } from './errors/DaytonaError'
+import { Image } from './Image'
+import { ObjectStorage } from './ObjectStorage'
 import { Sandbox, SandboxInstance, Sandbox as Workspace } from './Sandbox'
 import { VolumeService } from './Volume'
 
@@ -106,7 +111,7 @@ export interface SandboxResources {
  * Parameters for creating a new Sandbox.
  *
  * @interface
- * @property {string} [image] - Optional Docker image to use for the Sandbox
+ * @property {string | Image} [image] - Optional Docker image to use for the Sandbox or an Image instance
  * @property {string} [user] - Optional os user to use for the Sandbox
  * @property {CodeLanguage | string} [language] - Programming language for direct code execution
  * @property {Record<string, string>} [envVars] - Optional environment variables to set in the Sandbox
@@ -131,8 +136,8 @@ export interface SandboxResources {
  * const sandbox = await daytona.create(params, 50);
  */
 export type CreateSandboxParams = {
-  /** Optional Docker image to use for the Sandbox */
-  image?: string
+  /** Optional Docker image to use for the Sandbox or an Image instance */
+  image?: string | Image
   /** Optional os user to use for the Sandbox */
   user?: string
   /** Programming language for direct code execution */
@@ -199,6 +204,8 @@ export type SandboxFilter = {
 export class Daytona {
   private readonly sandboxApi: SandboxApi
   private readonly toolboxApi: ToolboxApi
+  private readonly imagesApi: ImagesApi
+  private readonly objectStorageApi: ObjectStorageApi
   private readonly target: SandboxTargetRegion
   private readonly apiKey?: string
   private readonly jwtToken?: string
@@ -297,6 +304,8 @@ export class Daytona {
     this.sandboxApi = new SandboxApi(configuration, '', axiosInstance)
     this.toolboxApi = new ToolboxApi(configuration, '', axiosInstance)
     this.volume = new VolumeService(new VolumesApi(configuration, '', axiosInstance))
+    this.imagesApi = new ImagesApi(configuration, '', axiosInstance)
+    this.objectStorageApi = new ObjectStorageApi(configuration, '', axiosInstance)
   }
 
   /**
@@ -356,9 +365,24 @@ export class Daytona {
     const codeToolbox = this.getCodeToolbox(params.language as CodeLanguage)
 
     try {
+      // Handle Image instance if provided
+      let imageStr: string | undefined
+      let buildInfo: any | undefined
+
+      if (typeof params.image === 'string') {
+        imageStr = params.image
+      } else if (params.image instanceof Image) {
+        const contextHashes = await this.processImageContext(params.image)
+        buildInfo = {
+          contextHashes,
+          dockerfileContent: params.image.dockerfile,
+        }
+      }
+
       const response = await this.sandboxApi.createWorkspace(
         {
-          image: params.image,
+          image: imageStr,
+          buildInfo,
           user: params.user,
           env: params.envVars || {},
           labels: params.labels,
@@ -392,7 +416,7 @@ export class Daytona {
         codeToolbox
       )
 
-      if (!params.async) {
+      if (!params.async && sandbox.instance.state !== 'started') {
         const timeElapsed = Date.now() - startTime
         await sandbox.waitUntilStarted(effectiveTimeout ? effectiveTimeout - timeElapsed / 1000 : 0)
       }
@@ -565,6 +589,64 @@ export class Daytona {
   }
 
   /**
+   * Creates and registers a new image from the given Image definition.
+   *
+   * @param {string} name - The name of the image to create.
+   * @param {Image} image - The Image instance.
+   * @param {object} options - Options for the create operation.
+   * @param {boolean} options.verbose - Default is false. Whether to log progress information upon each state change of the image.
+   * @param {number} options.timeout - Default is no timeout. Timeout in seconds (0 means no timeout).
+   * @returns {Promise<void>}
+   *
+   * @example
+   * const image = Image.debianSlim('3.12').pipInstall('numpy');
+   * await daytona.createImage('my-python-image', image);
+   */
+  public async createImage(
+    name: string,
+    image: Image,
+    options: { verbose?: boolean; timeout?: number } = {}
+  ): Promise<void> {
+    const contextHashes = await this.processImageContext(image)
+    let builtImage = (
+      await this.imagesApi.buildImage(
+        {
+          name,
+          buildInfo: {
+            contextHashes,
+            dockerfileContent: image.dockerfile,
+          },
+        },
+        undefined,
+        {
+          timeout: (options.timeout || 0) * 1000,
+        }
+      )
+    ).data
+
+    let previousState = null
+    while (builtImage.state !== ImageState.ACTIVE && builtImage.state !== ImageState.ERROR) {
+      if (options.verbose && previousState !== builtImage.state) {
+        console.log(`Building image ${builtImage.name} (${builtImage.state})`)
+        previousState = builtImage.state
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, 1000))
+      const response = await this.imagesApi.getImage(builtImage.id)
+      builtImage = response.data
+    }
+
+    if (builtImage.state === ImageState.ERROR) {
+      throw new DaytonaError(
+        `Failed to build image. Image ended in the ERROR state. name: ${builtImage.name}; error reason: ${builtImage.errorReason}`
+      )
+    }
+    if (options.verbose) {
+      console.log(`Built image ${builtImage.name} (${builtImage.state})`)
+    }
+  }
+
+  /**
    * Gets the appropriate code toolbox based on language.
    *
    * @private
@@ -585,5 +667,38 @@ export class Daytona {
           `Unsupported language: ${language}, supported languages: ${Object.values(CodeLanguage).join(', ')}`
         )
     }
+  }
+
+  /**
+   * Processes the image contexts by uploading them to object storage
+   *
+   * @private
+   * @param {Image} image - The Image instance.
+   * @returns {Promise<string[]>} The list of context hashes stored in object storage.
+   */
+  private async processImageContext(image: Image): Promise<string[]> {
+    if (!image.contextList || !image.contextList.length) {
+      return []
+    }
+
+    const pushAccessCreds = (await this.objectStorageApi.getPushAccess()).data
+    const objectStorage = new ObjectStorage({
+      endpointUrl: pushAccessCreds.storageUrl,
+      accessKeyId: pushAccessCreds.accessKey,
+      secretAccessKey: pushAccessCreds.secret,
+      sessionToken: pushAccessCreds.sessionToken,
+    })
+
+    const contextHashes = []
+    for (const context of image.contextList) {
+      const contextHash = await objectStorage.upload(
+        context.sourcePath,
+        pushAccessCreds.organizationId,
+        context.archivePath
+      )
+      contextHashes.push(contextHash)
+    }
+
+    return contextHashes
   }
 }
