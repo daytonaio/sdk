@@ -226,7 +226,7 @@ export class Process {
    * @param {string} sessionId - Unique identifier of the session to use
    * @param {SessionExecuteRequest} req - Command execution request containing:
    *                                     - command: The command to execute
-   *                                     - async: Whether to execute asynchronously
+   *                                     - runAsync: Whether to execute asynchronously
    * @param {number} timeout - Timeout in seconds
    * @returns {Promise<SessionExecuteResponse>} Command execution results containing:
    *                                           - cmdId: Unique identifier for the executed command
