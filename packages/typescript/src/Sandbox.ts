@@ -87,7 +87,7 @@ export interface SandboxInfo extends Omit<ApiSandboxInfo, 'name'> {
   /** Unique identifier */
   id: string
   /** Docker image */
-  image: string
+  image?: string
   /** OS user */
   user: string
   /** Environment variables */
