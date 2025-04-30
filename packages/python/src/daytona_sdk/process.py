@@ -1,26 +1,44 @@
 import asyncio
 import base64
 import json
-import time
+import warnings
 from typing import Callable, Dict, List, Optional
 
 import httpx
-from daytona_api_client import (
-    Command,
-    CreateSessionRequest,
-    ExecuteRequest,
-    Session,
-    SessionExecuteRequest,
-    SessionExecuteResponse,
-    ToolboxApi,
-)
+from daytona_api_client import Command, CreateSessionRequest, ExecuteRequest, Session
+from daytona_api_client import SessionExecuteRequest as ApiSessionExecuteRequest
+from daytona_api_client import SessionExecuteResponse, ToolboxApi
 from daytona_sdk._utils.errors import intercept_errors
+from pydantic import model_validator
 
 from .charts import parse_chart
 from .code_toolbox.sandbox_python_code_toolbox import SandboxPythonCodeToolbox
 from .common.code_run_params import CodeRunParams
 from .common.execute_response import ExecuteResponse, ExecutionArtifacts
 from .protocols import SandboxInstance
+
+
+class SessionExecuteRequest(ApiSessionExecuteRequest):
+    """Contains the request for executing a command in a session.
+
+    Attributes:
+        command (str): The command to execute.
+        run_async (Optional[bool]): Whether to execute the command asynchronously.
+        var_async (Optional[bool]): Deprecated. Use `run_async` instead.
+    """
+
+    @model_validator(mode="before")
+    @classmethod
+    def __handle_deprecated_var_async(cls, values):  # pylint: disable=unused-private-member
+        if "var_async" in values and values.get("var_async"):
+            warnings.warn(
+                "'var_async' is deprecated and will be removed in a future version. Use 'run_async' instead.",
+                DeprecationWarning,
+                stacklevel=3,
+            )
+            if "run_async" not in values or not values["run_async"]:
+                values["run_async"] = values.pop("var_async")
+        return values
 
 
 class Process:
@@ -134,9 +152,7 @@ class Process:
         command = f'sh -c "{command}"'
         execute_request = ExecuteRequest(command=command, cwd=cwd, timeout=timeout)
 
-        response = self.toolbox_api.execute_command(
-            workspace_id=self.instance.id, execute_request=execute_request
-        )
+        response = self.toolbox_api.execute_command(workspace_id=self.instance.id, execute_request=execute_request)
 
         # Post-process the output to extract ExecutionArtifacts
         artifacts = Process._parse_output(response.result.splitlines())
@@ -246,9 +262,7 @@ class Process:
             ```
         """
         request = CreateSessionRequest(sessionId=session_id)
-        self.toolbox_api.create_session(
-            self.instance.id, create_session_request=request
-        )
+        self.toolbox_api.create_session(self.instance.id, create_session_request=request)
 
     @intercept_errors(message_prefix="Failed to get session: ")
     def get_session(self, session_id: str) -> Session:
@@ -292,9 +306,7 @@ class Process:
                 print(f"Command {cmd.command} completed successfully")
             ```
         """
-        return self.toolbox_api.get_session_command(
-            self.instance.id, session_id=session_id, command_id=command_id
-        )
+        return self.toolbox_api.get_session_command(self.instance.id, session_id=session_id, command_id=command_id)
 
     @intercept_errors(message_prefix="Failed to execute session command: ")
     def execute_session_command(
@@ -309,7 +321,7 @@ class Process:
             session_id (str): Unique identifier of the session to use.
             req (SessionExecuteRequest): Command execution request containing:
                 - command: The command to execute
-                - var_async: Whether to execute asynchronously
+                - run_async: Whether to execute asynchronously
 
         Returns:
             SessionExecuteResponse: Command execution results containing:
@@ -336,25 +348,12 @@ class Process:
             print(result.output)  # Prints: Hello
             ```
         """
-        response = self.toolbox_api.execute_session_command(
+        return self.toolbox_api.execute_session_command(
             self.instance.id,
             session_id=session_id,
             session_execute_request=req,
             _request_timeout=timeout or None,
         )
-
-        if req.var_async and response is None:
-            time.sleep(0.1)
-            session = self.get_session(session_id)
-            for cmd in reversed(session.commands):
-                if cmd.command == req.command:
-                    response = SessionExecuteResponse(
-                        cmd_id=cmd.id,
-                        exit_code=cmd.exit_code,
-                    )
-                    break
-
-        return response
 
     @intercept_errors(message_prefix="Failed to get session command logs: ")
     def get_session_command_logs(self, session_id: str, command_id: str) -> str:
@@ -377,9 +376,7 @@ class Process:
             print(f"Command output: {logs}")
             ```
         """
-        return self.toolbox_api.get_session_command_logs(
-            self.instance.id, session_id=session_id, command_id=command_id
-        )
+        return self.toolbox_api.get_session_command_logs(self.instance.id, session_id=session_id, command_id=command_id)
 
     @intercept_errors(message_prefix="Failed to get session command logs: ")
     async def get_session_command_logs_async(
@@ -418,9 +415,7 @@ class Process:
                         next_chunk = asyncio.create_task(anext(stream, None))
                     timeout = asyncio.create_task(asyncio.sleep(2))
 
-                    done, pending = await asyncio.wait(
-                        [next_chunk, timeout], return_when=asyncio.FIRST_COMPLETED
-                    )
+                    done, pending = await asyncio.wait([next_chunk, timeout], return_when=asyncio.FIRST_COMPLETED)
 
                     if next_chunk in done:
                         timeout.cancel()

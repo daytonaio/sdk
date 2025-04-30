@@ -62,7 +62,7 @@ async function sessionExecLogsAsync(sandbox: Sandbox) {
 
   const command = await sandbox.process.executeSessionCommand(sessionId, {
     command: 'counter=1; while (( counter <= 3 )); do echo "Count: $counter"; ((counter++)); sleep 2; done',
-    async: true,
+    runAsync: true,
   })
 
   await sandbox.process.getSessionCommandLogs(sessionId, command.cmdId!, (chunk) => {
