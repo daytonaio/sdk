@@ -1,6 +1,6 @@
 {
   "name": "@daytonaio/sdk",
-  "version": "0.10.2",
+  "version": "0.15.1",
   "description": "Daytona client library for AI Agents",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -36,6 +36,7 @@
   "dependencies": {
     "@daytonaio/api-client": "^0.17.1",
     "uuid": "^11.0.3",
-    "@dotenvx/dotenvx": "^1.25.1"
+    "@dotenvx/dotenvx": "^1.25.1",
+    "axios": "^1.6.0"
   }
 }

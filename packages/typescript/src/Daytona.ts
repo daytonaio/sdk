@@ -244,7 +244,9 @@ export class Daytona {
       },
     })
 
-    const axiosInstance = axios.create()
+    const axiosInstance = axios.create({
+      timeout: 24 * 60 * 60 * 1000, // 24 hours
+    })
     axiosInstance.interceptors.response.use(
       (response) => {
         return response
