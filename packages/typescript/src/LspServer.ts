@@ -1,5 +1,6 @@
 import { CompletionList, LspSymbol, ToolboxApi } from '@daytonaio/api-client'
 import { SandboxInstance } from './Sandbox'
+import { prefixRelativePath } from './utils/Path'
 
 /**
  * Supported language server types.
@@ -63,7 +64,7 @@ export class LspServer {
    * @returns {Promise<void>}
    *
    * @example
-   * const lsp = sandbox.createLspServer('typescript', '/workspace/project');
+   * const lsp = await sandbox.createLspServer('typescript', 'workspace/project');
    * await lsp.start();  // Initialize the server
    * // Now ready for LSP operations
    */
@@ -96,19 +97,20 @@ export class LspServer {
    * language features like diagnostics and completions for that file. The server
    * will begin tracking the file's contents and providing language features.
    *
-   * @param {string} path - Absolute path to the opened file
+   * @param {string} path - Path to the opened file. Relative paths are resolved based on the user's
+   * root directory.
    * @returns {Promise<void>}
    *
    * @example
    * // When opening a file for editing
-   * await lsp.didOpen('/workspace/project/src/index.ts');
+   * await lsp.didOpen('workspace/project/src/index.ts');
    * // Now can get completions, symbols, etc. for this file
    */
   public async didOpen(path: string): Promise<void> {
     await this.toolboxApi.lspDidOpen(this.instance.id, {
       languageId: this.languageId,
       pathToProject: this.pathToProject,
-      uri: 'file://' + path,
+      uri: 'file://' + prefixRelativePath(this.pathToProject, path),
     })
   }
 
@@ -116,25 +118,27 @@ export class LspServer {
    * Notifies the language server that a file has been closed, should be called when a file is closed
    * in the editor to allow the language server to clean up any resources associated with that file.
    *
-   * @param {string} path - Absolute path to the closed file
+   * @param {string} path - Path to the closed file. Relative paths are resolved based on the project path
+   * set in the LSP server constructor.
    * @returns {Promise<void>}
    *
    * @example
    * // When done editing a file
-   * await lsp.didClose('/workspace/project/src/index.ts');
+   * await lsp.didClose('workspace/project/src/index.ts');
    */
   public async didClose(path: string): Promise<void> {
     await this.toolboxApi.lspDidClose(this.instance.id, {
       languageId: this.languageId,
       pathToProject: this.pathToProject,
-      uri: 'file://' + path,
+      uri: 'file://' + prefixRelativePath(this.pathToProject, path),
     })
   }
 
   /**
    * Get symbol information (functions, classes, variables, etc.) from a document.
    *
-   * @param {string} path - Absolute path to the file to get symbols from
+   * @param {string} path - Path to the file to get symbols from. Relative paths are resolved based on the project path
+   * set in the LSP server constructor.
    * @returns {Promise<LspSymbol[]>} List of symbols in the document. Each symbol includes:
    *                                 - name: The symbol's name
    *                                 - kind: The symbol's kind (function, class, variable, etc.)
@@ -142,7 +146,7 @@ export class LspServer {
    *
    * @example
    * // Get all symbols in a file
-   * const symbols = await lsp.documentSymbols('/workspace/project/src/index.ts');
+   * const symbols = await lsp.documentSymbols('workspace/project/src/index.ts');
    * symbols.forEach(symbol => {
    *   console.log(`${symbol.kind} ${symbol.name}: ${symbol.location}`);
    * });
@@ -152,7 +156,7 @@ export class LspServer {
       this.instance.id,
       this.languageId,
       this.pathToProject,
-      'file://' + path
+      'file://' + prefixRelativePath(this.pathToProject, path)
     )
     return response.data
   }
@@ -201,7 +205,8 @@ export class LspServer {
   /**
    * Gets completion suggestions at a position in a file.
    *
-   * @param {string} path - Absolute path to the file
+   * @param {string} path - Path to the file. Relative paths are resolved based on the project path
+   * set in the LSP server constructor.
    * @param {Position} position - The position in the file where completion was requested
    * @returns {Promise<CompletionList>} List of completion suggestions. The list includes:
    *                                    - isIncomplete: Whether more items might be available
@@ -216,7 +221,7 @@ export class LspServer {
    *
    * @example
    * // Get completions at a specific position
-   * const completions = await lsp.completions('/workspace/project/src/index.ts', {
+   * const completions = await lsp.completions('workspace/project/src/index.ts', {
    *   line: 10,
    *   character: 15
    * });
@@ -228,7 +233,7 @@ export class LspServer {
     const response = await this.toolboxApi.lspCompletions(this.instance.id, {
       languageId: this.languageId,
       pathToProject: this.pathToProject,
-      uri: 'file://' + path,
+      uri: 'file://' + prefixRelativePath(this.pathToProject, path),
       position,
     })
     return response.data

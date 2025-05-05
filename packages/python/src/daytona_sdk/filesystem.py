@@ -2,15 +2,9 @@ from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from typing import List
 
-from daytona_api_client import (
-    FileInfo,
-    Match,
-    ReplaceRequest,
-    ReplaceResult,
-    SearchFilesResponse,
-    ToolboxApi,
-)
+from daytona_api_client import FileInfo, Match, ReplaceRequest, ReplaceResult, SearchFilesResponse, ToolboxApi
 from daytona_sdk._utils.errors import intercept_errors
+from daytona_sdk._utils.path import prefix_relative_path
 
 from .protocols import SandboxInstance
 
@@ -38,15 +32,17 @@ class FileSystem:
         instance (SandboxInstance): The Sandbox instance this file system belongs to.
     """
 
-    def __init__(self, instance: SandboxInstance, toolbox_api: ToolboxApi):
+    def __init__(self, instance: SandboxInstance, toolbox_api: ToolboxApi, root_dir: str):
         """Initializes a new FileSystem instance.
 
         Args:
             instance (SandboxInstance): The Sandbox instance this file system belongs to.
             toolbox_api (ToolboxApi): API client for Sandbox operations.
+            root_dir (str): The default root directory of the Sandbox.
         """
         self.instance = instance
         self.toolbox_api = toolbox_api
+        self._root_dir = root_dir
 
     @intercept_errors(message_prefix="Failed to create folder: ")
     def create_folder(self, path: str, mode: str) -> None:
@@ -54,19 +50,20 @@ class FileSystem:
         permissions.
 
         Args:
-            path (str): Absolute path where the folder should be created.
+            path (str): Path where the folder should be created. Relative paths are resolved based
+            on the user's root directory.
             mode (str): Folder permissions in octal format (e.g., "755" for rwxr-xr-x).
 
         Example:
             ```python
             # Create a directory with standard permissions
-            sandbox.fs.create_folder("/workspace/data", "755")
+            sandbox.fs.create_folder("workspace/data", "755")
 
             # Create a private directory
-            sandbox.fs.create_folder("/workspace/secrets", "700")
+            sandbox.fs.create_folder("workspace/secrets", "700")
             ```
         """
-        self.toolbox_api.create_folder(self.instance.id, path=path, mode=mode)
+        self.toolbox_api.create_folder(self.instance.id, path=prefix_relative_path(self._root_dir, path), mode=mode)
 
     @intercept_errors(message_prefix="Failed to delete file: ")
     def delete_file(self, path: str) -> None:
@@ -78,17 +75,18 @@ class FileSystem:
         Example:
             ```python
             # Delete a file
-            sandbox.fs.delete_file("/workspace/data/old_file.txt")
+            sandbox.fs.delete_file("workspace/data/old_file.txt")
             ```
         """
-        self.toolbox_api.delete_file(self.instance.id, path=path)
+        self.toolbox_api.delete_file(self.instance.id, path=prefix_relative_path(self._root_dir, path))
 
     @intercept_errors(message_prefix="Failed to download file: ")
     def download_file(self, path: str) -> bytes:
         """Downloads a file from the Sandbox.
 
         Args:
-            path (str): Absolute path to the file to download.
+            path (str): Path to the file to download. Relative paths are resolved based on the user's
+            root directory.
 
         Returns:
             bytes: The file contents as a bytes object.
@@ -96,16 +94,16 @@ class FileSystem:
         Example:
             ```python
             # Download and save a file locally
-            content = sandbox.fs.download_file("/workspace/data/file.txt")
+            content = sandbox.fs.download_file("workspace/data/file.txt")
             with open("local_copy.txt", "wb") as f:
                 f.write(content)
 
             # Download and process text content
-            content = sandbox.fs.download_file("/workspace/data/config.json")
+            content = sandbox.fs.download_file("workspace/data/config.json")
             config = json.loads(content.decode('utf-8'))
             ```
         """
-        return self.toolbox_api.download_file(self.instance.id, path=path)
+        return self.toolbox_api.download_file(self.instance.id, path=prefix_relative_path(self._root_dir, path))
 
     @intercept_errors(message_prefix="Failed to find files: ")
     def find_files(self, path: str, pattern: str) -> List[Match]:
@@ -113,8 +111,9 @@ class FileSystem:
         the grep command.
 
         Args:
-            path (str): Absolute path to the file or directory to search. If the path is a directory,
-                the search will be performed recursively.
+            path (str): Path to the file or directory to search. If the path is a directory,
+                the search will be performed recursively. Relative paths are resolved based on the user's
+                root directory.
             pattern (str): Search pattern to match against file contents.
 
         Returns:
@@ -126,13 +125,13 @@ class FileSystem:
         Example:
             ```python
             # Search for TODOs in Python files
-            matches = sandbox.fs.find_files("/workspace/src", "TODO:")
+            matches = sandbox.fs.find_files("workspace/src", "TODO:")
             for match in matches:
                 print(f"{match.file}:{match.line}: {match.content.strip()}")
             ```
         """
         return self.toolbox_api.find_in_files(
-            self.instance.id, path=path, pattern=pattern
+            self.instance.id, path=prefix_relative_path(self._root_dir, path), pattern=pattern
         )
 
     @intercept_errors(message_prefix="Failed to get file info: ")
@@ -141,7 +140,8 @@ class FileSystem:
         size, permissions, and timestamps.
 
         Args:
-            path (str): Absolute path to the file or directory.
+            path (str): Path to the file or directory. Relative paths are resolved based on the user's
+            root directory.
 
         Returns:
             FileInfo: Detailed file information including:
@@ -157,25 +157,26 @@ class FileSystem:
         Example:
             ```python
             # Get file metadata
-            info = sandbox.fs.get_file_info("/workspace/data/file.txt")
+            info = sandbox.fs.get_file_info("workspace/data/file.txt")
             print(f"Size: {info.size} bytes")
             print(f"Modified: {info.mod_time}")
             print(f"Mode: {info.mode}")
 
             # Check if path is a directory
-            info = sandbox.fs.get_file_info("/workspace/data")
+            info = sandbox.fs.get_file_info("workspace/data")
             if info.is_dir:
                 print("Path is a directory")
             ```
         """
-        return self.toolbox_api.get_file_info(self.instance.id, path=path)
+        return self.toolbox_api.get_file_info(self.instance.id, path=prefix_relative_path(self._root_dir, path))
 
     @intercept_errors(message_prefix="Failed to list files: ")
     def list_files(self, path: str) -> List[FileInfo]:
         """Lists files and directories in a given path and returns their information, similar to the ls -l command.
 
         Args:
-            path (str): Absolute path to the directory to list contents from.
+            path (str): Path to the directory to list contents from. Relative paths are resolved based on the user's
+            root directory.
 
         Returns:
             List[FileInfo]: List of file and directory information. Each FileInfo
@@ -184,7 +185,7 @@ class FileSystem:
         Example:
             ```python
             # List directory contents
-            files = sandbox.fs.list_files("/workspace/data")
+            files = sandbox.fs.list_files("workspace/data")
 
             # Print files and their sizes
             for file in files:
@@ -196,51 +197,53 @@ class FileSystem:
             print("Subdirectories:", ", ".join(d.name for d in dirs))
             ```
         """
-        return self.toolbox_api.list_files(self.instance.id, path=path)
+        return self.toolbox_api.list_files(self.instance.id, path=prefix_relative_path(self._root_dir, path))
 
     @intercept_errors(message_prefix="Failed to move files: ")
     def move_files(self, source: str, destination: str) -> None:
         """Moves or renames a file or directory. The parent directory of the destination must exist.
 
         Args:
-            source (str): Absolute path to the source file or directory.
-            destination (str): Absolute path to the destination.
+            source (str): Path to the source file or directory. Relative paths are resolved based on the user's
+            root directory.
+            destination (str): Path to the destination. Relative paths are resolved based on the user's
+            root directory.
 
         Example:
             ```python
             # Rename a file
             sandbox.fs.move_files(
-                "/workspace/data/old_name.txt",
-                "/workspace/data/new_name.txt"
+                "workspace/data/old_name.txt",
+                "workspace/data/new_name.txt"
             )
 
             # Move a file to a different directory
             sandbox.fs.move_files(
-                "/workspace/data/file.txt",
-                "/workspace/archive/file.txt"
+                "workspace/data/file.txt",
+                "workspace/archive/file.txt"
             )
 
             # Move a directory
             sandbox.fs.move_files(
-                "/workspace/old_dir",
-                "/workspace/new_dir"
+                "workspace/old_dir",
+                "workspace/new_dir"
             )
             ```
         """
         self.toolbox_api.move_file(
             self.instance.id,
-            source=source,
-            destination=destination,
+            source=prefix_relative_path(self._root_dir, source),
+            destination=prefix_relative_path(self._root_dir, destination),
         )
 
     @intercept_errors(message_prefix="Failed to replace in files: ")
-    def replace_in_files(
-        self, files: List[str], pattern: str, new_value: str
-    ) -> List[ReplaceResult]:
+    def replace_in_files(self, files: List[str], pattern: str, new_value: str) -> List[ReplaceResult]:
         """Performs search and replace operations across multiple files.
 
         Args:
-            files (List[str]): List of absolute file paths to perform replacements in.
+            files (List[str]): List of file paths to perform replacements in. Relative paths are
+            resolved based on the user's
+            root directory.
             pattern (str): Pattern to search for.
             new_value (str): Text to replace matches with.
 
@@ -255,7 +258,7 @@ class FileSystem:
             ```python
             # Replace in specific files
             results = sandbox.fs.replace_in_files(
-                files=["/workspace/src/file1.py", "/workspace/src/file2.py"],
+                files=["workspace/src/file1.py", "workspace/src/file2.py"],
                 pattern="old_function",
                 new_value="new_function"
             )
@@ -268,13 +271,12 @@ class FileSystem:
                     print(f"{result.file}: {result.error}")
             ```
         """
-        replace_request = ReplaceRequest(
-            files=files, new_value=new_value, pattern=pattern
-        )
+        for i, file in enumerate(files):
+            files[i] = prefix_relative_path(self._root_dir, file)
 
-        return self.toolbox_api.replace_in_files(
-            self.instance.id, replace_request=replace_request
-        )
+        replace_request = ReplaceRequest(files=files, new_value=new_value, pattern=pattern)
+
+        return self.toolbox_api.replace_in_files(self.instance.id, replace_request=replace_request)
 
     @intercept_errors(message_prefix="Failed to search files: ")
     def search_files(self, path: str, pattern: str) -> SearchFilesResponse:
@@ -282,7 +284,8 @@ class FileSystem:
         specified pattern. The pattern can be a simple string or a glob pattern.
 
         Args:
-            path (str): Absolute path to the root directory to start search from.
+            path (str): Path to the root directory to start search from. Relative paths are resolved based on the user's
+            root directory.
             pattern (str): Pattern to match against file names. Supports glob
                 patterns (e.g., "*.py" for Python files).
 
@@ -293,28 +296,27 @@ class FileSystem:
         Example:
             ```python
             # Find all Python files
-            result = sandbox.fs.search_files("/workspace", "*.py")
+            result = sandbox.fs.search_files("workspace", "*.py")
             for file in result.files:
                 print(file)
 
             # Find files with specific prefix
-            result = sandbox.fs.search_files("/workspace/data", "test_*")
+            result = sandbox.fs.search_files("workspace/data", "test_*")
             print(f"Found {len(result.files)} test files")
             ```
         """
         return self.toolbox_api.search_files(
-            self.instance.id, path=path, pattern=pattern
+            self.instance.id, path=prefix_relative_path(self._root_dir, path), pattern=pattern
         )
 
     @intercept_errors(message_prefix="Failed to set file permissions: ")
-    def set_file_permissions(
-        self, path: str, mode: str = None, owner: str = None, group: str = None
-    ) -> None:
+    def set_file_permissions(self, path: str, mode: str = None, owner: str = None, group: str = None) -> None:
         """Sets permissions and ownership for a file or directory. Any of the parameters can be None
         to leave that attribute unchanged.
 
         Args:
-            path (str): Absolute path to the file or directory.
+            path (str): Path to the file or directory. Relative paths are resolved based on the user's
+            root directory.
             mode (Optional[str]): File mode/permissions in octal format
                 (e.g., "644" for rw-r--r--).
             owner (Optional[str]): User owner of the file.
@@ -324,13 +326,13 @@ class FileSystem:
             ```python
             # Make a file executable
             sandbox.fs.set_file_permissions(
-                path="/workspace/scripts/run.sh",
+                path="workspace/scripts/run.sh",
                 mode="755"  # rwxr-xr-x
             )
 
             # Change file owner
             sandbox.fs.set_file_permissions(
-                path="/workspace/data/file.txt",
+                path="workspace/data/file.txt",
                 owner="daytona",
                 group="daytona"
             )
@@ -338,7 +340,7 @@ class FileSystem:
         """
         self.toolbox_api.set_file_permissions(
             self.instance.id,
-            path=path,
+            path=prefix_relative_path(self._root_dir, path),
             mode=mode,
             owner=owner,
             group=group,
@@ -351,28 +353,29 @@ class FileSystem:
         path, it will be overwritten.
 
         Args:
-            path (str): Absolute destination path in the Sandbox.
+            path (str): Path to the destination file. Relative paths are resolved based on the user's
+            root directory.
             file (bytes): File contents as a bytes object.
 
         Example:
             ```python
             # Upload a text file
             content = b"Hello, World!"
-            sandbox.fs.upload_file("/workspace/data/hello.txt", content)
+            sandbox.fs.upload_file("workspace/data/hello.txt", content)
 
             # Upload a local file
             with open("local_file.txt", "rb") as f:
                 content = f.read()
-            sandbox.fs.upload_file("/workspace/data/file.txt", content)
+            sandbox.fs.upload_file("workspace/data/file.txt", content)
 
             # Upload binary data
             import json
             data = {"key": "value"}
             content = json.dumps(data).encode('utf-8')
-            sandbox.fs.upload_file("/workspace/data/config.json", content)
+            sandbox.fs.upload_file("workspace/data/config.json", content)
             ```
         """
-        self.toolbox_api.upload_file(self.instance.id, path=path, file=file)
+        self.toolbox_api.upload_file(self.instance.id, path=prefix_relative_path(self._root_dir, path), file=file)
 
     @intercept_errors(message_prefix="Failed to upload files: ")
     def upload_files(self, files: List[FileUpload]) -> None:
@@ -380,33 +383,36 @@ class FileSystem:
         If files already exist at the destination paths, they will be overwritten.
 
         Args:
-            files (List[FileUpload]): List of files to upload.
+            files (List[FileUpload]): List of files to upload. Each FileUpload object includes:
+                - path: Path to the destination file. Relative paths are resolved based on the user's
+                root directory.
+                - content: File contents as a bytes object.
 
         Example:
             ```python
             # Upload multiple text files
             files = [
                 FileUpload(
-                    path="/workspace/data/file1.txt",
+                    path="workspace/data/file1.txt",
                     content=b"Content of file 1"
                 ),
                 FileUpload(
-                    path="/workspace/data/file2.txt",
+                    path="workspace/data/file2.txt",
                     content=b"Content of file 2"
                 ),
                 FileUpload(
-                    path="/workspace/config/settings.json",
+                    path="workspace/config/settings.json",
                     content=b'{"key": "value"}'
                 )
             ]
             sandbox.fs.upload_files(files)
             ```
         """
+        for file in files:
+            file.path = prefix_relative_path(self._root_dir, file.path)
 
         def upload_file(file: FileUpload) -> None:
-            self.toolbox_api.upload_file(
-                self.instance.id, path=file.path, file=file.content
-            )
+            self.toolbox_api.upload_file(self.instance.id, path=file.path, file=file.content)
 
         with ThreadPoolExecutor() as executor:
             futures = [executor.submit(upload_file, file) for file in files]

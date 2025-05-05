@@ -14,6 +14,7 @@ import { Git } from './Git'
 import { CodeRunParams, Process } from './Process'
 import { LspLanguageId, LspServer } from './LspServer'
 import { DaytonaError } from './errors/DaytonaError'
+import { prefixRelativePath } from './utils/Path'
 
 /** @deprecated Use SandboxInfo instead. This type will be removed in a future version. */
 type WorkspaceInfo = SandboxInfo
@@ -155,6 +156,8 @@ export class Sandbox {
   public readonly git: Git
   /** Process and code execution operations */
   public readonly process: Process
+  /** Default root directory for the Sandbox */
+  private rootDir: string
 
   /**
    * Creates a new Sandbox instance
@@ -172,9 +175,10 @@ export class Sandbox {
     public readonly toolboxApi: ToolboxApi,
     private readonly codeToolbox: SandboxCodeToolbox
   ) {
-    this.fs = new FileSystem(instance, this.toolboxApi)
-    this.git = new Git(this, this.toolboxApi, instance)
-    this.process = new Process(this.codeToolbox, this.toolboxApi, instance)
+    this.rootDir = ''
+    this.fs = new FileSystem(instance, this.toolboxApi, async () => await this.getRootDir())
+    this.git = new Git(this, this.toolboxApi, instance, async () => await this.getRootDir())
+    this.process = new Process(this.codeToolbox, this.toolboxApi, instance, async () => await this.getRootDir())
   }
 
   /**
@@ -205,14 +209,20 @@ export class Sandbox {
    * diagnostics, and more.
    *
    * @param {LspLanguageId} languageId - The language server type (e.g., "typescript")
-   * @param {string} pathToProject - Absolute path to the project root directory
+   * @param {string} pathToProject - Path to the project root directory. Relative paths are resolved based on the user's
+   * root directory.
    * @returns {LspServer} A new LSP server instance configured for the specified language
    *
    * @example
-   * const lsp = sandbox.createLspServer('typescript', '/workspace/project');
+   * const lsp = await sandbox.createLspServer('typescript', 'workspace/project');
    */
-  public createLspServer(languageId: LspLanguageId | string, pathToProject: string): LspServer {
-    return new LspServer(languageId as LspLanguageId, pathToProject, this.toolboxApi, this.instance)
+  public async createLspServer(languageId: LspLanguageId | string, pathToProject: string): Promise<LspServer> {
+    return new LspServer(
+      languageId as LspLanguageId,
+      prefixRelativePath(await this.getRootDir(), pathToProject),
+      this.toolboxApi,
+      this.instance
+    )
   }
 
   /**
@@ -493,5 +503,12 @@ export class Sandbox {
    */
   public async archive(): Promise<void> {
     await this.sandboxApi.archiveWorkspace(this.id)
+  }
+
+  private async getRootDir(): Promise<string> {
+    if (!this.rootDir) {
+      this.rootDir = (await this.getUserRootDir()) || ''
+    }
+    return this.rootDir
   }
 }

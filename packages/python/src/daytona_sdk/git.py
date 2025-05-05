@@ -10,6 +10,7 @@ from daytona_api_client import (
     ToolboxApi,
 )
 from daytona_sdk._utils.errors import intercept_errors
+from daytona_sdk._utils.path import prefix_relative_path
 
 from .protocols import SandboxInstance
 
@@ -40,17 +41,17 @@ class Git:
         # Clone a repository
         sandbox.git.clone(
             url="https://github.com/user/repo.git",
-            path="/workspace/repo"
+            path="workspace/repo"
         )
 
         # Check repository status
-        status = sandbox.git.status("/workspace/repo")
+        status = sandbox.git.status("workspace/repo")
         print(f"Modified files: {status.modified}")
 
         # Stage and commit changes
-        sandbox.git.add("/workspace/repo", ["file.txt"])
+        sandbox.git.add("workspace/repo", ["file.txt"])
         sandbox.git.commit(
-            path="/workspace/repo",
+            path="workspace/repo",
             message="Update file",
             author="John Doe",
             email="john@example.com"
@@ -63,6 +64,7 @@ class Git:
         sandbox: "Sandbox",
         toolbox_api: ToolboxApi,
         instance: SandboxInstance,
+        root_dir: str,
     ):
         """Initializes a new Git handler instance.
 
@@ -70,10 +72,12 @@ class Git:
             sandbox (Sandbox): The parent Sandbox instance.
             toolbox_api (ToolboxApi): API client for Sandbox operations.
             instance (SandboxInstance): The Sandbox instance this Git handler belongs to.
+            root_dir (str): The default root directory of the Sandbox.
         """
         self.sandbox = sandbox
         self.toolbox_api = toolbox_api
         self.instance = instance
+        self._root_dir = root_dir
 
     @intercept_errors(message_prefix="Failed to add files: ")
     def add(self, path: str, files: List[str]) -> None:
@@ -81,16 +85,17 @@ class Git:
         running 'git add' on the command line.
 
         Args:
-            path (str): Absolute path to the Git repository root.
+            path (str): Path to the Git repository root. Relative paths are resolved based on the user's
+            root directory.
             files (List[str]): List of file paths or directories to stage, relative to the repository root.
 
         Example:
             ```python
             # Stage a single file
-            sandbox.git.add("/workspace/repo", ["file.txt"])
+            sandbox.git.add("workspace/repo", ["file.txt"])
 
             # Stage multiple files
-            sandbox.git.add("/workspace/repo", [
+            sandbox.git.add("workspace/repo", [
                 "src/main.py",
                 "tests/test_main.py",
                 "README.md"
@@ -99,7 +104,7 @@ class Git:
         """
         self.toolbox_api.git_add_files(
             self.instance.id,
-            git_add_request=GitAddRequest(path=path, files=files),
+            git_add_request=GitAddRequest(path=prefix_relative_path(self._root_dir, path), files=files),
         )
 
     @intercept_errors(message_prefix="Failed to list branches: ")
@@ -107,20 +112,21 @@ class Git:
         """Lists branches in the repository.
 
         Args:
-            path (str): Absolute path to the Git repository root.
+            path (str): Path to the Git repository root. Relative paths are resolved based on the user's
+            root directory.
 
         Returns:
             ListBranchResponse: List of branches in the repository.
 
         Example:
             ```python
-            response = sandbox.git.branches("/workspace/repo")
+            response = sandbox.git.branches("workspace/repo")
             print(f"Branches: {response.branches}")
             ```
         """
         return self.toolbox_api.git_list_branches(
             self.instance.id,
-            path=path,
+            path=prefix_relative_path(self._root_dir, path),
         )
 
     @intercept_errors(message_prefix="Failed to clone repository: ")
@@ -139,7 +145,8 @@ class Git:
 
         Args:
             url (str): Repository URL to clone from.
-            path (str): Absolute path where the repository should be cloned.
+            path (str): Path where the repository should be cloned. Relative paths are resolved based on the user's
+            root directory.
             branch (Optional[str]): Specific branch to clone. If not specified,
                 clones the default branch.
             commit_id (Optional[str]): Specific commit to clone. If specified,
@@ -152,13 +159,13 @@ class Git:
             # Clone the default branch
             sandbox.git.clone(
                 url="https://github.com/user/repo.git",
-                path="/workspace/repo"
+                path="workspace/repo"
             )
 
             # Clone a specific branch with authentication
             sandbox.git.clone(
                 url="https://github.com/user/private-repo.git",
-                path="/workspace/private",
+                path="workspace/private",
                 branch="develop",
                 username="user",
                 password="token"
@@ -167,7 +174,7 @@ class Git:
             # Clone a specific commit
             sandbox.git.clone(
                 url="https://github.com/user/repo.git",
-                path="/workspace/repo-old",
+                path="workspace/repo-old",
                 commit_id="abc123"
             )
             ```
@@ -177,7 +184,7 @@ class Git:
             git_clone_request=GitCloneRequest(
                 url=url,
                 branch=branch,
-                path=path,
+                path=prefix_relative_path(self._root_dir, path),
                 username=username,
                 password=password,
                 commitId=commit_id,
@@ -185,14 +192,13 @@ class Git:
         )
 
     @intercept_errors(message_prefix="Failed to commit changes: ")
-    def commit(
-        self, path: str, message: str, author: str, email: str
-    ) -> GitCommitResponse:
+    def commit(self, path: str, message: str, author: str, email: str) -> GitCommitResponse:
         """Creates a new commit with the staged changes. Make sure to stage
         changes using the add() method before committing.
 
         Args:
-            path (str): Absolute path to the Git repository root.
+            path (str): Path to the Git repository root. Relative paths are resolved based on the user's
+            root directory.
             message (str): Commit message describing the changes.
             author (str): Name of the commit author.
             email (str): Email address of the commit author.
@@ -200,9 +206,9 @@ class Git:
         Example:
             ```python
             # Stage and commit changes
-            sandbox.git.add("/workspace/repo", ["README.md"])
+            sandbox.git.add("workspace/repo", ["README.md"])
             sandbox.git.commit(
-                path="/workspace/repo",
+                path="workspace/repo",
                 message="Update documentation",
                 author="John Doe",
                 email="john@example.com"
@@ -212,7 +218,7 @@ class Git:
         response = self.toolbox_api.git_commit_changes(
             self.instance.id,
             git_commit_request=GitCommitRequest(
-                path=path, message=message, author=author, email=email
+                path=prefix_relative_path(self._root_dir, path), message=message, author=author, email=email
             ),
         )
         return GitCommitResponse(sha=response.hash)
@@ -229,18 +235,19 @@ class Git:
         username and password/token.
 
         Args:
-            path (str): Absolute path to the Git repository root.
+            path (str): Path to the Git repository root. Relative paths are resolved based on the user's
+            root directory.
             username (Optional[str]): Git username for authentication.
             password (Optional[str]): Git password or token for authentication.
 
         Example:
             ```python
             # Push without authentication (for public repos or SSH)
-            sandbox.git.push("/workspace/repo")
+            sandbox.git.push("workspace/repo")
 
             # Push with authentication
             sandbox.git.push(
-                path="/workspace/repo",
+                path="workspace/repo",
                 username="user",
                 password="github_token"
             )
@@ -249,7 +256,7 @@ class Git:
         self.toolbox_api.git_push_changes(
             self.instance.id,
             git_repo_request=GitRepoRequest(
-                path=path, username=username, password=password
+                path=prefix_relative_path(self._root_dir, path), username=username, password=password
             ),
         )
 
@@ -264,18 +271,19 @@ class Git:
         provide username and password/token.
 
         Args:
-            path (str): Absolute path to the Git repository root.
+            path (str): Path to the Git repository root. Relative paths are resolved based on the user's
+            root directory.
             username (Optional[str]): Git username for authentication.
             password (Optional[str]): Git password or token for authentication.
 
         Example:
             ```python
             # Pull without authentication
-            sandbox.git.pull("/workspace/repo")
+            sandbox.git.pull("workspace/repo")
 
             # Pull with authentication
             sandbox.git.pull(
-                path="/workspace/repo",
+                path="workspace/repo",
                 username="user",
                 password="github_token"
             )
@@ -284,7 +292,7 @@ class Git:
         self.toolbox_api.git_pull_changes(
             self.instance.id,
             git_repo_request=GitRepoRequest(
-                path=path, username=username, password=password
+                path=prefix_relative_path(self._root_dir, path), username=username, password=password
             ),
         )
 
@@ -293,7 +301,8 @@ class Git:
         """Gets the current Git repository status.
 
         Args:
-            path (str): Absolute path to the Git repository root.
+            path (str): Path to the Git repository root. Relative paths are resolved based on the user's
+            root directory.
 
         Returns:
             GitStatus: Repository status information including:
@@ -305,7 +314,7 @@ class Git:
 
         Example:
             ```python
-            status = sandbox.git.status("/workspace/repo")
+            status = sandbox.git.status("workspace/repo")
             print(f"On branch: {status.current_branch}")
             print(f"Commits ahead: {status.ahead}")
             print(f"Commits behind: {status.behind}")
@@ -313,5 +322,5 @@ class Git:
         """
         return self.toolbox_api.git_get_status(
             self.instance.id,
-            path=path,
+            path=prefix_relative_path(self._root_dir, path),
         )

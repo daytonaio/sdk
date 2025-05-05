@@ -1,5 +1,3 @@
-import os
-
 from daytona_sdk import Daytona
 
 
@@ -9,8 +7,7 @@ def main():
     sandbox = daytona.create()
 
     try:
-        root_dir = sandbox.get_user_root_dir()
-        project_dir = os.path.join(root_dir, "learn-typescript")
+        project_dir = "learn-typescript"
 
         # Clone the repository
         sandbox.git.clone(

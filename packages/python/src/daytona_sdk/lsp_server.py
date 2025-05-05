@@ -10,6 +10,7 @@ from daytona_api_client import (
     ToolboxApi,
 )
 from daytona_sdk._utils.errors import intercept_errors
+from daytona_sdk._utils.path import prefix_relative_path
 from deprecated import deprecated
 
 from .protocols import SandboxInstance
@@ -96,7 +97,7 @@ class LspServer:
 
         Example:
             ```python
-            lsp = sandbox.create_lsp_server("typescript", "/workspace/project")
+            lsp = sandbox.create_lsp_server("typescript", "workspace/project")
             lsp.start()  # Initialize the server
             # Now ready for LSP operations
             ```
@@ -139,15 +140,17 @@ class LspServer:
         will begin tracking the file's contents and providing language features.
 
         Args:
-            path (str): Absolute path to the opened file.
+            path (str): Path to the opened file. Relative paths are resolved based on the project path
+            set in the LSP server constructor.
 
         Example:
             ```python
             # When opening a file for editing
-            lsp.did_open("/workspace/project/src/index.ts")
+            lsp.did_open("workspace/project/src/index.ts")
             # Now can get completions, symbols, etc. for this file
             ```
         """
+        path = prefix_relative_path(self.path_to_project, path)
         self.toolbox_api.lsp_did_open(
             self.instance.id,
             lsp_document_request=LspDocumentRequest(
@@ -163,13 +166,15 @@ class LspServer:
 
         This method should be called when a file is closed in the editor to allow
         the language server to clean up any resources associated with that file.
+
         Args:
-            path (str): Absolute path to the closed file.
+            path (str): Path to the closed file. Relative paths are resolved based on the project path
+            set in the LSP server constructor.
 
         Example:
             ```python
             # When done editing a file
-            lsp.did_close("/workspace/project/src/index.ts")
+            lsp.did_close("workspace/project/src/index.ts")
             ```
         """
         self.toolbox_api.lsp_did_close(
@@ -177,7 +182,7 @@ class LspServer:
             lsp_document_request=LspDocumentRequest(
                 language_id=self.language_id,
                 path_to_project=self.path_to_project,
-                uri=f"file://{path}",
+                uri=f"file://{prefix_relative_path(self.path_to_project, path)}",
             ),
         )
 
@@ -186,7 +191,8 @@ class LspServer:
         """Gets symbol information (functions, classes, variables, etc.) from a document.
 
         Args:
-            path (str): Absolute path to the file to get symbols from.
+            path (str): Path to the file to get symbols from. Relative paths are resolved based on the project path
+            set in the LSP server constructor.
 
         Returns:
             List[LspSymbol]: List of symbols in the document. Each symbol includes:
@@ -197,7 +203,7 @@ class LspServer:
         Example:
             ```python
             # Get all symbols in a file
-            symbols = lsp.document_symbols("/workspace/project/src/index.ts")
+            symbols = lsp.document_symbols("workspace/project/src/index.ts")
             for symbol in symbols:
                 print(f"{symbol.kind} {symbol.name}: {symbol.location}")
             ```
@@ -206,7 +212,7 @@ class LspServer:
             self.instance.id,
             language_id=self.language_id,
             path_to_project=self.path_to_project,
-            uri=f"file://{path}",
+            uri=f"file://{prefix_relative_path(self.path_to_project, path)}",
         )
 
     @deprecated(
@@ -259,7 +265,8 @@ class LspServer:
         """Gets completion suggestions at a position in a file.
 
         Args:
-            path (str): Absolute path to the file.
+            path (str): Path to the file. Relative paths are resolved based on the project path
+            set in the LSP server constructor.
             position (Position): Cursor position to get completions for.
 
         Returns:
@@ -278,7 +285,7 @@ class LspServer:
             ```python
             # Get completions at a specific position
             pos = Position(line=10, character=15)
-            completions = lsp.completions("/workspace/project/src/index.ts", pos)
+            completions = lsp.completions("workspace/project/src/index.ts", pos)
             for item in completions.items:
                 print(f"{item.label} ({item.kind}): {item.detail}")
             ```
@@ -288,7 +295,7 @@ class LspServer:
             lsp_completion_params=LspCompletionParams(
                 language_id=self.language_id,
                 path_to_project=self.path_to_project,
-                uri=f"file://{path}",
+                uri=f"file://{prefix_relative_path(self.path_to_project, path)}",
                 position=position,
             ),
         )

@@ -1,6 +1,7 @@
 import { FileInfo, Match, ReplaceRequest, ReplaceResult, SearchFilesResponse, ToolboxApi } from '@daytonaio/api-client'
 import { SandboxInstance } from './Sandbox'
 import { DaytonaError } from './errors/DaytonaError'
+import { prefixRelativePath } from './utils/Path'
 
 /**
  * Parameters for setting file permissions in the Sandbox.
@@ -46,128 +47,165 @@ export interface FileUpload {
  * @class
  */
 export class FileSystem {
-  constructor(private readonly instance: SandboxInstance, private readonly toolboxApi: ToolboxApi) {}
+  constructor(
+    private readonly instance: SandboxInstance,
+    private readonly toolboxApi: ToolboxApi,
+    private readonly getRootDir: () => Promise<string>
+  ) {}
 
   /**
    * Create a new directory in the Sandbox with specified permissions.
    *
-   * @param {string} path - Path where the directory should be created
+   * @param {string} path - Path where the directory should be created. Relative paths are resolved based on the user's
+   * root directory.
    * @param {string} mode - Directory permissions in octal format (e.g. "755")
    * @returns {Promise<void>}
    *
    * @example
    * // Create a directory with standard permissions
-   * await fs.createFolder('/app/data', '755');
+   * await fs.createFolder('app/data', '755');
    */
   public async createFolder(path: string, mode: string): Promise<void> {
-    const response = await this.toolboxApi.createFolder(this.instance.id, path, mode)
+    const response = await this.toolboxApi.createFolder(
+      this.instance.id,
+      prefixRelativePath(await this.getRootDir(), path),
+      mode
+    )
     return response.data
   }
 
   /**
    * Deletes a file or directory from the Sandbox.
    *
-   * @param {string} path - Path to the file or directory to delete
+   * @param {string} path - Path to the file or directory to delete. Relative paths are resolved based on the user's
+   * root directory.
    * @returns {Promise<void>}
    *
    * @example
    * // Delete a file
-   * await fs.deleteFile('/app/temp.log');
+   * await fs.deleteFile('app/temp.log');
    */
   public async deleteFile(path: string): Promise<void> {
-    const response = await this.toolboxApi.deleteFile(this.instance.id, path)
+    const response = await this.toolboxApi.deleteFile(
+      this.instance.id,
+      prefixRelativePath(await this.getRootDir(), path)
+    )
     return response.data
   }
 
   /**
    * Downloads a file from the Sandbox.
    *
-   * @param {string} path - Path to the file to download
+   * @param {string} path - Path to the file to download. Relative paths are resolved based on the user's
+   * root directory.
    * @returns {Promise<Blob>} The file contents as a Blob
    *
    * @example
    * // Download and process a file
-   * const fileBlob = await fs.downloadFile('/app/data.json');
+   * const fileBlob = await fs.downloadFile('app/data.json');
    * console.log('File content:', fileBlob.toString());
    */
   public async downloadFile(path: string): Promise<Blob> {
-    const response = await this.toolboxApi.downloadFile(this.instance.id, path)
+    const response = await this.toolboxApi.downloadFile(
+      this.instance.id,
+      prefixRelativePath(await this.getRootDir(), path)
+    )
     return response.data
   }
 
   /**
    * Searches for text patterns within files in the Sandbox.
    *
-   * @param {string} path - Directory to search in
+   * @param {string} path - Directory to search in. Relative paths are resolved based on the user's
+   * root directory.
    * @param {string} pattern - Search pattern
    * @returns {Promise<Array<Match>>} Array of matches with file and line information
    *
    * @example
    * // Find all TODO comments in TypeScript files
-   * const matches = await fs.findFiles('/app/src', 'TODO:');
+   * const matches = await fs.findFiles('app/src', 'TODO:');
    * matches.forEach(match => {
    *   console.log(`${match.file}:${match.line}: ${match.content}`);
    * });
    */
   public async findFiles(path: string, pattern: string): Promise<Array<Match>> {
-    const response = await this.toolboxApi.findInFiles(this.instance.id, path, pattern)
+    const response = await this.toolboxApi.findInFiles(
+      this.instance.id,
+      prefixRelativePath(await this.getRootDir(), path),
+      pattern
+    )
     return response.data
   }
 
   /**
    * Retrieves detailed information about a file or directory.
    *
-   * @param {string} path - Path to the file or directory
+   * @param {string} path - Path to the file or directory. Relative paths are resolved based on the user's
+   * root directory.
    * @returns {Promise<FileInfo>} Detailed file information including size, permissions, modification time
    *
    * @example
    * // Get file details
-   * const info = await fs.getFileDetails('/app/config.json');
+   * const info = await fs.getFileDetails('app/config.json');
    * console.log(`Size: ${info.size}, Modified: ${info.modTime}`);
    */
   public async getFileDetails(path: string): Promise<FileInfo> {
-    const response = await this.toolboxApi.getFileInfo(this.instance.id, path)
+    const response = await this.toolboxApi.getFileInfo(
+      this.instance.id,
+      prefixRelativePath(await this.getRootDir(), path)
+    )
     return response.data
   }
 
   /**
    * Lists contents of a directory in the Sandbox.
    *
-   * @param {string} path - Directory path to list
+   * @param {string} path - Directory path to list. Relative paths are resolved based on the user's
+   * root directory.
    * @returns {Promise<FileInfo[]>} Array of file and directory information
    *
    * @example
    * // List directory contents
-   * const files = await fs.listFiles('/app/src');
+   * const files = await fs.listFiles('app/src');
    * files.forEach(file => {
    *   console.log(`${file.name} (${file.size} bytes)`);
    * });
    */
   public async listFiles(path: string): Promise<FileInfo[]> {
-    const response = await this.toolboxApi.listFiles(this.instance.id, undefined, path)
+    const response = await this.toolboxApi.listFiles(
+      this.instance.id,
+      undefined,
+      prefixRelativePath(await this.getRootDir(), path)
+    )
     return response.data
   }
 
   /**
    * Moves or renames a file or directory.
    *
-   * @param {string} source - Source path
-   * @param {string} destination - Destination path
+   * @param {string} source - Source path. Relative paths are resolved based on the user's
+   * root directory.
+   * @param {string} destination - Destination path. Relative paths are resolved based on the user's
+   * root directory.
    * @returns {Promise<void>}
    *
    * @example
    * // Move a file to a new location
-   * await fs.moveFiles('/app/temp/data.json', '/app/data/data.json');
+   * await fs.moveFiles('app/temp/data.json', 'app/data/data.json');
    */
   public async moveFiles(source: string, destination: string): Promise<void> {
-    const response = await this.toolboxApi.moveFile(this.instance.id, source, destination)
+    const response = await this.toolboxApi.moveFile(
+      this.instance.id,
+      prefixRelativePath(await this.getRootDir(), source),
+      prefixRelativePath(await this.getRootDir(), destination)
+    )
     return response.data
   }
 
   /**
    * Replaces text content in multiple files.
    *
-   * @param {string[]} files - Array of file paths to process
+   * @param {string[]} files - Array of file paths to process. Relative paths are resolved based on the user's
    * @param {string} pattern - Pattern to replace
    * @param {string} newValue - Replacement text
    * @returns {Promise<Array<ReplaceResult>>} Results of the replace operation for each file
@@ -175,12 +213,16 @@ export class FileSystem {
    * @example
    * // Update version number across multiple files
    * const results = await fs.replaceInFiles(
-   *   ['/app/package.json', '/app/version.ts'],
+   *   ['app/package.json', 'app/version.ts'],
    *   '"version": "1.0.0"',
    *   '"version": "1.1.0"'
    * );
    */
   public async replaceInFiles(files: string[], pattern: string, newValue: string): Promise<Array<ReplaceResult>> {
+    for (let i = 0; i < files.length; i++) {
+      files[i] = prefixRelativePath(await this.getRootDir(), files[i])
+    }
+
     const replaceRequest: ReplaceRequest = {
       files,
       newValue,
@@ -194,30 +236,35 @@ export class FileSystem {
   /**
    * Searches for files and directories by name pattern in the Sandbox.
    *
-   * @param {string} path - Directory to search in
+   * @param {string} path - Directory to search in. Relative paths are resolved based on the user's
    * @param {string} pattern - File name pattern (supports globs)
    * @returns {Promise<SearchFilesResponse>} Search results with matching files
    *
    * @example
    * // Find all TypeScript files
-   * const result = await fs.searchFiles('/app', '*.ts');
+   * const result = await fs.searchFiles('app', '*.ts');
    * result.files.forEach(file => console.log(file));
    */
   public async searchFiles(path: string, pattern: string): Promise<SearchFilesResponse> {
-    const response = await this.toolboxApi.searchFiles(this.instance.id, path, pattern)
+    const response = await this.toolboxApi.searchFiles(
+      this.instance.id,
+      prefixRelativePath(await this.getRootDir(), path),
+      pattern
+    )
     return response.data
   }
 
   /**
    * Sets permissions and ownership for a file or directory.
    *
-   * @param {string} path - Path to the file or directory
+   * @param {string} path - Path to the file or directory. Relative paths are resolved based on the user's
+   * root directory.
    * @param {FilePermissionsParams} permissions - Permission settings
    * @returns {Promise<void>}
    *
    * @example
    * // Set file permissions and ownership
-   * await fs.setFilePermissions('/app/script.sh', {
+   * await fs.setFilePermissions('app/script.sh', {
    *   owner: 'daytona',
    *   group: 'users',
    *   mode: '755'  // Execute permission for shell script
@@ -226,7 +273,7 @@ export class FileSystem {
   public async setFilePermissions(path: string, permissions: FilePermissionsParams): Promise<void> {
     const response = await this.toolboxApi.setFilePermissions(
       this.instance.id,
-      path,
+      prefixRelativePath(await this.getRootDir(), path),
       undefined,
       permissions.owner!,
       permissions.group!,
@@ -238,17 +285,23 @@ export class FileSystem {
   /**
    * Uploads a file to the Sandbox.
    *
-   * @param {string} path - Destination path in the Sandbox
+   * @param {string} path - Destination path in the Sandbox. Relative paths are resolved based on the user's
+   * root directory.
    * @param {File} file - File to upload
    * @returns {Promise<void>}
    *
    * @example
    * // Upload a configuration file
    * const configFile = new File(['{"setting": "value"}'], 'config.json');
-   * await fs.uploadFile('/app/config.json', configFile);
+   * await fs.uploadFile('app/config.json', configFile);
    */
   public async uploadFile(path: string, file: File): Promise<void> {
-    const response = await this.toolboxApi.uploadFile(this.instance.id, path, undefined, file)
+    const response = await this.toolboxApi.uploadFile(
+      this.instance.id,
+      prefixRelativePath(await this.getRootDir(), path),
+      undefined,
+      file
+    )
     return response.data
   }
 
@@ -256,28 +309,33 @@ export class FileSystem {
    * Uploads multiple files to the Sandbox. The parent directories must exist.
    * If files already exist at the destination paths, they will be overwritten.
    *
-   * @param {FileUpload[]} files - Array of files to upload
+   * @param {FileUpload[]} files - Array of files to upload. Relative paths are resolved based on the user's
+   * root directory.
    * @returns {Promise<void>}
    *
    * @example
    * // Upload multiple text files
    * const files = [
    *   {
-   *     path: '/app/data/file1.txt',
+   *     path: 'app/data/file1.txt',
    *     content: new File(['Content of file 1'], 'file1.txt')
    *   },
    *   {
-   *     path: '/app/data/file2.txt',
+   *     path: 'app/data/file2.txt',
    *     content: new File(['Content of file 2'], 'file2.txt')
    *   },
    *   {
-   *     path: '/app/config/settings.json',
+   *     path: 'app/config/settings.json',
    *     content: new File(['{"key": "value"}'], 'settings.json')
    *   }
    * ];
    * await fs.uploadFiles(files);
    */
   public async uploadFiles(files: FileUpload[]): Promise<void> {
+    for (const file of files) {
+      file.path = prefixRelativePath(await this.getRootDir(), file.path)
+    }
+
     const results = await Promise.allSettled(files.map((file) => this.uploadFile(file.path, file.content)))
 
     const failedUploads = results

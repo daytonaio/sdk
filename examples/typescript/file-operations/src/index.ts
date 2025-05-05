@@ -8,17 +8,12 @@ async function main() {
   const sandbox = await daytona.create()
 
   try {
-    const rootDir = await sandbox.getUserRootDir()
-    if (!rootDir) {
-      throw new Error('Failed to get sandbox root directory')
-    }
-
     //  list files in the sandbox
-    const files = await sandbox.fs.listFiles(rootDir)
+    const files = await sandbox.fs.listFiles('~')
     console.log('Files:', files)
 
     //  create a new directory in the sandbox
-    const newDir = path.join(rootDir, 'new-dir')
+    const newDir = 'new-dir'
     await sandbox.fs.createFolder(newDir, '755')
 
     const filePath = path.join(newDir, 'data.txt')
@@ -30,7 +25,7 @@ async function main() {
     await sandbox.fs.uploadFile(filePath, fileContent)
 
     //  search for the file we just added
-    const matches = await sandbox.fs.findFiles(rootDir, 'World!')
+    const matches = await sandbox.fs.findFiles('~', 'World!')
     console.log('Matches:', matches)
 
     //  replace the contents of the file
@@ -48,14 +43,14 @@ async function main() {
     console.log('File info:', fileInfo) //  should show the new permissions
 
     //  move the file to the new location
-    await sandbox.fs.moveFiles(filePath, path.join(rootDir, 'moved-data.txt'))
+    await sandbox.fs.moveFiles(filePath, 'moved-data.txt')
 
     //  find the file in the new location
-    const searchResults = await sandbox.fs.searchFiles(rootDir, 'moved-data.txt')
+    const searchResults = await sandbox.fs.searchFiles('~', 'moved-data.txt')
     console.log('Search results:', searchResults)
 
     //  delete the file
-    await sandbox.fs.deleteFile(path.join(rootDir, 'moved-data.txt'))
+    await sandbox.fs.deleteFile('moved-data.txt')
   } catch (error) {
     console.error('Error creating sandbox:', error)
   } finally {

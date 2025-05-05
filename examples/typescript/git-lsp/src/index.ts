@@ -1,4 +1,3 @@
-import * as path from 'path'
 import { Daytona } from '@daytonaio/sdk'
 
 async function main() {
@@ -10,12 +9,7 @@ async function main() {
   })
 
   try {
-    const rootDir = await sandbox.getUserRootDir()
-    if (!rootDir) {
-      throw new Error('Failed to get sandbox root directory')
-    }
-
-    const projectDir = path.join(rootDir, 'learn-typescript')
+    const projectDir = 'learn-typescript'
 
     //  clone the repository
     await sandbox.git.clone('https://github.com/panaverse/learn-typescript', projectDir, 'master')
@@ -25,7 +19,7 @@ async function main() {
     console.log('Matches:', matches)
 
     //  start the language server
-    const lsp = sandbox.createLspServer('typescript', projectDir)
+    const lsp = await sandbox.createLspServer('typescript', projectDir)
     await lsp.start()
 
     //  notify the language server of the document we want to work on
