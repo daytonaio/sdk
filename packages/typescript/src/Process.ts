@@ -303,36 +303,24 @@ export class Process {
       return response.data
     }
 
-    await new Promise((resolve, reject) => {
+    await new Promise<void>((resolve, reject) => {
       this.toolboxApi
-        .getSessionCommandLogs(this.instance.id, sessionId, commandId, undefined, true, {
-          responseType: 'stream',
-        })
+        .getSessionCommandLogs(this.instance.id, sessionId, commandId, undefined, true, { responseType: 'stream' })
         .then((res) => {
           const stream = res.data as any
 
-          stream.on('data', (data: Buffer) => {
-            const chunk = data.toString('utf-8')
-            onLogs(chunk)
-          })
-
-          stream.on('close', () => {
-            resolve(void 0)
-          })
-
-          // TODO: end event is not working
-          // stream.on('end', () => {
-          //   console.log('stream done - end event')
-          //   resolve(void 0)
-          // })
-
-          // TODO: error event is triggered at the end of the stream, 'connection aborted'
-          // stream.on('error', (err: Error) => {
-          //   console.error('Stream error:', err)
-          //   reject(err)
-          // })
+          this.streamWithStatusPoll(
+            stream,
+            (chunk: string) => onLogs(chunk),
+            async () => {
+              const statusRes = await this.getSessionCommand(sessionId, commandId)
+              return statusRes.exitCode
+            }
+          )
+            .then(() => resolve())
+            .catch((err) => reject(err))
         })
-        .catch(reject)
+        .catch((err) => reject(err))
     })
   }
 
@@ -367,5 +355,68 @@ export class Process {
    */
   public async deleteSession(sessionId: string): Promise<void> {
     await this.toolboxApi.deleteSession(this.instance.id, sessionId)
+  }
+
+  private async streamWithStatusPoll(
+    stream: any,
+    onLogs: (chunk: string) => void,
+    getExitCode: () => Promise<number | undefined>
+  ): Promise<void> {
+    let nextChunkPromise: Promise<Buffer | null> | null = null
+    let exitCodeSeenCount = 0
+
+    const readNext = (): Promise<Buffer | null> => {
+      return new Promise((resolve) => {
+        const onData = (data: Buffer) => {
+          cleanup()
+          resolve(data)
+        }
+        const onClose = () => {
+          cleanup()
+          resolve(null)
+        }
+        const onError = () => {
+          cleanup()
+          resolve(null)
+        }
+        function cleanup() {
+          stream.off('data', onData)
+          stream.off('close', onClose)
+          stream.off('error', onError)
+        }
+        stream.once('data', onData)
+        stream.once('close', onClose)
+        stream.once('error', onError)
+      })
+    }
+
+    while (true) {
+      // kick off reading and polling race
+      if (!nextChunkPromise) {
+        nextChunkPromise = readNext()
+      }
+      const timeoutPromise = new Promise<null>((resolve) => setTimeout(() => resolve(null), 2000))
+
+      const result = await Promise.race([nextChunkPromise, timeoutPromise])
+
+      if (result instanceof Buffer) {
+        // got data
+        const chunk = result.toString('utf8')
+        onLogs(chunk)
+        nextChunkPromise = null // reset for next loop
+        exitCodeSeenCount = 0 // reset exit-code counter
+      } /* result === null from timeout */ else {
+        const exit_code = await getExitCode()
+        if (exit_code != undefined && exit_code != null) {
+          exitCodeSeenCount += 1
+          // after seeing finished status twice in a row, break
+          if (exitCodeSeenCount > 1) {
+            stream.destroy()
+            break
+          }
+        }
+        // else loop again: nextChunkPromise still pending
+      }
+    }
   }
 }
