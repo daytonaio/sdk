@@ -127,7 +127,7 @@ await sandbox.git.add('path/to/repo', ['file1.txt', 'file2.txt'])
 
 ```typescript
 // Create and start a language server
-const lsp = sandbox.createLspServer('typescript', 'path/to/project')
+const lsp = await sandbox.createLspServer('typescript', 'path/to/project')
 await lsp.start()
 
 // Notify the lsp for the file

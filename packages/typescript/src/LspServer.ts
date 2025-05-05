@@ -64,7 +64,7 @@ export class LspServer {
    * @returns {Promise<void>}
    *
    * @example
-   * const lsp = sandbox.createLspServer('typescript', 'workspace/project');
+   * const lsp = await sandbox.createLspServer('typescript', 'workspace/project');
    * await lsp.start();  // Initialize the server
    * // Now ready for LSP operations
    */

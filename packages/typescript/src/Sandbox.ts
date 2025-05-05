@@ -214,7 +214,7 @@ export class Sandbox {
    * @returns {LspServer} A new LSP server instance configured for the specified language
    *
    * @example
-   * const lsp = sandbox.createLspServer('typescript', 'workspace/project');
+   * const lsp = await sandbox.createLspServer('typescript', 'workspace/project');
    */
   public async createLspServer(languageId: LspLanguageId | string, pathToProject: string): Promise<LspServer> {
     return new LspServer(

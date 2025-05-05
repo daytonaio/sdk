@@ -217,7 +217,7 @@ It initializes the language server for the specified language and project.
 **Example:**
 
 ```ts
-const lsp = sandbox.createLspServer('typescript', 'workspace/project');
+const lsp = await sandbox.createLspServer('typescript', 'workspace/project');
 await lsp.start();  // Initialize the server
 // Now ready for LSP operations
 ```
