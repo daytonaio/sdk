@@ -55,6 +55,7 @@ class Process:
         code_toolbox: SandboxPythonCodeToolbox,
         toolbox_api: ToolboxApi,
         instance: SandboxInstance,
+        root_dir: str,
     ):
         """Initialize a new Process instance.
 
@@ -62,10 +63,12 @@ class Process:
             code_toolbox (SandboxPythonCodeToolbox): Language-specific code execution toolbox.
             toolbox_api (ToolboxApi): API client for Sandbox operations.
             instance (SandboxInstance): The Sandbox instance this process belongs to.
+            root_dir (str): The default root directory of the Sandbox.
         """
         self.code_toolbox = code_toolbox
         self.toolbox_api = toolbox_api
         self.instance = instance
+        self._root_dir = root_dir
 
     @staticmethod
     def _parse_output(lines: List[str]) -> Optional[ExecutionArtifacts]:
@@ -109,7 +112,7 @@ class Process:
         Args:
             command (str): Shell command to execute.
             cwd (Optional[str]): Working directory for command execution. If not
-                specified, uses the Sandbox root directory.
+                specified, uses the Sandbox root directory. Default is the user's root directory.
             env (Optional[Dict[str, str]]): Environment variables to set for the command.
             timeout (Optional[int]): Maximum time in seconds to wait for the command
                 to complete. 0 means wait indefinitely.
@@ -128,7 +131,7 @@ class Process:
             print(response.artifacts.stdout)  # Prints: Hello
 
             # Command with working directory
-            result = sandbox.process.exec("ls", cwd="/workspace/src")
+            result = sandbox.process.exec("ls", cwd="workspace/src")
 
             # Command with timeout
             result = sandbox.process.exec("sleep 10", timeout=5)
@@ -150,7 +153,7 @@ class Process:
             command = f"{safe_env_exports} {command}"
 
         command = f'sh -c "{command}"'
-        execute_request = ExecuteRequest(command=command, cwd=cwd, timeout=timeout)
+        execute_request = ExecuteRequest(command=command, cwd=cwd or self._root_dir, timeout=timeout)
 
         response = self.toolbox_api.execute_command(workspace_id=self.instance.id, execute_request=execute_request)
 

@@ -9,6 +9,7 @@ from daytona_api_client import Workspace as ApiSandbox
 from daytona_api_client import WorkspaceApi as SandboxApi
 from daytona_api_client import WorkspaceInfo as ApiSandboxInfo
 from daytona_api_client import WorkspaceState as SandboxState
+from daytona_sdk._utils.path import prefix_relative_path
 from deprecated import deprecated
 from pydantic import Field
 
@@ -181,10 +182,11 @@ class Sandbox:
         self.sandbox_api = sandbox_api
         self.toolbox_api = toolbox_api
         self._code_toolbox = code_toolbox
+        self._root_dir = self.get_user_root_dir()
 
-        self.fs = FileSystem(instance, toolbox_api)
-        self.git = Git(self, toolbox_api, instance)
-        self.process = Process(code_toolbox, toolbox_api, instance)
+        self.fs = FileSystem(instance, toolbox_api, self._root_dir)
+        self.git = Git(self, toolbox_api, instance, self._root_dir)
+        self.process = Process(code_toolbox, toolbox_api, instance, self._root_dir)
 
     def info(self) -> SandboxInfo:
         """Gets structured information about the Sandbox.
@@ -226,9 +228,7 @@ class Sandbox:
     def get_workspace_root_dir(self) -> str:
         return self.get_user_root_dir()
 
-    def create_lsp_server(
-        self, language_id: LspLanguageId, path_to_project: str
-    ) -> LspServer:
+    def create_lsp_server(self, language_id: LspLanguageId, path_to_project: str) -> LspServer:
         """Creates a new Language Server Protocol (LSP) server instance.
 
         The LSP server provides language-specific features like code completion,
@@ -236,17 +236,23 @@ class Sandbox:
 
         Args:
             language_id (LspLanguageId): The language server type (e.g., LspLanguageId.PYTHON).
-            path_to_project (str): Absolute path to the project root directory.
+            path_to_project (str): Path to the project root directory. Relative paths are resolved based on the user's
+            root directory.
 
         Returns:
             LspServer: A new LSP server instance configured for the specified language.
 
         Example:
             ```python
-            lsp = sandbox.create_lsp_server("python", "/workspace/project")
+            lsp = sandbox.create_lsp_server("python", "workspace/project")
             ```
         """
-        return LspServer(language_id, path_to_project, self.toolbox_api, self.instance)
+        return LspServer(
+            language_id,
+            prefix_relative_path(self._root_dir, path_to_project),
+            self.toolbox_api,
+            self.instance,
+        )
 
     @intercept_errors(message_prefix="Failed to set labels: ")
     def set_labels(self, labels: Dict[str, str]) -> Dict[str, str]:
@@ -271,10 +277,7 @@ class Sandbox:
             ```
         """
         # Convert all values to strings and create the expected labels structure
-        string_labels = {
-            k: str(v).lower() if isinstance(v, bool) else str(v)
-            for k, v in labels.items()
-        }
+        string_labels = {k: str(v).lower() if isinstance(v, bool) else str(v) for k, v in labels.items()}
         labels_payload = {"labels": string_labels}
         return self.sandbox_api.replace_labels(self.id, labels_payload)
 

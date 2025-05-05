@@ -26,14 +26,16 @@ export class Process {
   constructor(
     private readonly codeToolbox: SandboxCodeToolbox,
     private readonly toolboxApi: ToolboxApi,
-    private readonly instance: SandboxInstance
+    private readonly instance: SandboxInstance,
+    private readonly getRootDir: () => Promise<string>
   ) {}
 
   /**
    * Executes a shell command in the Sandbox.
    *
    * @param {string} command - Shell command to execute
-   * @param {string} [cwd] - Working directory for command execution. If not specified, uses the Sandbox root directory
+   * @param {string} [cwd] - Working directory for command execution. If not specified, uses the Sandbox root directory.
+   * Default is the user's root directory.
    * @param {Record<string, string>} [env] - Environment variables to set for the command
    * @param {number} [timeout] - Maximum time in seconds to wait for the command to complete. 0 means wait indefinitely.
    * @returns {Promise<ExecuteResponse>} Command execution results containing:
@@ -48,7 +50,7 @@ export class Process {
    *
    * @example
    * // Command with working directory
-   * const result = await process.executeCommand('ls', '/workspace/src');
+   * const result = await process.executeCommand('ls', 'workspace/src');
    *
    * @example
    * // Command with timeout
@@ -79,7 +81,7 @@ export class Process {
     const response = await this.toolboxApi.executeCommand(this.instance.id, {
       command,
       timeout,
-      cwd,
+      cwd: cwd ?? (await this.getRootDir()),
     })
 
     // Parse artifacts from the output
@@ -239,14 +241,14 @@ export class Process {
    *
    * // Change directory
    * await process.executeSessionCommand(sessionId, {
-   *   command: 'cd /workspace'
+   *   command: 'cd /home/daytona'
    * });
    *
    * // Run command in new directory
    * const result = await process.executeSessionCommand(sessionId, {
    *   command: 'pwd'
    * });
-   * console.log(result.output);  // Prints: /workspace
+   * console.log(result.output);  // Prints: /home/daytona
    */
   public async executeSessionCommand(
     sessionId: string,

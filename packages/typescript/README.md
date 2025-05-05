@@ -99,12 +99,12 @@ console.log(response.result)
 ```typescript
 // Upload a file
 await sandbox.fs.uploadFile(
-  '/path/to/file.txt',
+  'path/to/file.txt',
   new File([Buffer.from('Hello, World!')], 'file.txt', { type: 'text/plain' }),
 )
 
 // Download a file
-const content = await sandbox.fs.downloadFile('/path/to/file.txt')
+const content = await sandbox.fs.downloadFile('path/to/file.txt')
 
 // Search for files
 const matches = await sandbox.fs.findFiles(root_dir, 'search_pattern')
@@ -114,30 +114,30 @@ const matches = await sandbox.fs.findFiles(root_dir, 'search_pattern')
 
 ```typescript
 // Clone a repository
-await sandbox.git.clone('https://github.com/example/repo', '/path/to/clone')
+await sandbox.git.clone('https://github.com/example/repo', 'path/to/clone')
 
 // List branches
-const branches = await sandbox.git.branches('/path/to/repo')
+const branches = await sandbox.git.branches('path/to/repo')
 
 // Add files
-await sandbox.git.add('/path/to/repo', ['file1.txt', 'file2.txt'])
+await sandbox.git.add('path/to/repo', ['file1.txt', 'file2.txt'])
 ```
 
 ### Language Server Protocol
 
 ```typescript
 // Create and start a language server
-const lsp = sandbox.createLspServer('typescript', '/path/to/project')
+const lsp = sandbox.createLspServer('typescript', 'path/to/project')
 await lsp.start()
 
 // Notify the lsp for the file
-await lsp.didOpen('/path/to/file.ts')
+await lsp.didOpen('path/to/file.ts')
 
 // Get document symbols
-const symbols = await lsp.documentSymbols('/path/to/file.ts')
+const symbols = await lsp.documentSymbols('path/to/file.ts')
 
 // Get completions
-const completions = await lsp.completions('/path/to/file.ts', {
+const completions = await lsp.completions('path/to/file.ts', {
   line: 10,
   character: 15,
 })

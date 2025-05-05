@@ -93,10 +93,10 @@ print(response.result)
 
 ```python
 # Upload a file
-sandbox.fs.upload_file('/path/to/file.txt', b'Hello, World!')
+sandbox.fs.upload_file('path/to/file.txt', b'Hello, World!')
 
 # Download a file
-content = sandbox.fs.download_file('/path/to/file.txt')
+content = sandbox.fs.download_file('path/to/file.txt')
 
 # Search for files
 matches = sandbox.fs.find_files(root_dir, 'search_pattern')
@@ -106,30 +106,30 @@ matches = sandbox.fs.find_files(root_dir, 'search_pattern')
 
 ```python
 # Clone a repository
-sandbox.git.clone('https://github.com/example/repo', '/path/to/clone')
+sandbox.git.clone('https://github.com/example/repo', 'path/to/clone')
 
 # List branches
-branches = sandbox.git.branches('/path/to/repo')
+branches = sandbox.git.branches('path/to/repo')
 
 # Add files
-sandbox.git.add('/path/to/repo', ['file1.txt', 'file2.txt'])
+sandbox.git.add('path/to/repo', ['file1.txt', 'file2.txt'])
 ```
 
 ### Language Server Protocol
 
 ```python
 # Create and start a language server
-lsp = sandbox.create_lsp_server('typescript', '/path/to/project')
+lsp = sandbox.create_lsp_server('typescript', 'path/to/project')
 lsp.start()
 
 # Notify the lsp for the file
-lsp.did_open('/path/to/file.ts')
+lsp.did_open('path/to/file.ts')
 
 # Get document symbols
-symbols = lsp.document_symbols('/path/to/file.ts')
+symbols = lsp.document_symbols('path/to/file.ts')
 
 # Get completions
-completions = lsp.completions('/path/to/file.ts', {"line": 10, "character": 15})
+completions = lsp.completions('path/to/file.ts', {"line": 10, "character": 15})
 ```
 
 ## Contributing

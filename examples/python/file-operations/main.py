@@ -10,15 +10,12 @@ params = CreateSandboxParams(
 # First, create a sandbox
 sandbox = daytona.create(params)
 
-# Get sandbox root directory
-root_dir = sandbox.get_user_root_dir()
-
 # List files in the sandbox
-files = sandbox.fs.list_files(root_dir)
+files = sandbox.fs.list_files("~")
 print("Files:", files)
 
 # Create a new directory in the sandbox
-new_dir = os.path.join(root_dir, "new-dir")
+new_dir = "new-dir"
 sandbox.fs.create_folder(new_dir, "755")
 
 file_path = os.path.join(new_dir, "data.txt")
@@ -28,7 +25,7 @@ file_content = b"Hello, World!"
 sandbox.fs.upload_file(file_path, file_content)
 
 # Search for the file we just added
-matches = sandbox.fs.find_files(root_dir, "World!")
+matches = sandbox.fs.find_files("~", "World!")
 print("Matches:", matches)
 
 # Replace the contents of the file
@@ -46,11 +43,11 @@ file_info = sandbox.fs.get_file_info(file_path)
 print("File info:", file_info)  # Should show the new permissions
 
 # Move the file to the new location
-new_file_path = os.path.join(root_dir, "moved-data.txt")
+new_file_path = "moved-data.txt"
 sandbox.fs.move_files(file_path, new_file_path)
 
 # Find the file in the new location
-search_results = sandbox.fs.search_files(root_dir, "moved-data.txt")
+search_results = sandbox.fs.search_files("~", "moved-data.txt")
 print("Search results:", search_results)
 
 # Delete the file

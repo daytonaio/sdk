@@ -96,7 +96,8 @@ diagnostics, and more.
 **Arguments**:
 
 - `language_id` _LspLanguageId_ - The language server type (e.g., LspLanguageId.PYTHON).
-- `path_to_project` _str_ - Absolute path to the project root directory.
+- `path_to_project` _str_ - Path to the project root directory. Relative paths are resolved based on the user's
+  root directory.
   
 
 **Returns**:
@@ -107,7 +108,7 @@ diagnostics, and more.
 **Example**:
 
 ```python
-lsp = sandbox.create_lsp_server("python", "/workspace/project")
+lsp = sandbox.create_lsp_server("python", "workspace/project")
 ```
 
 #### Sandbox.set\_labels

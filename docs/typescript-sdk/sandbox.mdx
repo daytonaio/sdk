@@ -114,7 +114,7 @@ Sandbox must be stopped before archiving.
 #### createLspServer()
 
 ```ts
-createLspServer(languageId: string, pathToProject: string): LspServer
+createLspServer(languageId: string, pathToProject: string): Promise<LspServer>
 ```
 
 Creates a new Language Server Protocol (LSP) server instance.
@@ -125,17 +125,18 @@ diagnostics, and more.
 **Parameters**:
 
 - `languageId` _string_ - The language server type (e.g., "typescript")
-- `pathToProject` _string_ - Absolute path to the project root directory
+- `pathToProject` _string_ - Path to the project root directory. Relative paths are resolved based on the user's
+    root directory.
 
 
 **Returns**:
 
-- `LspServer` - A new LSP server instance configured for the specified language
+- `Promise<LspServer>` - A new LSP server instance configured for the specified language
 
 **Example:**
 
 ```ts
-const lsp = sandbox.createLspServer('typescript', '/workspace/project');
+const lsp = sandbox.createLspServer('typescript', 'workspace/project');
 ```
 
 ***

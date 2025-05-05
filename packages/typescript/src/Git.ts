@@ -1,5 +1,6 @@
 import { ToolboxApi, ListBranchResponse, GitStatus } from '@daytonaio/api-client'
 import { Sandbox, SandboxInstance } from './Sandbox'
+import { prefixRelativePath } from './utils/Path'
 
 /**
  * Response from the git commit.
@@ -20,28 +21,30 @@ export class Git {
   constructor(
     private readonly sandbox: Sandbox,
     private readonly toolboxApi: ToolboxApi,
-    private readonly instance: SandboxInstance
+    private readonly instance: SandboxInstance,
+    private readonly getRootDir: () => Promise<string>
   ) {}
 
   /**
    * Stages the specified files for the next commit, similar to
    * running 'git add' on the command line.
    *
-   * @param {string} path - Absolute path to the Git repository root
+   * @param {string} path - Path to the Git repository root. Relative paths are resolved based on the user's
+   * root directory.
    * @param {string[]} files - List of file paths or directories to stage, relative to the repository root
    * @returns {Promise<void>}
    *
    * @example
    * // Stage a single file
-   * await git.add('/workspace/repo', ['file.txt']);
+   * await git.add('workspace/repo', ['file.txt']);
    *
    * @example
    * // Stage whole repository
-   * await git.add('/workspace/repo', ['.']);
+   * await git.add('workspace/repo', ['.']);
    */
   public async add(path: string, files: string[]): Promise<void> {
     await this.toolboxApi.gitAddFiles(this.instance.id, {
-      path,
+      path: prefixRelativePath(await this.getRootDir(), path),
       files,
     })
   }
@@ -49,15 +52,19 @@ export class Git {
   /**
    * List branches in the repository.
    *
-   * @param {string} path - Absolute path to the Git repository root
+   * @param {string} path - Path to the Git repository root. Relative paths are resolved based on the user's
+   * root directory.
    * @returns {Promise<ListBranchResponse>} List of branches in the repository
    *
    * @example
-   * const response = await git.branches('/workspace/repo');
+   * const response = await git.branches('workspace/repo');
    * console.log(`Branches: ${response.branches}`);
    */
   public async branches(path: string): Promise<ListBranchResponse> {
-    const response = await this.toolboxApi.gitListBranches(this.instance.id, path)
+    const response = await this.toolboxApi.gitListBranches(
+      this.instance.id,
+      prefixRelativePath(await this.getRootDir(), path)
+    )
     return response.data
   }
 
@@ -67,7 +74,8 @@ export class Git {
    * repository if credentials are provided.
    *
    * @param {string} url - Repository URL to clone from
-   * @param {string} path - Absolute path where the repository should be cloned
+   * @param {string} path - Path where the repository should be cloned. Relative paths are resolved based on the user's
+   * root directory.
    * @param {string} [branch] - Specific branch to clone. If not specified, clones the default branch
    * @param {string} [commitId] - Specific commit to clone. If specified, the repository will be left in a detached HEAD state at this commit
    * @param {string} [username] - Git username for authentication
@@ -78,14 +86,14 @@ export class Git {
    * // Clone the default branch
    * await git.clone(
    *   'https://github.com/user/repo.git',
-   *   '/workspace/repo'
+   *   'workspace/repo'
    * );
    *
    * @example
    * // Clone a specific branch with authentication
    * await git.clone(
    *   'https://github.com/user/private-repo.git',
-   *   '/workspace/private',
+   *   'workspace/private',
    *   branch='develop',
    *   username='user',
    *   password='token'
@@ -95,7 +103,7 @@ export class Git {
    * // Clone a specific commit
    * await git.clone(
    *   'https://github.com/user/repo.git',
-   *   '/workspace/repo-old',
+   *   'workspace/repo-old',
    *   commitId='abc123'
    * );
    */
@@ -110,7 +118,7 @@ export class Git {
     await this.toolboxApi.gitCloneRepository(this.instance.id, {
       url: url,
       branch: branch,
-      path,
+      path: prefixRelativePath(await this.getRootDir(), path),
       username,
       password,
       commit_id: commitId,
@@ -120,7 +128,8 @@ export class Git {
   /**
    * Commits staged changes.
    *
-   * @param {string} path - Absolute path to the Git repository root
+   * @param {string} path - Path to the Git repository root. Relative paths are resolved based on the user's
+   * root directory.
    * @param {string} message - Commit message describing the changes
    * @param {string} author - Name of the commit author
    * @param {string} email - Email address of the commit author
@@ -128,9 +137,9 @@ export class Git {
    *
    * @example
    * // Stage and commit changes
-   * await git.add('/workspace/repo', ['README.md']);
+   * await git.add('workspace/repo', ['README.md']);
    * await git.commit(
-   *   '/workspace/repo',
+   *   'workspace/repo',
    *   'Update documentation',
    *   'John Doe',
    *   'john@example.com'
@@ -138,7 +147,7 @@ export class Git {
    */
   public async commit(path: string, message: string, author: string, email: string): Promise<GitCommitResponse> {
     const response = await this.toolboxApi.gitCommitChanges(this.instance.id, {
-      path,
+      path: prefixRelativePath(await this.getRootDir(), path),
       message,
       author,
       email,
@@ -151,26 +160,27 @@ export class Git {
   /**
    * Push local changes to the remote repository.
    *
-   * @param {string} path - Absolute path to the Git repository root
+   * @param {string} path - Path to the Git repository root. Relative paths are resolved based on the user's
+   * root directory.
    * @param {string} [username] - Git username for authentication
    * @param {string} [password] - Git password or token for authentication
    * @returns {Promise<void>}
    *
    * @example
    * // Push to a public repository
-   * await git.push('/workspace/repo');
+   * await git.push('workspace/repo');
    *
    * @example
    * // Push to a private repository
    * await git.push(
-   *   '/workspace/repo',
+   *   'workspace/repo',
    *   'user',
    *   'token'
    * );
    */
   public async push(path: string, username?: string, password?: string): Promise<void> {
     await this.toolboxApi.gitPushChanges(this.instance.id, {
-      path,
+      path: prefixRelativePath(await this.getRootDir(), path),
       username,
       password,
     })
@@ -179,26 +189,27 @@ export class Git {
   /**
    * Pulls changes from the remote repository.
    *
-   * @param {string} path - Absolute path to the Git repository root
+   * @param {string} path - Path to the Git repository root. Relative paths are resolved based on the user's
+   * root directory.
    * @param {string} [username] - Git username for authentication
    * @param {string} [password] - Git password or token for authentication
    * @returns {Promise<void>}
    *
    * @example
    * // Pull from a public repository
-   * await git.pull('/workspace/repo');
+   * await git.pull('workspace/repo');
    *
    * @example
    * // Pull from a private repository
    * await git.pull(
-   *   '/workspace/repo',
+   *   'workspace/repo',
    *   'user',
    *   'token'
    * );
    */
   public async pull(path: string, username?: string, password?: string): Promise<void> {
     await this.toolboxApi.gitPullChanges(this.instance.id, {
-      path,
+      path: prefixRelativePath(await this.getRootDir(), path),
       username,
       password,
     })
@@ -207,7 +218,8 @@ export class Git {
   /**
    * Gets the current status of the Git repository.
    *
-   * @param {string} path - Absolute path to the Git repository root
+   * @param {string} path - Path to the Git repository root. Relative paths are resolved based on the user's
+   * root directory.
    * @returns {Promise<GitStatus>} Current repository status including:
    *                               - currentBranch: Name of the current branch
    *                               - ahead: Number of commits ahead of the remote branch
@@ -216,13 +228,16 @@ export class Git {
    *                               - fileStatus: List of file statuses
    *
    * @example
-   * const status = await sandbox.git.status('/workspace/repo');
+   * const status = await sandbox.git.status('workspace/repo');
    * console.log(`Current branch: ${status.currentBranch}`);
    * console.log(`Commits ahead: ${status.ahead}`);
    * console.log(`Commits behind: ${status.behind}`);
    */
   public async status(path: string): Promise<GitStatus> {
-    const response = await this.toolboxApi.gitGetStatus(this.instance.id, path)
+    const response = await this.toolboxApi.gitGetStatus(
+      this.instance.id,
+      prefixRelativePath(await this.getRootDir(), path)
+    )
     return response.data
   }
 }
