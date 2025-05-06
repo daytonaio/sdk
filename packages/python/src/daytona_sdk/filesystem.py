@@ -1,8 +1,15 @@
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
-from typing import List
+from typing import Callable, List
 
-from daytona_api_client import FileInfo, Match, ReplaceRequest, ReplaceResult, SearchFilesResponse, ToolboxApi
+from daytona_api_client import (
+    FileInfo,
+    Match,
+    ReplaceRequest,
+    ReplaceResult,
+    SearchFilesResponse,
+    ToolboxApi,
+)
 from daytona_sdk._utils.errors import intercept_errors
 from daytona_sdk._utils.path import prefix_relative_path
 
@@ -32,17 +39,22 @@ class FileSystem:
         instance (SandboxInstance): The Sandbox instance this file system belongs to.
     """
 
-    def __init__(self, instance: SandboxInstance, toolbox_api: ToolboxApi, root_dir: str):
+    def __init__(
+        self,
+        instance: SandboxInstance,
+        toolbox_api: ToolboxApi,
+        get_root_dir: Callable[[], str],
+    ):
         """Initializes a new FileSystem instance.
 
         Args:
             instance (SandboxInstance): The Sandbox instance this file system belongs to.
             toolbox_api (ToolboxApi): API client for Sandbox operations.
-            root_dir (str): The default root directory of the Sandbox.
+            get_root_dir (Callable[[], str]): A function to get the default root directory of the Sandbox.
         """
         self.instance = instance
         self.toolbox_api = toolbox_api
-        self._root_dir = root_dir
+        self._get_root_dir = get_root_dir
 
     @intercept_errors(message_prefix="Failed to create folder: ")
     def create_folder(self, path: str, mode: str) -> None:
@@ -63,7 +75,11 @@ class FileSystem:
             sandbox.fs.create_folder("workspace/secrets", "700")
             ```
         """
-        self.toolbox_api.create_folder(self.instance.id, path=prefix_relative_path(self._root_dir, path), mode=mode)
+        self.toolbox_api.create_folder(
+            self.instance.id,
+            path=prefix_relative_path(self._get_root_dir(), path),
+            mode=mode,
+        )
 
     @intercept_errors(message_prefix="Failed to delete file: ")
     def delete_file(self, path: str) -> None:
@@ -78,7 +94,9 @@ class FileSystem:
             sandbox.fs.delete_file("workspace/data/old_file.txt")
             ```
         """
-        self.toolbox_api.delete_file(self.instance.id, path=prefix_relative_path(self._root_dir, path))
+        self.toolbox_api.delete_file(
+            self.instance.id, path=prefix_relative_path(self._get_root_dir(), path)
+        )
 
     @intercept_errors(message_prefix="Failed to download file: ")
     def download_file(self, path: str) -> bytes:
@@ -103,7 +121,9 @@ class FileSystem:
             config = json.loads(content.decode('utf-8'))
             ```
         """
-        return self.toolbox_api.download_file(self.instance.id, path=prefix_relative_path(self._root_dir, path))
+        return self.toolbox_api.download_file(
+            self.instance.id, path=prefix_relative_path(self._get_root_dir(), path)
+        )
 
     @intercept_errors(message_prefix="Failed to find files: ")
     def find_files(self, path: str, pattern: str) -> List[Match]:
@@ -131,7 +151,9 @@ class FileSystem:
             ```
         """
         return self.toolbox_api.find_in_files(
-            self.instance.id, path=prefix_relative_path(self._root_dir, path), pattern=pattern
+            self.instance.id,
+            path=prefix_relative_path(self._get_root_dir(), path),
+            pattern=pattern,
         )
 
     @intercept_errors(message_prefix="Failed to get file info: ")
@@ -168,7 +190,9 @@ class FileSystem:
                 print("Path is a directory")
             ```
         """
-        return self.toolbox_api.get_file_info(self.instance.id, path=prefix_relative_path(self._root_dir, path))
+        return self.toolbox_api.get_file_info(
+            self.instance.id, path=prefix_relative_path(self._get_root_dir(), path)
+        )
 
     @intercept_errors(message_prefix="Failed to list files: ")
     def list_files(self, path: str) -> List[FileInfo]:
@@ -197,7 +221,9 @@ class FileSystem:
             print("Subdirectories:", ", ".join(d.name for d in dirs))
             ```
         """
-        return self.toolbox_api.list_files(self.instance.id, path=prefix_relative_path(self._root_dir, path))
+        return self.toolbox_api.list_files(
+            self.instance.id, path=prefix_relative_path(self._get_root_dir(), path)
+        )
 
     @intercept_errors(message_prefix="Failed to move files: ")
     def move_files(self, source: str, destination: str) -> None:
@@ -232,12 +258,14 @@ class FileSystem:
         """
         self.toolbox_api.move_file(
             self.instance.id,
-            source=prefix_relative_path(self._root_dir, source),
-            destination=prefix_relative_path(self._root_dir, destination),
+            source=prefix_relative_path(self._get_root_dir(), source),
+            destination=prefix_relative_path(self._get_root_dir(), destination),
         )
 
     @intercept_errors(message_prefix="Failed to replace in files: ")
-    def replace_in_files(self, files: List[str], pattern: str, new_value: str) -> List[ReplaceResult]:
+    def replace_in_files(
+        self, files: List[str], pattern: str, new_value: str
+    ) -> List[ReplaceResult]:
         """Performs search and replace operations across multiple files.
 
         Args:
@@ -272,11 +300,15 @@ class FileSystem:
             ```
         """
         for i, file in enumerate(files):
-            files[i] = prefix_relative_path(self._root_dir, file)
+            files[i] = prefix_relative_path(self._get_root_dir(), file)
 
-        replace_request = ReplaceRequest(files=files, new_value=new_value, pattern=pattern)
+        replace_request = ReplaceRequest(
+            files=files, new_value=new_value, pattern=pattern
+        )
 
-        return self.toolbox_api.replace_in_files(self.instance.id, replace_request=replace_request)
+        return self.toolbox_api.replace_in_files(
+            self.instance.id, replace_request=replace_request
+        )
 
     @intercept_errors(message_prefix="Failed to search files: ")
     def search_files(self, path: str, pattern: str) -> SearchFilesResponse:
@@ -306,11 +338,15 @@ class FileSystem:
             ```
         """
         return self.toolbox_api.search_files(
-            self.instance.id, path=prefix_relative_path(self._root_dir, path), pattern=pattern
+            self.instance.id,
+            path=prefix_relative_path(self._get_root_dir(), path),
+            pattern=pattern,
         )
 
     @intercept_errors(message_prefix="Failed to set file permissions: ")
-    def set_file_permissions(self, path: str, mode: str = None, owner: str = None, group: str = None) -> None:
+    def set_file_permissions(
+        self, path: str, mode: str = None, owner: str = None, group: str = None
+    ) -> None:
         """Sets permissions and ownership for a file or directory. Any of the parameters can be None
         to leave that attribute unchanged.
 
@@ -340,7 +376,7 @@ class FileSystem:
         """
         self.toolbox_api.set_file_permissions(
             self.instance.id,
-            path=prefix_relative_path(self._root_dir, path),
+            path=prefix_relative_path(self._get_root_dir(), path),
             mode=mode,
             owner=owner,
             group=group,
@@ -375,7 +411,11 @@ class FileSystem:
             sandbox.fs.upload_file("workspace/data/config.json", content)
             ```
         """
-        self.toolbox_api.upload_file(self.instance.id, path=prefix_relative_path(self._root_dir, path), file=file)
+        self.toolbox_api.upload_file(
+            self.instance.id,
+            path=prefix_relative_path(self._get_root_dir(), path),
+            file=file,
+        )
 
     @intercept_errors(message_prefix="Failed to upload files: ")
     def upload_files(self, files: List[FileUpload]) -> None:
@@ -409,10 +449,12 @@ class FileSystem:
             ```
         """
         for file in files:
-            file.path = prefix_relative_path(self._root_dir, file.path)
+            file.path = prefix_relative_path(self._get_root_dir(), file.path)
 
         def upload_file(file: FileUpload) -> None:
-            self.toolbox_api.upload_file(self.instance.id, path=file.path, file=file.content)
+            self.toolbox_api.upload_file(
+                self.instance.id, path=file.path, file=file.content
+            )
 
         with ThreadPoolExecutor() as executor:
             futures = [executor.submit(upload_file, file) for file in files]

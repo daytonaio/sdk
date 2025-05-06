@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING, Callable, List, Optional
 
 from daytona_api_client import (
     GitAddRequest,
@@ -64,7 +64,7 @@ class Git:
         sandbox: "Sandbox",
         toolbox_api: ToolboxApi,
         instance: SandboxInstance,
-        root_dir: str,
+        get_root_dir: Callable[[], str],
     ):
         """Initializes a new Git handler instance.
 
@@ -72,12 +72,12 @@ class Git:
             sandbox (Sandbox): The parent Sandbox instance.
             toolbox_api (ToolboxApi): API client for Sandbox operations.
             instance (SandboxInstance): The Sandbox instance this Git handler belongs to.
-            root_dir (str): The default root directory of the Sandbox.
+            get_root_dir (Callable[[], str]): A function to get the default root directory of the Sandbox.
         """
         self.sandbox = sandbox
         self.toolbox_api = toolbox_api
         self.instance = instance
-        self._root_dir = root_dir
+        self._get_root_dir = get_root_dir
 
     @intercept_errors(message_prefix="Failed to add files: ")
     def add(self, path: str, files: List[str]) -> None:
@@ -104,7 +104,9 @@ class Git:
         """
         self.toolbox_api.git_add_files(
             self.instance.id,
-            git_add_request=GitAddRequest(path=prefix_relative_path(self._root_dir, path), files=files),
+            git_add_request=GitAddRequest(
+                path=prefix_relative_path(self._get_root_dir(), path), files=files
+            ),
         )
 
     @intercept_errors(message_prefix="Failed to list branches: ")
@@ -126,7 +128,7 @@ class Git:
         """
         return self.toolbox_api.git_list_branches(
             self.instance.id,
-            path=prefix_relative_path(self._root_dir, path),
+            path=prefix_relative_path(self._get_root_dir(), path),
         )
 
     @intercept_errors(message_prefix="Failed to clone repository: ")
@@ -184,7 +186,7 @@ class Git:
             git_clone_request=GitCloneRequest(
                 url=url,
                 branch=branch,
-                path=prefix_relative_path(self._root_dir, path),
+                path=prefix_relative_path(self._get_root_dir(), path),
                 username=username,
                 password=password,
                 commitId=commit_id,
@@ -192,7 +194,9 @@ class Git:
         )
 
     @intercept_errors(message_prefix="Failed to commit changes: ")
-    def commit(self, path: str, message: str, author: str, email: str) -> GitCommitResponse:
+    def commit(
+        self, path: str, message: str, author: str, email: str
+    ) -> GitCommitResponse:
         """Creates a new commit with the staged changes. Make sure to stage
         changes using the add() method before committing.
 
@@ -218,7 +222,10 @@ class Git:
         response = self.toolbox_api.git_commit_changes(
             self.instance.id,
             git_commit_request=GitCommitRequest(
-                path=prefix_relative_path(self._root_dir, path), message=message, author=author, email=email
+                path=prefix_relative_path(self._get_root_dir(), path),
+                message=message,
+                author=author,
+                email=email,
             ),
         )
         return GitCommitResponse(sha=response.hash)
@@ -256,7 +263,9 @@ class Git:
         self.toolbox_api.git_push_changes(
             self.instance.id,
             git_repo_request=GitRepoRequest(
-                path=prefix_relative_path(self._root_dir, path), username=username, password=password
+                path=prefix_relative_path(self._get_root_dir(), path),
+                username=username,
+                password=password,
             ),
         )
 
@@ -292,7 +301,9 @@ class Git:
         self.toolbox_api.git_pull_changes(
             self.instance.id,
             git_repo_request=GitRepoRequest(
-                path=prefix_relative_path(self._root_dir, path), username=username, password=password
+                path=prefix_relative_path(self._get_root_dir(), path),
+                username=username,
+                password=password,
             ),
         )
 
@@ -322,5 +333,5 @@ class Git:
         """
         return self.toolbox_api.git_get_status(
             self.instance.id,
-            path=prefix_relative_path(self._root_dir, path),
+            path=prefix_relative_path(self._get_root_dir(), path),
         )

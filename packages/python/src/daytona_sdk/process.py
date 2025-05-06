@@ -29,7 +29,9 @@ class SessionExecuteRequest(ApiSessionExecuteRequest):
 
     @model_validator(mode="before")
     @classmethod
-    def __handle_deprecated_var_async(cls, values):  # pylint: disable=unused-private-member
+    def __handle_deprecated_var_async(
+        cls, values
+    ):  # pylint: disable=unused-private-member
         if "var_async" in values and values.get("var_async"):
             warnings.warn(
                 "'var_async' is deprecated and will be removed in a future version. Use 'run_async' instead.",
@@ -55,7 +57,7 @@ class Process:
         code_toolbox: SandboxPythonCodeToolbox,
         toolbox_api: ToolboxApi,
         instance: SandboxInstance,
-        root_dir: str,
+        get_root_dir: Callable[[], str],
     ):
         """Initialize a new Process instance.
 
@@ -63,12 +65,12 @@ class Process:
             code_toolbox (SandboxPythonCodeToolbox): Language-specific code execution toolbox.
             toolbox_api (ToolboxApi): API client for Sandbox operations.
             instance (SandboxInstance): The Sandbox instance this process belongs to.
-            root_dir (str): The default root directory of the Sandbox.
+            get_root_dir (Callable[[], str]): A function to get the default root directory of the Sandbox.
         """
         self.code_toolbox = code_toolbox
         self.toolbox_api = toolbox_api
         self.instance = instance
-        self._root_dir = root_dir
+        self._get_root_dir = get_root_dir
 
     @staticmethod
     def _parse_output(lines: List[str]) -> Optional[ExecutionArtifacts]:
@@ -153,9 +155,13 @@ class Process:
             command = f"{safe_env_exports} {command}"
 
         command = f'sh -c "{command}"'
-        execute_request = ExecuteRequest(command=command, cwd=cwd or self._root_dir, timeout=timeout)
+        execute_request = ExecuteRequest(
+            command=command, cwd=cwd or self._get_root_dir(), timeout=timeout
+        )
 
-        response = self.toolbox_api.execute_command(workspace_id=self.instance.id, execute_request=execute_request)
+        response = self.toolbox_api.execute_command(
+            workspace_id=self.instance.id, execute_request=execute_request
+        )
 
         # Post-process the output to extract ExecutionArtifacts
         artifacts = Process._parse_output(response.result.splitlines())
@@ -265,7 +271,9 @@ class Process:
             ```
         """
         request = CreateSessionRequest(sessionId=session_id)
-        self.toolbox_api.create_session(self.instance.id, create_session_request=request)
+        self.toolbox_api.create_session(
+            self.instance.id, create_session_request=request
+        )
 
     @intercept_errors(message_prefix="Failed to get session: ")
     def get_session(self, session_id: str) -> Session:
@@ -309,7 +317,9 @@ class Process:
                 print(f"Command {cmd.command} completed successfully")
             ```
         """
-        return self.toolbox_api.get_session_command(self.instance.id, session_id=session_id, command_id=command_id)
+        return self.toolbox_api.get_session_command(
+            self.instance.id, session_id=session_id, command_id=command_id
+        )
 
     @intercept_errors(message_prefix="Failed to execute session command: ")
     def execute_session_command(
@@ -379,7 +389,9 @@ class Process:
             print(f"Command output: {logs}")
             ```
         """
-        return self.toolbox_api.get_session_command_logs(self.instance.id, session_id=session_id, command_id=command_id)
+        return self.toolbox_api.get_session_command_logs(
+            self.instance.id, session_id=session_id, command_id=command_id
+        )
 
     @intercept_errors(message_prefix="Failed to get session command logs: ")
     async def get_session_command_logs_async(
@@ -418,7 +430,9 @@ class Process:
                         next_chunk = asyncio.create_task(anext(stream, None))
                     timeout = asyncio.create_task(asyncio.sleep(2))
 
-                    done, pending = await asyncio.wait([next_chunk, timeout], return_when=asyncio.FIRST_COMPLETED)
+                    done, pending = await asyncio.wait(
+                        [next_chunk, timeout], return_when=asyncio.FIRST_COMPLETED
+                    )
 
                     if next_chunk in done:
                         timeout.cancel()
