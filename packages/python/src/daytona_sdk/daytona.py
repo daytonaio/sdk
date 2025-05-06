@@ -358,7 +358,7 @@ class Daytona:
                 language="python",
                 image="debian:12.9",
                 env_vars={"DEBUG": "true"},
-                resources=SandboxResources(cpu=2, memory=4096),
+                resources=SandboxResources(cpu=2, memory=4),
                 auto_stop_interval=0
             )
             sandbox = daytona.create(params, 40)
