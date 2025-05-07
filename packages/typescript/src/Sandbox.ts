@@ -331,7 +331,7 @@ export class Sandbox {
 
       if (state === 'error') {
         throw new DaytonaError(
-          `Sandbox failed to start with status: ${state}, error reason: ${response.data.errorReason}`
+          `Sandbox ${this.id} failed to start with status: ${state}, error reason: ${response.data.errorReason}`
         )
       }
 
