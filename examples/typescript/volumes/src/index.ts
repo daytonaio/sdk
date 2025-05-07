@@ -1,17 +1,11 @@
 import { Daytona } from '@daytonaio/sdk'
-import { Volume } from '@daytonaio/sdk/dist/Volume'
 import path from 'path'
+
 async function main() {
   const daytona = new Daytona()
 
   //  Create a new volume or get an existing one
-  const existingVolume = await daytona.volume.get('my-volume')
-  let volume: Volume
-  if (existingVolume) {
-    volume = existingVolume
-  } else {
-    volume = await daytona.volume.create('my-volume')
-  }
+  const volume = await daytona.volume.get('my-volume', true)
 
   // Mount the volume to the sandbox
   const mountDir1 = '/home/daytona/volume'

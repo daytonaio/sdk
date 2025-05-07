@@ -1,6 +1,8 @@
+import re
 from typing import List
 
 from daytona_api_client import CreateVolume, VolumeDto, VolumesApi
+from daytona_api_client.exceptions import NotFoundException
 
 
 class Volume(VolumeDto):
@@ -43,11 +45,12 @@ class VolumeService:
         """
         return [Volume.from_dto(volume) for volume in self.__volumes_api.list_volumes()]
 
-    def get(self, name: str) -> Volume:  # TODO: volume - should be name # pylint: disable=fixme
+    def get(self, name: str, create: bool = False) -> Volume:
         """Get a Volume by name.
 
         Args:
             name (str): Name of the Volume to get.
+            create (bool): If True, create a new Volume if it doesn't exist.
 
         Returns:
             Volume: The Volume object.
@@ -55,11 +58,16 @@ class VolumeService:
         Example:
             ```python
             daytona = Daytona()
-            volume = daytona.volume.get("test-volume-name")
+            volume = daytona.volume.get("test-volume-name", create=True)
             print(f"{volume.name} ({volume.id})")
             ```
         """
-        return Volume.from_dto(self.__volumes_api.get_volume_by_name(name))
+        try:
+            return Volume.from_dto(self.__volumes_api.get_volume_by_name(name))
+        except NotFoundException as e:
+            if create and re.search(r"Volume with name ([\w\-]+) not found", str(e)):
+                return self.create(name)
+            raise e
 
     def create(self, name: str) -> Volume:
         """Create a new Volume.
@@ -79,7 +87,7 @@ class VolumeService:
         """
         return Volume.from_dto(self.__volumes_api.create_volume(CreateVolume(name=name)))
 
-    def delete(self, volume: Volume) -> None:  # TODO: volume - should be name # pylint: disable=fixme
+    def delete(self, volume: Volume) -> None:
         """Delete a Volume.
 
         Args:

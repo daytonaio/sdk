@@ -95,7 +95,7 @@ console.log("Volume deleted successfully");
 #### get()
 
 ```ts
-get(name: string): Promise<Volume>
+get(name: string, create: boolean): Promise<Volume>
 ```
 
 Gets a Volume by its name.
@@ -103,6 +103,7 @@ Gets a Volume by its name.
 **Parameters**:
 
 - `name` _string_ - Name of the Volume to retrieve
+- `create` _boolean = false_ - Whether to create the Volume if it does not exist
 
 
 **Returns**:
@@ -117,7 +118,7 @@ If the Volume does not exist or cannot be accessed
 
 ```ts
 const daytona = new Daytona();
-const volume = await daytona.volume.get("volume-name");
+const volume = await daytona.volume.get("volume-name", true);
 console.log(`Volume ${volume.name} is in state ${volume.state}`);
 ```
 

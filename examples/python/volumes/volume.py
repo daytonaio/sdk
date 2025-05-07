@@ -5,11 +5,7 @@ from daytona_sdk import CreateSandboxParams, Daytona, VolumeMount
 daytona = Daytona()
 
 # Create a new volume or get an existing one
-existing_volume = daytona.volume.get("my-volume")
-if existing_volume is None:
-    volume = daytona.volume.create("my-volume")
-else:
-    volume = existing_volume
+volume = daytona.volume.get("my-volume", create=True)
 
 # Mount the volume to the sandbox
 mount_dir_1 = "/home/daytona/volume"

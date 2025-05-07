@@ -10,7 +10,7 @@ import axios, { AxiosError } from 'axios'
 import dotenv from 'dotenv'
 import { SandboxPythonCodeToolbox } from './code-toolbox/SandboxPythonCodeToolbox'
 import { SandboxTsCodeToolbox } from './code-toolbox/SandboxTsCodeToolbox'
-import { DaytonaError } from './errors/DaytonaError'
+import { DaytonaError, DaytonaNotFoundError } from './errors/DaytonaError'
 import { Sandbox, SandboxInstance, Sandbox as Workspace } from './Sandbox'
 import { VolumeService } from './Volume'
 
@@ -285,7 +285,12 @@ export class Daytona {
           errorMessage = String(errorMessage)
         }
 
-        throw new DaytonaError(errorMessage)
+        switch (error.response?.data?.statusCode) {
+          case 404:
+            throw new DaytonaNotFoundError(errorMessage)
+          default:
+            throw new DaytonaError(errorMessage)
+        }
       }
     )
 
@@ -324,7 +329,7 @@ export class Daytona {
    * const sandbox = await daytona.create(params, 40);
    */
   public async create(params?: CreateSandboxParams, timeout: number = 60): Promise<Sandbox> {
-    // const startTime = Date.now();
+    const startTime = Date.now()
 
     if (params == null) {
       params = { language: 'python' }
@@ -387,10 +392,10 @@ export class Daytona {
         codeToolbox
       )
 
-      // if (!params.async) {
-      //   const timeElapsed = Date.now() - startTime;
-      //   await sandbox.waitUntilStarted(effectiveTimeout ? effectiveTimeout - (timeElapsed / 1000) : 0);
-      // }
+      if (!params.async) {
+        const timeElapsed = Date.now() - startTime
+        await sandbox.waitUntilStarted(effectiveTimeout ? effectiveTimeout - timeElapsed / 1000 : 0)
+      }
 
       return sandbox
     } catch (error) {

@@ -1,4 +1,5 @@
 import { VolumeDto, VolumesApi } from '@daytonaio/api-client'
+import { DaytonaNotFoundError } from './errors/DaytonaError'
 
 /**
  * Represents a Daytona Volume which is a shared storage volume for Sandboxes.
@@ -43,17 +44,29 @@ export class VolumeService {
    * Gets a Volume by its name.
    *
    * @param {string} name - Name of the Volume to retrieve
+   * @param {boolean} create - Whether to create the Volume if it does not exist
    * @returns {Promise<Volume>} The requested Volume
    * @throws {Error} If the Volume does not exist or cannot be accessed
    *
    * @example
    * const daytona = new Daytona();
-   * const volume = await daytona.volume.get("volume-name");
+   * const volume = await daytona.volume.get("volume-name", true);
    * console.log(`Volume ${volume.name} is in state ${volume.state}`);
    */
-  async get(name: string): Promise<Volume> {
-    const response = await this.volumesApi.getVolumeByName(name)
-    return response.data as Volume
+  async get(name: string, create: boolean = false): Promise<Volume> {
+    try {
+      const response = await this.volumesApi.getVolumeByName(name)
+      return response.data as Volume
+    } catch (error) {
+      if (
+        error instanceof DaytonaNotFoundError &&
+        create &&
+        error.message.match(/Volume with name ([\w-]+) not found/)
+      ) {
+        return await this.create(name)
+      }
+      throw error
+    }
   }
 
   /**

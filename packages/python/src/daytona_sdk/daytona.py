@@ -431,12 +431,12 @@ class Daytona:
             code_toolbox,
         )
 
-        # # Wait for sandbox to start
-        # try:
-        #     sandbox.wait_for_sandbox_start()
-        # finally:
-        #     # If not Daytona SaaS, we don't need to handle pulling image state
-        #     pass
+        # Wait for sandbox to start
+        try:
+            sandbox.wait_for_sandbox_start()
+        finally:
+            # If not Daytona SaaS, we don't need to handle pulling image state
+            pass
 
         return sandbox
 
