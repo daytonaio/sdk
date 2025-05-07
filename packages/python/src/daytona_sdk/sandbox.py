@@ -182,11 +182,11 @@ class Sandbox:
         self.sandbox_api = sandbox_api
         self.toolbox_api = toolbox_api
         self._code_toolbox = code_toolbox
-        self._root_dir = self.get_user_root_dir()
+        self._root_dir = ""
 
-        self.fs = FileSystem(instance, toolbox_api, self._root_dir)
-        self.git = Git(self, toolbox_api, instance, self._root_dir)
-        self.process = Process(code_toolbox, toolbox_api, instance, self._root_dir)
+        self.fs = FileSystem(instance, toolbox_api, self.__get_root_dir)
+        self.git = Git(self, toolbox_api, instance, self.__get_root_dir)
+        self.process = Process(code_toolbox, toolbox_api, instance, self.__get_root_dir)
 
     def info(self) -> SandboxInfo:
         """Gets structured information about the Sandbox.
@@ -228,7 +228,9 @@ class Sandbox:
     def get_workspace_root_dir(self) -> str:
         return self.get_user_root_dir()
 
-    def create_lsp_server(self, language_id: LspLanguageId, path_to_project: str) -> LspServer:
+    def create_lsp_server(
+        self, language_id: LspLanguageId, path_to_project: str
+    ) -> LspServer:
         """Creates a new Language Server Protocol (LSP) server instance.
 
         The LSP server provides language-specific features like code completion,
@@ -277,7 +279,10 @@ class Sandbox:
             ```
         """
         # Convert all values to strings and create the expected labels structure
-        string_labels = {k: str(v).lower() if isinstance(v, bool) else str(v) for k, v in labels.items()}
+        string_labels = {
+            k: str(v).lower() if isinstance(v, bool) else str(v)
+            for k, v in labels.items()
+        }
         labels_payload = {"labels": string_labels}
         return self.sandbox_api.replace_labels(self.id, labels_payload)
 
@@ -545,3 +550,8 @@ class Sandbox:
             last_snapshot=provider_metadata.get("lastSnapshot"),
             provider_metadata=instance.info.provider_metadata,
         )
+
+    def __get_root_dir(self) -> str:
+        if not self._root_dir:
+            self._root_dir = self.get_user_root_dir()
+        return self._root_dir
