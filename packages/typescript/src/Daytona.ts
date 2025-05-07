@@ -687,6 +687,7 @@ export class Daytona {
       accessKeyId: pushAccessCreds.accessKey,
       secretAccessKey: pushAccessCreds.secret,
       sessionToken: pushAccessCreds.sessionToken,
+      bucketName: pushAccessCreds.bucket,
     })
 
     const contextHashes = []
