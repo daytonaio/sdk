@@ -12,6 +12,7 @@ from .daytona import (
     DaytonaError,
     SandboxResources,
     SessionExecuteResponse,
+    VolumeMount,
 )
 from .filesystem import FileUpload
 from .lsp_server import LspLanguageId
@@ -53,4 +54,5 @@ __all__ = [
     "BoxAndWhiskerChart",
     "CompositeChart",
     "FileUpload",
+    "VolumeMount",
 ]

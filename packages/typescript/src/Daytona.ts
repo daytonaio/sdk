@@ -3,13 +3,29 @@ import {
   WorkspaceApi as SandboxApi,
   CreateWorkspaceTargetEnum as SandboxTargetRegion,
   ToolboxApi,
+  VolumesApi,
+  WorkspaceVolume,
 } from '@daytonaio/api-client'
 import axios, { AxiosError } from 'axios'
 import dotenv from 'dotenv'
 import { SandboxPythonCodeToolbox } from './code-toolbox/SandboxPythonCodeToolbox'
 import { SandboxTsCodeToolbox } from './code-toolbox/SandboxTsCodeToolbox'
-import { DaytonaError } from './errors/DaytonaError'
+import { DaytonaError, DaytonaNotFoundError } from './errors/DaytonaError'
 import { Sandbox, SandboxInstance, Sandbox as Workspace } from './Sandbox'
+import { VolumeService } from './Volume'
+
+/**
+ * Represents a volume mount for a Sandbox.
+ *
+ * @interface
+ * @property {string} volumeId - ID of the Volume to mount
+ * @property {string} mountPath - Path on the Sandbox to mount the Volume
+ */
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface VolumeMount extends WorkspaceVolume {
+  volumeId: string
+  mountPath: string
+}
 
 /**
  * Configuration options for initializing the Daytona client.
@@ -140,6 +156,8 @@ export type CreateSandboxParams = {
   timeout?: number
   /** Auto-stop interval in minutes (0 means disabled) (must be a non-negative integer) */
   autoStopInterval?: number
+  /** List of volumes to mount in the Sandbox */
+  volumes?: VolumeMount[]
 }
 
 /**
@@ -156,10 +174,10 @@ export type SandboxFilter = {
 
 /**
  * Main class for interacting with the Daytona API.
- *
  * Provides methods for creating, managing, and interacting with Daytona Sandboxes.
  * Can be initialized either with explicit configuration or using environment variables.
  *
+ * @property {VolumeService} volume - Service for managing Daytona Volumes
  *
  * @example
  * // Using environment variables
@@ -186,6 +204,7 @@ export class Daytona {
   private readonly jwtToken?: string
   private readonly organizationId?: string
   private readonly apiUrl: string
+  public readonly volume: VolumeService
 
   /**
    * Creates a new Daytona client instance.
@@ -266,12 +285,18 @@ export class Daytona {
           errorMessage = String(errorMessage)
         }
 
-        throw new DaytonaError(errorMessage)
+        switch (error.response?.data?.statusCode) {
+          case 404:
+            throw new DaytonaNotFoundError(errorMessage)
+          default:
+            throw new DaytonaError(errorMessage)
+        }
       }
     )
 
     this.sandboxApi = new SandboxApi(configuration, '', axiosInstance)
     this.toolboxApi = new ToolboxApi(configuration, '', axiosInstance)
+    this.volume = new VolumeService(new VolumesApi(configuration, '', axiosInstance))
   }
 
   /**
@@ -304,7 +329,7 @@ export class Daytona {
    * const sandbox = await daytona.create(params, 40);
    */
   public async create(params?: CreateSandboxParams, timeout: number = 60): Promise<Sandbox> {
-    // const startTime = Date.now();
+    const startTime = Date.now()
 
     if (params == null) {
       params = { language: 'python' }
@@ -344,6 +369,7 @@ export class Daytona {
           memory: params.resources?.memory,
           disk: params.resources?.disk,
           autoStopInterval: params.autoStopInterval,
+          volumes: params.volumes,
         },
         undefined,
         {
@@ -366,10 +392,10 @@ export class Daytona {
         codeToolbox
       )
 
-      // if (!params.async) {
-      //   const timeElapsed = Date.now() - startTime;
-      //   await sandbox.waitUntilStarted(effectiveTimeout ? effectiveTimeout - (timeElapsed / 1000) : 0);
-      // }
+      if (!params.async) {
+        const timeElapsed = Date.now() - startTime
+        await sandbox.waitUntilStarted(effectiveTimeout ? effectiveTimeout - timeElapsed / 1000 : 0)
+      }
 
       return sandbox
     } catch (error) {

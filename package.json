@@ -1,6 +1,6 @@
 {
   "private": true,
-  "version": "0.10.2",
+  "version": "0.0.0-dev",
   "scripts": {
     "generate-api-clients": "sh ./hack/generate-api-clients.sh",
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -29,7 +29,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@daytonaio/api-client": "^0.17.1",
+    "@daytonaio/api-client": "^0.18.0",
     "@dotenvx/dotenvx": "^1.25.1"
   },
   "devDependencies": {
@@ -45,10 +45,10 @@
     "prettier": "^2.4.1",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
-    "typescript": "^5.8.2",
     "typedoc": "~0.27.7",
     "typedoc-plugin-markdown": "~4.4.2",
-    "typedoc-plugin-merge-modules": "~6.1.0"
+    "typedoc-plugin-merge-modules": "~6.1.0",
+    "typescript": "^5.8.2"
   },
   "lint-staged": {
     "*.{ts,tsx}": [

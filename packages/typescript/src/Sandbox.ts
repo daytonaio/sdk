@@ -87,7 +87,7 @@ export interface SandboxInfo extends Omit<ApiSandboxInfo, 'name'> {
   /** Unique identifier */
   id: string
   /** Docker image */
-  image: string
+  image?: string
   /** OS user */
   user: string
   /** Environment variables */
@@ -331,7 +331,7 @@ export class Sandbox {
 
       if (state === 'error') {
         throw new DaytonaError(
-          `Sandbox failed to start with status: ${state}, error reason: ${response.data.errorReason}`
+          `Sandbox ${this.id} failed to start with status: ${state}, error reason: ${response.data.errorReason}`
         )
       }
 
