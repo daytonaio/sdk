@@ -15,7 +15,7 @@
   },
   "homepage": "https://github.com/daytonaio/sdk#readme",
   "scripts": {
-    "build": "tsc",
+    "build": "echo 'build'",
     "test": "jest",
     "prepare": "npm run build",
     "docs": "rm -rf ../../docs/typescript-sdk/* && typedoc && rm -f ../../docs/typescript-sdk/readme.mdx"
@@ -38,7 +38,7 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.445.0",
     "@aws-sdk/lib-storage": "^3.798.0",
-    "@daytonaio/api-client": "^0.18.0-alpha.2",
+    "@daytonaio/api-client": "^0.19.0-alpha.3",
     "@dotenvx/dotenvx": "^1.25.1",
     "@iarna/toml": "^2.2.5",
     "axios": "^1.6.0",

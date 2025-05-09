@@ -61,7 +61,7 @@ async function sessionExecLogsAsync(sandbox: Sandbox) {
   await sandbox.process.createSession(sessionId)
 
   const command = await sandbox.process.executeSessionCommand(sessionId, {
-    command: 'counter=1; while (( counter <= 3 )); do echo "Count: $counter"; ((counter++)); sleep 2; done',
+    command: 'counter=1; while (( counter <= 3 )); do echo "Count: $counter"; ((counter++)); sleep 3; done',
     runAsync: true,
   })
 
@@ -79,8 +79,8 @@ async function main() {
   })
 
   try {
-    await basicExec(sandbox)
-    await sessionExec(sandbox)
+    // await basicExec(sandbox)
+    // await sessionExec(sandbox)
     await sessionExecLogsAsync(sandbox)
   } catch (error) {
     console.error('Error executing commands:', error)

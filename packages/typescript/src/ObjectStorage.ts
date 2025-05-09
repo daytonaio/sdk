@@ -38,7 +38,7 @@ export class ObjectStorage {
   constructor(config: ObjectStorageConfig) {
     this.bucketName = config.bucketName || 'daytona-volume-builds'
     this.s3Client = new S3Client({
-      region: 'us', // required even if unused
+      region: this.extractAwsRegion(config.endpointUrl) || 'us-east-1',
       endpoint: config.endpointUrl,
       credentials: {
         accessKeyId: config.accessKeyId,
@@ -209,6 +209,11 @@ export class ObjectStorage {
     })
 
     await uploader.done()
+  }
+
+  private extractAwsRegion(endpoint: string): string | undefined {
+    const match = endpoint.match(/s3[.-]([a-z0-9-]+)\.amazonaws\.com/)
+    return match?.[1]
   }
 
   /**

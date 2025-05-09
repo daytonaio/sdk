@@ -4,21 +4,24 @@ async function main() {
   const daytona = new Daytona()
 
   const image = Image.base('python:3.13.2-slim-bookworm')
-    .pipInstall(['ruff'])
+    .pipInstall(['ruff', 'black', 'isort', 'mypy'])
     .pipInstallFromPyproject('packages/python/pyproject.toml', {
       optionalDependencies: ['dev'],
     })
     .runCommands('mkdir -p /home/daytona/ws')
     .workdir('/home/daytona/ws')
-    .addLocalFile('packages/python/pyproject.toml', '/home/daytona/ws/pyproject.toml')
-    .addLocalDir('packages/python', '/home/daytona/ws/python-pkg')
+    // .addLocalFile('packages/python/pyproject.toml', '/home/daytona/ws/pyproject.toml')
+    // .addLocalDir('packages/python', '/home/daytona/ws/python-pkg')
 
   const sandbox = await daytona.create(
     {
       image,
       autoStopInterval: 0,
     },
-    0
+    {
+      onImageBuildLogs: console.log,
+      timeout: 0,
+    }
   )
 
   const response = await sandbox.process.executeCommand('ls -la')

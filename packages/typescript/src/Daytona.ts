@@ -4,6 +4,7 @@ import {
   ImageState,
   ObjectStorageApi,
   WorkspaceApi as SandboxApi,
+  WorkspaceState as SandboxState,
   CreateWorkspaceTargetEnum as SandboxTargetRegion,
   ToolboxApi,
   VolumesApi,
@@ -17,6 +18,7 @@ import { DaytonaError, DaytonaNotFoundError } from './errors/DaytonaError'
 import { Image } from './Image'
 import { ObjectStorage } from './ObjectStorage'
 import { Sandbox, SandboxInstance, Sandbox as Workspace } from './Sandbox'
+import { processStreamingResponse } from './utils/Stream'
 import { VolumeService } from './Volume'
 
 /**
@@ -309,6 +311,8 @@ export class Daytona {
   }
 
   /**
+   * @deprecated Use `create` with `options` object instead. This method will be removed in a future version.
+   *
    * Creates Sandboxes with default or custom configurations. You can specify various parameters,
    * including language, image, resources, environment variables, and volumes for the Sandbox.
    *
@@ -337,8 +341,55 @@ export class Daytona {
    * };
    * const sandbox = await daytona.create(params, 40);
    */
-  public async create(params?: CreateSandboxParams, timeout: number = 60): Promise<Sandbox> {
+  public async create(params?: CreateSandboxParams, options?: number): Promise<Sandbox>
+  /**
+   * Creates Sandboxes with default or custom configurations. You can specify various parameters,
+   * including language, image, resources, environment variables, and volumes for the Sandbox.
+   *
+   * @param {CreateSandboxParams} [params] - Parameters for Sandbox creation
+   * @param {object} [options] - Options for the create operation
+   * @param {number} [options.timeout] - Timeout in seconds (0 means no timeout, default is 60)
+   * @param {function} [options.onImageBuildLogs] - Callback function to handle image build logs.
+   * It's invoked only when `params.image` is an instance of `Image` and there's no existing
+   * image in Daytona with the same configuration.
+   * @returns {Promise<Sandbox>} The created Sandbox instance
+   *
+   * @example
+   * const image = Image.debianSlim('3.12').pipInstall('numpy');
+   * const sandbox = await daytona.create({ image }, { timeout: 90, onImageBuildLogs: console.log });
+   *
+   * @example
+   * // Create a custom sandbox
+   * const image = Image.debianSlim('3.12').pipInstall('numpy');
+   * const params: CreateSandboxParams = {
+   *     language: 'typescript',
+   *     image,
+   *     envVars: {
+   *         NODE_ENV: 'development',
+   *         DEBUG: 'true'
+   *     },
+   *     resources: {
+   *         cpu: 2,
+   *         memory: 4 // 4GB RAM
+   *     },
+   *     autoStopInterval: 60
+   * };
+   * const sandbox = await daytona.create(params, { timeout: 100, onImageBuildLogs: console.log });
+   */
+  public async create(
+    params?: CreateSandboxParams,
+    options?: { onImageBuildLogs?: (chunk: string) => void; timeout?: number }
+  ): Promise<Sandbox>
+  public async create(
+    params?: CreateSandboxParams,
+    options: number | { onImageBuildLogs?: (chunk: string) => void; timeout?: number } = { timeout: 60 }
+  ): Promise<Sandbox> {
     const startTime = Date.now()
+
+    options = typeof options === 'number' ? { timeout: options } : { ...options }
+    if (options.timeout == undefined || options.timeout == null) {
+      options.timeout = 60
+    }
 
     if (params == null) {
       params = { language: 'python' }
@@ -350,7 +401,7 @@ export class Daytona {
     }
 
     // remove this when params.timeout is removed
-    const effectiveTimeout = params.timeout || timeout
+    const effectiveTimeout = params.timeout || options.timeout
     if (effectiveTimeout < 0) {
       throw new DaytonaError('Timeout must be a non-negative number')
     }
@@ -401,7 +452,21 @@ export class Daytona {
         }
       )
 
-      const sandboxInstance = response.data
+      let sandboxInstance = response.data
+
+      if (sandboxInstance.state === SandboxState.PENDING_BUILD && options.onImageBuildLogs) {
+        const terminalStates: SandboxState[] = [SandboxState.STARTED, SandboxState.STARTING, SandboxState.ERROR]
+
+        await processStreamingResponse(
+          () => this.sandboxApi.getBuildLogs(sandboxInstance.id, undefined, true, { responseType: 'stream' }),
+          options.onImageBuildLogs,
+          async () => {
+            sandboxInstance = (await this.sandboxApi.getWorkspace(sandboxInstance.id)).data
+            return sandboxInstance.state !== undefined && terminalStates.includes(sandboxInstance.state)
+          }
+        )
+      }
+
       const sandboxInfo = Sandbox.toSandboxInfo(sandboxInstance)
       sandboxInstance.info = {
         ...sandboxInfo,
@@ -605,7 +670,7 @@ export class Daytona {
   public async createImage(
     name: string,
     image: Image,
-    options: { verbose?: boolean; timeout?: number } = {}
+    options: { onLogs?: (chunk: string) => void; timeout?: number } = {}
   ): Promise<void> {
     const contextHashes = await this.processImageContext(image)
     let builtImage = (
@@ -624,25 +689,41 @@ export class Daytona {
       )
     ).data
 
-    let previousState = null
-    while (builtImage.state !== ImageState.ACTIVE && builtImage.state !== ImageState.ERROR) {
-      if (options.verbose && previousState !== builtImage.state) {
-        console.log(`Building image ${builtImage.name} (${builtImage.state})`)
+    const terminalStates: ImageState[] = [ImageState.ACTIVE, ImageState.ERROR]
+    const imageRef = { builtImage }
+    let streamPromise: Promise<void> | undefined
+
+    if (options.onLogs) {
+      options.onLogs(`Building image ${builtImage.name} (${builtImage.state})`)
+      streamPromise = processStreamingResponse(
+        () => this.imagesApi.getImageBuildLogs(builtImage.id, undefined, true, { responseType: 'stream' }),
+        options.onLogs,
+        async () => terminalStates.includes(imageRef.builtImage.state)
+      )
+    }
+
+    let previousState = builtImage.state
+    while (!terminalStates.includes(builtImage.state)) {
+      if (options.onLogs && previousState !== builtImage.state) {
+        options.onLogs(`Building image ${builtImage.name} (${builtImage.state})`)
         previousState = builtImage.state
       }
-
       await new Promise((resolve) => setTimeout(resolve, 1000))
-      const response = await this.imagesApi.getImage(builtImage.id)
-      builtImage = response.data
+      builtImage = (await this.imagesApi.getImage(builtImage.id)).data
+      imageRef.builtImage = builtImage
+    }
+
+    if (options.onLogs) {
+      await streamPromise
+      if (builtImage.state === ImageState.ACTIVE) {
+        options.onLogs(`Built image ${builtImage.name} (${builtImage.state})`)
+      }
     }
 
     if (builtImage.state === ImageState.ERROR) {
       throw new DaytonaError(
         `Failed to build image. Image ended in the ERROR state. name: ${builtImage.name}; error reason: ${builtImage.errorReason}`
       )
-    }
-    if (options.verbose) {
-      console.log(`Built image ${builtImage.name} (${builtImage.state})`)
     }
   }
 
