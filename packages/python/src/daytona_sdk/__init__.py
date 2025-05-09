@@ -15,6 +15,7 @@ from .daytona import (
     VolumeMount,
 )
 from .filesystem import FileUpload
+from .image import Image
 from .lsp_server import LspLanguageId
 from .process import SessionExecuteRequest
 from .sandbox import Sandbox, SandboxState, SandboxTargetRegion
@@ -55,4 +56,5 @@ __all__ = [
     "CompositeChart",
     "FileUpload",
     "VolumeMount",
+    "Image",
 ]
