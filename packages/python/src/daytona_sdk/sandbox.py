@@ -79,7 +79,7 @@ class SandboxInfo(ApiSandboxInfo):
 
     Attributes:
         id (str): Unique identifier for the Sandbox.
-        image (str): Docker image used for the Sandbox.
+        image (Optional[str]): Docker image used for the Sandbox.
         user (str): OS user running in the Sandbox.
         env (Dict[str, str]): Environment variables set in the Sandbox.
         labels (Dict[str, str]): Custom labels attached to the Sandbox.
@@ -114,7 +114,7 @@ class SandboxInfo(ApiSandboxInfo):
             deprecated="The `name` field is deprecated.",
         ),
     ]
-    image: str
+    image: Optional[str]
     user: str
     env: Dict[str, str]
     labels: Dict[str, str]
@@ -228,9 +228,7 @@ class Sandbox:
     def get_workspace_root_dir(self) -> str:
         return self.get_user_root_dir()
 
-    def create_lsp_server(
-        self, language_id: LspLanguageId, path_to_project: str
-    ) -> LspServer:
+    def create_lsp_server(self, language_id: LspLanguageId, path_to_project: str) -> LspServer:
         """Creates a new Language Server Protocol (LSP) server instance.
 
         The LSP server provides language-specific features like code completion,
@@ -279,10 +277,7 @@ class Sandbox:
             ```
         """
         # Convert all values to strings and create the expected labels structure
-        string_labels = {
-            k: str(v).lower() if isinstance(v, bool) else str(v)
-            for k, v in labels.items()
-        }
+        string_labels = {k: str(v).lower() if isinstance(v, bool) else str(v) for k, v in labels.items()}
         labels_payload = {"labels": string_labels}
         return self.sandbox_api.replace_labels(self.id, labels_payload)
 
@@ -377,7 +372,7 @@ class Sandbox:
         Raises:
             DaytonaError: If timeout is negative; If Sandbox fails to start or times out
         """
-        state = None
+        state = self.info().state
         while state != "started":
             response = self.sandbox_api.get_workspace(self.id)
             state = response.state
@@ -428,7 +423,7 @@ class Sandbox:
         Raises:
             DaytonaError: If timeout is negative. If Sandbox fails to stop or times out.
         """
-        state = None
+        state = self.info().state
         while state != "stopped":
             try:
                 response = self.sandbox_api.get_workspace(self.id)
