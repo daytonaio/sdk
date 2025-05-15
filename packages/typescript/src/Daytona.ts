@@ -143,8 +143,6 @@ export type CreateSandboxParams = {
   labels?: Record<string, string>
   /** Is the Sandbox port preview public */
   public?: boolean
-  /** Target location for the Sandbox */
-  target?: SandboxTargetRegion | string
   /** Resource allocation for the Sandbox */
   resources?: SandboxResources
   /** If true, will not wait for the Sandbox to be ready before returning */
