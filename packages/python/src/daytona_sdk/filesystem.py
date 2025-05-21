@@ -1,17 +1,14 @@
-from concurrent.futures import ThreadPoolExecutor
+import io
+import os
+from contextlib import ExitStack
 from dataclasses import dataclass
-from typing import Callable, List
+from typing import Callable, List, Union, overload
 
-from daytona_api_client import (
-    FileInfo,
-    Match,
-    ReplaceRequest,
-    ReplaceResult,
-    SearchFilesResponse,
-    ToolboxApi,
-)
+import requests
+from daytona_api_client import FileInfo, Match, ReplaceRequest, ReplaceResult, SearchFilesResponse, ToolboxApi
 from daytona_sdk._utils.errors import intercept_errors
 from daytona_sdk._utils.path import prefix_relative_path
+from requests_toolbelt.multipart.encoder import MultipartEncoder
 
 from .protocols import SandboxInstance
 
@@ -21,12 +18,14 @@ class FileUpload:
     """Represents a file to be uploaded to the Sandbox.
 
     Attributes:
-        path (str): Absolute destination path in the Sandbox.
-        content (bytes): File contents as a bytes object.
+        source (Union[bytes, str]): File contents as a bytes object or a local file path. If a bytes object is provided,
+        make sure it fits into memory, otherwise use the local file path which content will be streamed to the Sandbox.
+        destination (str): Absolute destination path in the Sandbox. Relative paths are resolved based on the user's
+        root directory.
     """
 
-    path: str
-    content: bytes
+    source: Union[bytes, str]
+    destination: str
 
 
 class FileSystem:
@@ -75,9 +74,11 @@ class FileSystem:
             sandbox.fs.create_folder("workspace/secrets", "700")
             ```
         """
+        path = prefix_relative_path(self._get_root_dir(), path)
+        print(f"Creating folder {path} with mode {mode}")
         self.toolbox_api.create_folder(
             self.instance.id,
-            path=prefix_relative_path(self._get_root_dir(), path),
+            path=path,
             mode=mode,
         )
 
@@ -94,17 +95,18 @@ class FileSystem:
             sandbox.fs.delete_file("workspace/data/old_file.txt")
             ```
         """
-        self.toolbox_api.delete_file(
-            self.instance.id, path=prefix_relative_path(self._get_root_dir(), path)
-        )
+        self.toolbox_api.delete_file(self.instance.id, path=prefix_relative_path(self._get_root_dir(), path))
 
-    @intercept_errors(message_prefix="Failed to download file: ")
-    def download_file(self, path: str) -> bytes:
-        """Downloads a file from the Sandbox.
+    @overload
+    def download_file(self, remote_path: str, timeout: int = 10 * 60) -> bytes:
+        """Downloads a file from the Sandbox. Returns the file contents as a bytes object.
+        This method is useful when you want to load the file into memory without saving it to disk.
+        It can only be used for smaller files.
 
         Args:
-            path (str): Path to the file to download. Relative paths are resolved based on the user's
+            remote_path (str): Path to the file in the Sandbox. Relative paths are resolved based on the user's
             root directory.
+            timeout (int): Timeout for the download operation in seconds. 0 means no timeout. Default is 10 minutes.
 
         Returns:
             bytes: The file contents as a bytes object.
@@ -121,9 +123,67 @@ class FileSystem:
             config = json.loads(content.decode('utf-8'))
             ```
         """
-        return self.toolbox_api.download_file(
-            self.instance.id, path=prefix_relative_path(self._get_root_dir(), path)
+
+    @overload
+    def download_file(self, remote_path: str, local_path: str, timeout: int = 10 * 60) -> None:
+        """Downloads a file from the Sandbox and saves it to a local file using stream.
+        This method is useful when you want to download larger files that may not fit into memory.
+
+        Args:
+            remote_path (str): Path to the file in the Sandbox. Relative paths are resolved based on the user's
+            root directory.
+            local_path (str): Path to save the file locally.
+            timeout (int): Timeout for the download operation in seconds. 0 means no timeout. Default is 10 minutes.
+
+        Example:
+            ```python
+            local_path = "local_copy.txt"
+            sandbox.fs.download_file("tmp/large_file.txt", local_path)
+            size_mb = os.path.getsize(local_path) / 1024 / 1024
+            print(f"Size of the downloaded file {local_path}: {size_mb} MB")
+            ```
+        """
+
+    @intercept_errors(message_prefix="Failed to download file: ")
+    def download_file(self, *args: str) -> Union[bytes, None]:
+        if len(args) == 1 or (len(args) == 2 and isinstance(args[1], int)):
+            remote_path = args[0]
+            timeout = args[1] if len(args) == 2 else 10 * 60
+            return self.toolbox_api.download_file(
+                self.instance.id,
+                path=prefix_relative_path(self._get_root_dir(), remote_path),
+                _request_timeout=timeout or None,
+            )
+
+        remote_path = args[0]
+        local_path = args[1]
+        timeout = args[2] if len(args) == 3 else 10 * 60
+        # pylint: disable=protected-access
+        _, url, *_ = self.toolbox_api._download_file_serialize(
+            self.instance.id,
+            path=prefix_relative_path(self._get_root_dir(), remote_path),
+            x_daytona_organization_id=None,
+            _request_auth=None,
+            _content_type=None,
+            _headers=None,
+            _host_index=None,
         )
+
+        with requests.get(
+            url,
+            headers=self.toolbox_api.api_client.default_headers,
+            stream=True,
+            timeout=timeout or None,
+        ) as r:
+            r.raise_for_status()
+            parent = os.path.dirname(local_path)
+            if parent:
+                os.makedirs(parent, exist_ok=True)
+            with open(local_path, "wb") as f:
+                for chunk in r.iter_content(chunk_size=10 * 1024):
+                    if chunk:
+                        f.write(chunk)
+        return None
 
     @intercept_errors(message_prefix="Failed to find files: ")
     def find_files(self, path: str, pattern: str) -> List[Match]:
@@ -190,9 +250,7 @@ class FileSystem:
                 print("Path is a directory")
             ```
         """
-        return self.toolbox_api.get_file_info(
-            self.instance.id, path=prefix_relative_path(self._get_root_dir(), path)
-        )
+        return self.toolbox_api.get_file_info(self.instance.id, path=prefix_relative_path(self._get_root_dir(), path))
 
     @intercept_errors(message_prefix="Failed to list files: ")
     def list_files(self, path: str) -> List[FileInfo]:
@@ -221,9 +279,7 @@ class FileSystem:
             print("Subdirectories:", ", ".join(d.name for d in dirs))
             ```
         """
-        return self.toolbox_api.list_files(
-            self.instance.id, path=prefix_relative_path(self._get_root_dir(), path)
-        )
+        return self.toolbox_api.list_files(self.instance.id, path=prefix_relative_path(self._get_root_dir(), path))
 
     @intercept_errors(message_prefix="Failed to move files: ")
     def move_files(self, source: str, destination: str) -> None:
@@ -263,9 +319,7 @@ class FileSystem:
         )
 
     @intercept_errors(message_prefix="Failed to replace in files: ")
-    def replace_in_files(
-        self, files: List[str], pattern: str, new_value: str
-    ) -> List[ReplaceResult]:
+    def replace_in_files(self, files: List[str], pattern: str, new_value: str) -> List[ReplaceResult]:
         """Performs search and replace operations across multiple files.
 
         Args:
@@ -302,13 +356,9 @@ class FileSystem:
         for i, file in enumerate(files):
             files[i] = prefix_relative_path(self._get_root_dir(), file)
 
-        replace_request = ReplaceRequest(
-            files=files, new_value=new_value, pattern=pattern
-        )
+        replace_request = ReplaceRequest(files=files, new_value=new_value, pattern=pattern)
 
-        return self.toolbox_api.replace_in_files(
-            self.instance.id, replace_request=replace_request
-        )
+        return self.toolbox_api.replace_in_files(self.instance.id, replace_request=replace_request)
 
     @intercept_errors(message_prefix="Failed to search files: ")
     def search_files(self, path: str, pattern: str) -> SearchFilesResponse:
@@ -344,9 +394,7 @@ class FileSystem:
         )
 
     @intercept_errors(message_prefix="Failed to set file permissions: ")
-    def set_file_permissions(
-        self, path: str, mode: str = None, owner: str = None, group: str = None
-    ) -> None:
+    def set_file_permissions(self, path: str, mode: str = None, owner: str = None, group: str = None) -> None:
         """Sets permissions and ownership for a file or directory. Any of the parameters can be None
         to leave that attribute unchanged.
 
@@ -382,81 +430,105 @@ class FileSystem:
             group=group,
         )
 
-    @intercept_errors(message_prefix="Failed to upload file: ")
-    def upload_file(self, path: str, file: bytes) -> None:
-        """Uploads a file to the specified path in the Sandbox. The
-        parent directory must exist. If a file already exists at the destination
-        path, it will be overwritten.
+    @overload
+    def upload_file(self, file: bytes, remote_path: str, timeout: int = 10 * 60) -> None:
+        """Uploads a file to the specified path in the Sandbox. If a file already exists at
+        the destination path, it will be overwritten. This method is useful when you want to upload
+        small files that fit into memory.
 
         Args:
-            path (str): Path to the destination file. Relative paths are resolved based on the user's
-            root directory.
             file (bytes): File contents as a bytes object.
+            remote_path (str): Path to the destination file. Relative paths are resolved based on the user's
+            root directory.
+            timeout (int): Timeout for the upload operation in seconds. 0 means no timeout. Default is 10 minutes.
 
         Example:
             ```python
             # Upload a text file
             content = b"Hello, World!"
-            sandbox.fs.upload_file("workspace/data/hello.txt", content)
+            sandbox.fs.upload_file(content, "tmp/hello.txt")
 
             # Upload a local file
             with open("local_file.txt", "rb") as f:
                 content = f.read()
-            sandbox.fs.upload_file("workspace/data/file.txt", content)
+            sandbox.fs.upload_file(content, "tmp/file.txt")
 
             # Upload binary data
             import json
             data = {"key": "value"}
             content = json.dumps(data).encode('utf-8')
-            sandbox.fs.upload_file("workspace/data/config.json", content)
+            sandbox.fs.upload_file(content, "tmp/config.json")
             ```
         """
-        self.toolbox_api.upload_file(
-            self.instance.id,
-            path=prefix_relative_path(self._get_root_dir(), path),
-            file=file,
-        )
 
-    @intercept_errors(message_prefix="Failed to upload files: ")
-    def upload_files(self, files: List[FileUpload]) -> None:
-        """Uploads multiple files to the Sandbox. The parent directories must exist.
-        If files already exist at the destination paths, they will be overwritten.
+    @overload
+    def upload_file(self, local_path: str, remote_path: str, timeout: int = 10 * 60) -> None:
+        """Uploads a file from the local file system to the specified path in the Sandbox.
+        If a file already exists at the destination path, it will be overwritten. This method uses
+        streaming to upload the file, so it is useful when you want to upload larger files that may
+        not fit into memory.
 
         Args:
-            files (List[FileUpload]): List of files to upload. Each FileUpload object includes:
-                - path: Path to the destination file. Relative paths are resolved based on the user's
-                root directory.
-                - content: File contents as a bytes object.
+            local_path (str): Path to the local file to upload.
+            remote_path (str): Path to the destination file in the Sandbox. Relative paths are
+            resolved based on the user's root directory.
+            timeout (int): Timeout for the upload operation in seconds. 0 means no timeout. Default is 10 minutes.
 
+        Example:
+            ```python
+            sandbox.fs.upload_file("local_file.txt", "tmp/large_file.txt")
+            ```
+        """
+
+    def upload_file(self, src: Union[str, bytes], dst: str, timeout: int = 10 * 60) -> None:
+        self.upload_files([FileUpload(src, dst)], timeout)
+
+    @intercept_errors(message_prefix="Failed to upload files: ")
+    def upload_files(self, files: List[FileUpload], timeout: int = 10 * 60) -> None:
+        """Uploads multiple files to the Sandbox. If files already exist at the destination paths,
+        they will be overwritten.
+
+        Args:
+            files (List[FileUpload]): List of files to upload.
+            timeout (int): Timeout for the upload operation in seconds. 0 means no timeout. Default is 10 minutes.
         Example:
             ```python
             # Upload multiple text files
             files = [
                 FileUpload(
-                    path="workspace/data/file1.txt",
-                    content=b"Content of file 1"
+                    source=b"Content of file 1",
+                    destination="/tmp/file1.txt"
                 ),
                 FileUpload(
-                    path="workspace/data/file2.txt",
-                    content=b"Content of file 2"
+                    source="workspace/data/file2.txt",
+                    destination="/tmp/file2.txt"
                 ),
                 FileUpload(
-                    path="workspace/config/settings.json",
-                    content=b'{"key": "value"}'
+                    source=b'{"key": "value"}',
+                    destination="/tmp/config.json"
                 )
             ]
             sandbox.fs.upload_files(files)
             ```
         """
-        for file in files:
-            file.path = prefix_relative_path(self._get_root_dir(), file.path)
+        fields = {}
+        with ExitStack() as stack:
+            for i, f in enumerate(files):
+                dst = prefix_relative_path(self._get_root_dir(), f.destination)
+                # metadata field
+                fields[f"files[{i}].path"] = dst
+                # file field: wrap bytes in BytesIO or open file stream
+                if isinstance(f.source, bytes):
+                    stream = io.BytesIO(f.source)
+                    fname = dst
+                else:
+                    stream = stack.enter_context(open(f.source, "rb"))
+                    fname = os.path.basename(f.source)
+                fields[f"files[{i}].file"] = (fname, stream)
 
-        def upload_file(file: FileUpload) -> None:
-            self.toolbox_api.upload_file(
-                self.instance.id, path=file.path, file=file.content
-            )
-
-        with ThreadPoolExecutor() as executor:
-            futures = [executor.submit(upload_file, file) for file in files]
-            for future in futures:
-                future.result()
+            m = MultipartEncoder(fields=fields)
+            headers = self.toolbox_api.api_client.default_headers.copy()
+            headers["Content-Type"] = m.content_type
+            # pylint: disable=protected-access
+            _, url, *_ = self.toolbox_api._upload_files_serialize(self.instance.id, None, None, None, None, None)
+            requests.post(url, data=m, headers=headers, timeout=timeout or None)

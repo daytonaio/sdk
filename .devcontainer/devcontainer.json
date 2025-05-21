@@ -1,6 +1,12 @@
 {
   "name": "Daytona SDK",
   "dockerFile": "Dockerfile",
+  "runArgs": [
+    "--add-host=host.localhost:host-gateway"
+  ],
+  "mounts": [
+    "source=${localEnv:HOME}/Documents/daytona/daytona,target=/home/daytona/daytona,type=bind"
+  ],
   // Configure tool-specific properties.
   "customizations": {
     // Configure properties specific to VS Code.
