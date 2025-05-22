@@ -12,9 +12,9 @@ def prefix_relative_path(prefix: str, path: Optional[str] = None) -> str:
             result = prefix
         elif path.startswith("~/"):
             result = os.path.join(prefix, path[2:])
-        elif path.startswith(prefix.lstrip("/")):
+        elif PurePosixPath(path).is_absolute():
             result = path
-        elif not PurePosixPath(path).is_absolute():
+        else:
             result = os.path.join(prefix, path)
 
     return result

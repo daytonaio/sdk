@@ -328,7 +328,7 @@ export class FileSystem {
    * for uploading large files.
    *
    * @param {Buffer} file - Buffer of the file to upload.
-   * @param {string} path - Destination path in the Sandbox. Relative paths are resolved based on the user's
+   * @param {string} remotePath - Destination path in the Sandbox. Relative paths are resolved based on the user's
    * root directory.
    * @param {number} [timeout] - Timeout for the upload operation in seconds. 0 means no timeout.
    * Default is 30 minutes.
@@ -338,7 +338,7 @@ export class FileSystem {
    * // Upload a configuration file
    * await fs.uploadFile(Buffer.from('{"setting": "value"}'), 'tmp/config.json');
    */
-  public async uploadFile(file: Buffer, path: string, timeout?: number): Promise<void>
+  public async uploadFile(file: Buffer, remotePath: string, timeout?: number): Promise<void>
   /**
    * Uploads a file from the local file system to the Sandbox. This method uses streaming to upload the file,
    * so it is recommended for uploading larger files.

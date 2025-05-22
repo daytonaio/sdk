@@ -9,9 +9,9 @@ export function prefixRelativePath(prefix: string, path?: string): string {
       result = prefix
     } else if (path.startsWith('~/')) {
       result = _path.join(prefix, path.slice(2))
-    } else if (path.startsWith(prefix.replace(/^\/+/, ''))) {
+    } else if (_path.isAbsolute(path)) {
       result = path
-    } else if (!_path.isAbsolute(path)) {
+    } else {
       result = _path.join(prefix, path)
     }
   }

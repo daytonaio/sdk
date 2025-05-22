@@ -370,7 +370,7 @@ await fs.setFilePermissions('app/script.sh', {
 ```ts
 uploadFile(
    file: Buffer, 
-   path: string, 
+   remotePath: string, 
 timeout?: number): Promise<void>
 ```
 
@@ -380,7 +380,7 @@ for uploading large files.
 **Parameters**:
 
 - `file` _Buffer_ - Buffer of the file to upload.
-- `path` _string_ - Destination path in the Sandbox. Relative paths are resolved based on the user's
+- `remotePath` _string_ - Destination path in the Sandbox. Relative paths are resolved based on the user's
     root directory.
 - `timeout?` _number_ - Timeout for the upload operation in seconds. 0 means no timeout.
     Default is 30 minutes.
