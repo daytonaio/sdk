@@ -356,7 +356,7 @@ export class FileSystem {
    */
   public async uploadFile(localPath: string, remotePath: string, timeout?: number): Promise<void>
   public async uploadFile(src: string | Buffer, dst: string, timeout: number = 30 * 60): Promise<void> {
-    this.uploadFiles([{ source: src, destination: dst }], timeout)
+    await this.uploadFiles([{ source: src, destination: dst }], timeout)
   }
 
   /**
