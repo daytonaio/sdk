@@ -21,12 +21,7 @@ async function main() {
 
   // Create a new file in the mount directory
   const newFile = path.join(mountDir1, 'new-file.txt')
-  await sandbox1.fs.uploadFile(
-    newFile,
-    new File([Buffer.from('Hello, World!')], 'data.txt', {
-      type: 'text/plain',
-    })
-  )
+  await sandbox1.fs.uploadFile(Buffer.from('Hello, World!'), newFile)
 
   // Create a new sandbox with the same volume
   // and mount it to the different path

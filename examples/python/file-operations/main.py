@@ -1,6 +1,8 @@
+import json
 import os
+from datetime import datetime
 
-from daytona_sdk import CreateSandboxParams, Daytona
+from daytona_sdk import CreateSandboxParams, Daytona, FileUpload
 
 daytona = Daytona()
 params = CreateSandboxParams(
@@ -9,48 +11,77 @@ params = CreateSandboxParams(
 
 # First, create a sandbox
 sandbox = daytona.create(params)
+print(f"Created sandbox with ID: {sandbox.id}")
 
 # List files in the sandbox
 files = sandbox.fs.list_files("~")
-print("Files:", files)
+print("Initial files:", files)
 
 # Create a new directory in the sandbox
-new_dir = "new-dir"
+new_dir = "~/project-files"
 sandbox.fs.create_folder(new_dir, "755")
 
-file_path = os.path.join(new_dir, "data.txt")
+# Create a local file for demonstration
+local_file_path = "local-example.txt"
+with open(local_file_path, "w", encoding="utf-8") as f:
+    f.write("This is a local file created for demonstration purposes")
 
-# Add a new file to the sandbox
-file_content = b"Hello, World!"
-sandbox.fs.upload_file(file_path, file_content)
+# Create a configuration file with JSON data
+config_data = json.dumps(
+    {"name": "project-config", "version": "1.0.0", "settings": {"debug": True, "maxConnections": 10}}, indent=2
+)
 
-# Search for the file we just added
-matches = sandbox.fs.find_files("~", "World!")
-print("Matches:", matches)
+# Upload multiple files at once - both from local path and from bytes
+sandbox.fs.upload_files(
+    [
+        FileUpload(source=local_file_path, destination=os.path.join(new_dir, "example.txt")),
+        FileUpload(source=config_data.encode("utf-8"), destination=os.path.join(new_dir, "config.json")),
+        FileUpload(
+            source=b'#!/bin/bash\necho "Hello from script!"\nexit 0', destination=os.path.join(new_dir, "script.sh")
+        ),
+    ]
+)
 
-# Replace the contents of the file
-sandbox.fs.replace_in_files([file_path], "Hello, World!", "Goodbye, World!")
+# Execute commands on the sandbox to verify files and make them executable
+print("Verifying uploaded files:")
+ls_result = sandbox.process.exec(f"ls -la {new_dir}")
+print(ls_result.result)
 
-# Read the file
-downloaded_file = sandbox.fs.download_file(file_path)
-print("File content:", downloaded_file.decode("utf-8"))
+# Make the script executable
+sandbox.process.exec(f"chmod +x {os.path.join(new_dir, 'script.sh')}")
 
-# Change the file permissions
-sandbox.fs.set_file_permissions(file_path, mode="777")
+# Run the script
+print("Running script:")
+script_result = sandbox.process.exec(f"{os.path.join(new_dir, 'script.sh')}")
+print(script_result.result)
 
-# Get file info
-file_info = sandbox.fs.get_file_info(file_path)
-print("File info:", file_info)  # Should show the new permissions
+# Search for files in the project
+matches = sandbox.fs.search_files(new_dir, "*.json")
+print("JSON files found:", matches)
 
-# Move the file to the new location
-new_file_path = "moved-data.txt"
-sandbox.fs.move_files(file_path, new_file_path)
+# Replace content in config file
+sandbox.fs.replace_in_files([os.path.join(new_dir, "config.json")], '"debug": true', '"debug": false')
 
-# Find the file in the new location
-search_results = sandbox.fs.search_files("~", "moved-data.txt")
-print("Search results:", search_results)
+# Download the modified config file
+print("Downloading updated config file:")
+config_content = sandbox.fs.download_file(os.path.join(new_dir, "config.json"))
+print(config_content.decode("utf-8"))
 
-# Delete the file
-sandbox.fs.delete_file(new_file_path)
+# Create a report of all operations
+report_data = f"""
+Project Files Report:
+---------------------
+Time: {datetime.now().isoformat()}
+Files: {len(matches.files)} JSON files found
+Config: {'Production mode' if b'"debug": false' in config_content else 'Debug mode'}
+Script: {'Executed successfully' if script_result.exit_code == 0 else 'Failed'}
+""".strip()
 
+# Save the report
+sandbox.fs.upload_file(report_data.encode("utf-8"), os.path.join(new_dir, "report.txt"))
+
+# Clean up local file
+os.remove(local_file_path)
+
+# Delete the sandbox
 daytona.delete(sandbox)

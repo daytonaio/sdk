@@ -1,7 +1,9 @@
 import { FileInfo, Match, ReplaceRequest, ReplaceResult, SearchFilesResponse, ToolboxApi } from '@daytonaio/api-client'
 import { SandboxInstance } from './Sandbox'
-import { DaytonaError } from './errors/DaytonaError'
 import { prefixRelativePath } from './utils/Path'
+import fs from 'fs'
+import { Readable } from 'stream'
+import FormData from 'form-data'
 
 /**
  * Parameters for setting file permissions in the Sandbox.
@@ -31,14 +33,14 @@ export type FilePermissionsParams = {
  * Represents a file to be uploaded to the Sandbox.
  *
  * @interface
- * @property {string} path - Absolute destination path in the Sandbox
- * @property {File} content - File to upload
+ * @property {string | Buffer} source - File to upload. If a Buffer, it is interpreted as the file content which is loaded into memory.
+ * Make sure it fits into memory, otherwise use the local file path which content will be streamed to the Sandbox.
+ * @property {string} destination - Absolute destination path in the Sandbox. Relative paths are resolved based on the user's
+ * root directory.
  */
 export interface FileUpload {
-  /** Absolute destination path in the Sandbox */
-  path: string
-  /** File to upload */
-  content: File
+  source: string | Buffer
+  destination: string
 }
 
 /**
@@ -94,23 +96,62 @@ export class FileSystem {
   }
 
   /**
-   * Downloads a file from the Sandbox.
+   * Downloads a file from the Sandbox. This method loads the entire file into memory, so it is not recommended
+   * for downloading large files.
    *
-   * @param {string} path - Path to the file to download. Relative paths are resolved based on the user's
+   * @param {string} remotePath - Path to the file to download. Relative paths are resolved based on the user's
    * root directory.
-   * @returns {Promise<Blob>} The file contents as a Blob
+   * @param {number} [timeout] - Timeout for the download operation in seconds. 0 means no timeout.
+   * Default is 30 minutes.
+   * @returns {Promise<Buffer>} The file contents as a Buffer.
    *
    * @example
    * // Download and process a file
-   * const fileBlob = await fs.downloadFile('app/data.json');
-   * console.log('File content:', fileBlob.toString());
+   * const fileBuffer = await fs.downloadFile('tmp/data.json');
+   * console.log('File content:', fileBuffer.toString());
    */
-  public async downloadFile(path: string): Promise<Blob> {
-    const response = await this.toolboxApi.downloadFile(
-      this.instance.id,
-      prefixRelativePath(await this.getRootDir(), path)
-    )
-    return response.data
+  public async downloadFile(remotePath: string, timeout?: number): Promise<Buffer>
+  /**
+   * Downloads a file from the Sandbox and saves it to a local file. This method uses streaming to download the file,
+   * so it is recommended for downloading larger files.
+   *
+   * @param {string} remotePath - Path to the file to download in the Sandbox. Relative paths are resolved based on the user's
+   * root directory.
+   * @param {string} localPath - Path to save the downloaded file.
+   * @param {number} [timeout] - Timeout for the download operation in seconds. 0 means no timeout.
+   * Default is 30 minutes.
+   * @returns {Promise<void>}
+   *
+   * @example
+   * // Download and save a file
+   * await fs.downloadFile('tmp/data.json', 'local_file.json');
+   */
+  public async downloadFile(remotePath: string, localPath: string, timeout?: number): Promise<void>
+  public async downloadFile(src: string, dst?: string | number, timeout: number = 30 * 60): Promise<Buffer | void> {
+    const remotePath = prefixRelativePath(await this.getRootDir(), src)
+
+    if (typeof dst !== 'string') {
+      timeout = dst as number
+      const { data } = await this.toolboxApi.downloadFile(this.instance.id, remotePath, undefined, {
+        responseType: 'arraybuffer',
+        timeout: timeout * 1000,
+      })
+      if (Buffer.isBuffer(data)) {
+        return data
+      }
+      return Buffer.from(await data.arrayBuffer())
+    }
+
+    const response = await this.toolboxApi.downloadFile(this.instance.id, remotePath, undefined, {
+      responseType: 'stream',
+      timeout: timeout * 1000,
+    })
+    const writer = fs.createWriteStream(dst)
+    ;(response.data as any).pipe(writer)
+    await new Promise<void>((resolve, reject) => {
+      writer.on('finish', () => resolve())
+      writer.on('error', (err) => reject(err))
+    })
   }
 
   /**
@@ -283,71 +324,84 @@ export class FileSystem {
   }
 
   /**
-   * Uploads a file to the Sandbox.
+   * Uploads a file to the Sandbox. This method loads the entire file into memory, so it is not recommended
+   * for uploading large files.
    *
-   * @param {string} path - Destination path in the Sandbox. Relative paths are resolved based on the user's
+   * @param {Buffer} file - Buffer of the file to upload.
+   * @param {string} remotePath - Destination path in the Sandbox. Relative paths are resolved based on the user's
    * root directory.
-   * @param {File} file - File to upload
+   * @param {number} [timeout] - Timeout for the upload operation in seconds. 0 means no timeout.
+   * Default is 30 minutes.
    * @returns {Promise<void>}
    *
    * @example
    * // Upload a configuration file
-   * const configFile = new File(['{"setting": "value"}'], 'config.json');
-   * await fs.uploadFile('app/config.json', configFile);
+   * await fs.uploadFile(Buffer.from('{"setting": "value"}'), 'tmp/config.json');
    */
-  public async uploadFile(path: string, file: File): Promise<void> {
-    const response = await this.toolboxApi.uploadFile(
-      this.instance.id,
-      prefixRelativePath(await this.getRootDir(), path),
-      undefined,
-      file
-    )
-    return response.data
+  public async uploadFile(file: Buffer, remotePath: string, timeout?: number): Promise<void>
+  /**
+   * Uploads a file from the local file system to the Sandbox. This method uses streaming to upload the file,
+   * so it is recommended for uploading larger files.
+   *
+   * @param {string} localPath - Path to the local file to upload.
+   * @param {string} remotePath - Destination path in the Sandbox. Relative paths are resolved based on the user's
+   * root directory.
+   * @param {number} [timeout] - Timeout for the upload operation in seconds. 0 means no timeout.
+   * Default is 30 minutes.
+   * @returns {Promise<void>}
+   *
+   * @example
+   * // Upload a local file
+   * await fs.uploadFile('local_file.txt', 'tmp/file.txt');
+   */
+  public async uploadFile(localPath: string, remotePath: string, timeout?: number): Promise<void>
+  public async uploadFile(src: string | Buffer, dst: string, timeout: number = 30 * 60): Promise<void> {
+    await this.uploadFiles([{ source: src, destination: dst }], timeout)
   }
 
   /**
-   * Uploads multiple files to the Sandbox. The parent directories must exist.
-   * If files already exist at the destination paths, they will be overwritten.
+   * Uploads multiple files to the Sandbox. If files already exist at the destination paths,
+   * they will be overwritten.
    *
-   * @param {FileUpload[]} files - Array of files to upload. Relative paths are resolved based on the user's
-   * root directory.
+   * @param {FileUpload[]} files - Array of files to upload.
+   * @param {number} [timeout] - Timeout for the upload operation in seconds. 0 means no timeout.
+   * Default is 30 minutes.
    * @returns {Promise<void>}
    *
    * @example
    * // Upload multiple text files
    * const files = [
    *   {
-   *     path: 'app/data/file1.txt',
-   *     content: new File(['Content of file 1'], 'file1.txt')
+   *     source: Buffer.from('Content of file 1'),
+   *     destination: '/tmp/file1.txt'
    *   },
    *   {
-   *     path: 'app/data/file2.txt',
-   *     content: new File(['Content of file 2'], 'file2.txt')
+   *     source: 'app/data/file2.txt',
+   *     destination: '/tmp/file2.txt'
    *   },
    *   {
-   *     path: 'app/config/settings.json',
-   *     content: new File(['{"key": "value"}'], 'settings.json')
+   *     source: Buffer.from('{"key": "value"}'),
+   *     destination: '/tmp/config.json'
    *   }
    * ];
    * await fs.uploadFiles(files);
    */
-  public async uploadFiles(files: FileUpload[]): Promise<void> {
-    for (const file of files) {
-      file.path = prefixRelativePath(await this.getRootDir(), file.path)
-    }
+  public async uploadFiles(files: FileUpload[], timeout: number = 30 * 60): Promise<void> {
+    const form = new FormData()
+    const rootDir = await this.getRootDir()
 
-    const results = await Promise.allSettled(files.map((file) => this.uploadFile(file.path, file.content)))
+    files.forEach(({ source, destination }, i) => {
+      const dst = prefixRelativePath(rootDir, destination)
+      form.append(`files[${i}].path`, dst)
+      const stream = typeof source === 'string' ? fs.createReadStream(source) : Readable.from(source)
+      // the third arg sets filename in Content-Disposition
+      form.append(`files[${i}].file`, stream as any, dst)
+    })
 
-    const failedUploads = results
-      .map((result, index) => ({
-        path: files[index].path,
-        error: result.status === 'rejected' ? result.reason : undefined,
-      }))
-      .filter(({ error }) => error !== undefined)
-
-    if (failedUploads.length > 0) {
-      const errorMessage = failedUploads.map(({ path, error }) => `\nFailed to upload '${path}': ${error}`).join('')
-      throw new DaytonaError(errorMessage)
-    }
+    await this.toolboxApi.uploadFiles(this.instance.id, undefined, {
+      data: form,
+      maxRedirects: 0,
+      timeout: timeout * 1000,
+    })
   }
 }

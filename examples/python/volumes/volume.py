@@ -22,7 +22,7 @@ sandbox.fs.create_folder(new_dir, "755")
 
 # Create a new file in the mount directory
 new_file = os.path.join(mount_dir_1, "new-file.txt")
-sandbox.fs.upload_file(new_file, b"Hello, World!")
+sandbox.fs.upload_file(b"Hello, World!", new_file)
 
 # Create a new sandbox with the same volume
 # and mount it to the different path

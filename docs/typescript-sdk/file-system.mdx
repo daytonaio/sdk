@@ -89,28 +89,63 @@ await fs.deleteFile('app/temp.log');
 
 #### downloadFile()
 
+##### Call Signature
+
 ```ts
-downloadFile(path: string): Promise<Blob>
+downloadFile(remotePath: string, timeout?: number): Promise<Buffer<ArrayBufferLike>>
 ```
 
-Downloads a file from the Sandbox.
+Downloads a file from the Sandbox. This method loads the entire file into memory, so it is not recommended
+for downloading large files.
 
 **Parameters**:
 
-- `path` _string_ - Path to the file to download. Relative paths are resolved based on the user's
+- `remotePath` _string_ - Path to the file to download. Relative paths are resolved based on the user's
     root directory.
-
+- `timeout?` _number_ - Timeout for the download operation in seconds. 0 means no timeout.
+    Default is 30 minutes.
 
 **Returns**:
 
-- `Promise<Blob>` - The file contents as a Blob
+- `Promise<Buffer<ArrayBufferLike>>` - The file contents as a Buffer.
 
 **Example:**
 
 ```ts
 // Download and process a file
-const fileBlob = await fs.downloadFile('app/data.json');
-console.log('File content:', fileBlob.toString());
+const fileBuffer = await fs.downloadFile('tmp/data.json');
+console.log('File content:', fileBuffer.toString());
+```
+
+##### Call Signature
+
+```ts
+downloadFile(
+   remotePath: string, 
+   localPath: string, 
+timeout?: number): Promise<void>
+```
+
+Downloads a file from the Sandbox and saves it to a local file. This method uses streaming to download the file,
+so it is recommended for downloading larger files.
+
+**Parameters**:
+
+- `remotePath` _string_ - Path to the file to download in the Sandbox. Relative paths are resolved based on the user's
+    root directory.
+- `localPath` _string_ - Path to save the downloaded file.
+- `timeout?` _number_ - Timeout for the download operation in seconds. 0 means no timeout.
+    Default is 30 minutes.
+
+**Returns**:
+
+- `Promise<void>`
+
+**Example:**
+
+```ts
+// Download and save a file
+await fs.downloadFile('tmp/data.json', 'local_file.json');
 ```
 
 ***
@@ -330,18 +365,25 @@ await fs.setFilePermissions('app/script.sh', {
 
 #### uploadFile()
 
+##### Call Signature
+
 ```ts
-uploadFile(path: string, file: File): Promise<void>
+uploadFile(
+   file: Buffer, 
+   remotePath: string, 
+timeout?: number): Promise<void>
 ```
 
-Uploads a file to the Sandbox.
+Uploads a file to the Sandbox. This method loads the entire file into memory, so it is not recommended
+for uploading large files.
 
 **Parameters**:
 
-- `path` _string_ - Destination path in the Sandbox. Relative paths are resolved based on the user's
+- `file` _Buffer_ - Buffer of the file to upload.
+- `remotePath` _string_ - Destination path in the Sandbox. Relative paths are resolved based on the user's
     root directory.
-- `file` _File_ - File to upload
-
+- `timeout?` _number_ - Timeout for the upload operation in seconds. 0 means no timeout.
+    Default is 30 minutes.
 
 **Returns**:
 
@@ -351,8 +393,38 @@ Uploads a file to the Sandbox.
 
 ```ts
 // Upload a configuration file
-const configFile = new File(['{"setting": "value"}'], 'config.json');
-await fs.uploadFile('app/config.json', configFile);
+await fs.uploadFile(Buffer.from('{"setting": "value"}'), 'tmp/config.json');
+```
+
+##### Call Signature
+
+```ts
+uploadFile(
+   localPath: string, 
+   remotePath: string, 
+timeout?: number): Promise<void>
+```
+
+Uploads a file from the local file system to the Sandbox. This method uses streaming to upload the file,
+so it is recommended for uploading larger files.
+
+**Parameters**:
+
+- `localPath` _string_ - Path to the local file to upload.
+- `remotePath` _string_ - Destination path in the Sandbox. Relative paths are resolved based on the user's
+    root directory.
+- `timeout?` _number_ - Timeout for the upload operation in seconds. 0 means no timeout.
+    Default is 30 minutes.
+
+**Returns**:
+
+- `Promise<void>`
+
+**Example:**
+
+```ts
+// Upload a local file
+await fs.uploadFile('local_file.txt', 'tmp/file.txt');
 ```
 
 ***
@@ -360,16 +432,17 @@ await fs.uploadFile('app/config.json', configFile);
 #### uploadFiles()
 
 ```ts
-uploadFiles(files: FileUpload[]): Promise<void>
+uploadFiles(files: FileUpload[], timeout?: number): Promise<void>
 ```
 
-Uploads multiple files to the Sandbox. The parent directories must exist.
-If files already exist at the destination paths, they will be overwritten.
+Uploads multiple files to the Sandbox. If files already exist at the destination paths,
+they will be overwritten.
 
 **Parameters**:
 
-- `files` _FileUpload\[\]_ - Array of files to upload. Relative paths are resolved based on the user's
-    root directory.
+- `files` _FileUpload\[\]_ - Array of files to upload.
+- `timeout?` _number = ..._ - Timeout for the upload operation in seconds. 0 means no timeout.
+    Default is 30 minutes.
 
 
 **Returns**:
@@ -382,16 +455,16 @@ If files already exist at the destination paths, they will be overwritten.
 // Upload multiple text files
 const files = [
   {
-    path: 'app/data/file1.txt',
-    content: new File(['Content of file 1'], 'file1.txt')
+    source: Buffer.from('Content of file 1'),
+    destination: '/tmp/file1.txt'
   },
   {
-    path: 'app/data/file2.txt',
-    content: new File(['Content of file 2'], 'file2.txt')
+    source: 'app/data/file2.txt',
+    destination: '/tmp/file2.txt'
   },
   {
-    path: 'app/config/settings.json',
-    content: new File(['{"key": "value"}'], 'settings.json')
+    source: Buffer.from('{"key": "value"}'),
+    destination: '/tmp/config.json'
   }
 ];
 await fs.uploadFiles(files);
@@ -429,5 +502,7 @@ Represents a file to be uploaded to the Sandbox.
 
 **Properties**:
 
-- `content` _File_ - File to upload
-- `path` _string_ - Absolute destination path in the Sandbox
+- `destination` _string_ - Absolute destination path in the Sandbox. Relative paths are resolved based on the user's
+    root directory.
+- `source` _string \| Buffer\<ArrayBufferLike\>_ - File to upload. If a Buffer, it is interpreted as the file content which is loaded into memory.
+    Make sure it fits into memory, otherwise use the local file path which content will be streamed to the Sandbox.

@@ -93,7 +93,7 @@ print(response.result)
 
 ```python
 # Upload a file
-sandbox.fs.upload_file('path/to/file.txt', b'Hello, World!')
+sandbox.fs.upload_file(b'Hello, World!', 'path/to/file.txt')
 
 # Download a file
 content = sandbox.fs.download_file('path/to/file.txt')

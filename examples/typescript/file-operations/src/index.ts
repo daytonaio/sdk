@@ -1,5 +1,6 @@
-import * as path from 'path'
 import { Daytona } from '@daytonaio/sdk'
+import * as fs from 'fs'
+import * as path from 'path'
 
 async function main() {
   const daytona = new Daytona()
@@ -8,51 +9,92 @@ async function main() {
   const sandbox = await daytona.create()
 
   try {
+    console.log(`Created sandbox with ID: ${sandbox.id}`)
+
     //  list files in the sandbox
     const files = await sandbox.fs.listFiles('~')
-    console.log('Files:', files)
+    console.log('Initial files:', files)
 
     //  create a new directory in the sandbox
-    const newDir = 'new-dir'
+    const newDir = '~/project-files'
     await sandbox.fs.createFolder(newDir, '755')
 
-    const filePath = path.join(newDir, 'data.txt')
+    // Create a local file for demonstration
+    const localFilePath = 'local-example.txt'
+    fs.writeFileSync(localFilePath, 'This is a local file created for use case purposes')
 
-    //  add a new file to the sandbox
-    const fileContent = new File([Buffer.from('Hello, World!')], 'data.txt', {
-      type: 'text/plain',
-    })
-    await sandbox.fs.uploadFile(filePath, fileContent)
+    // Create a configuration file with JSON data
+    const configData = JSON.stringify(
+      {
+        name: 'project-config',
+        version: '1.0.0',
+        settings: {
+          debug: true,
+          maxConnections: 10,
+        },
+      },
+      null,
+      2
+    )
 
-    //  search for the file we just added
-    const matches = await sandbox.fs.findFiles('~', 'World!')
-    console.log('Matches:', matches)
+    // Upload multiple files at once - both from local path and from buffers
+    await sandbox.fs.uploadFiles([
+      {
+        source: localFilePath,
+        destination: path.join(newDir, 'example.txt'),
+      },
+      {
+        source: Buffer.from(configData),
+        destination: path.join(newDir, 'config.json'),
+      },
+      {
+        source: Buffer.from('#!/bin/bash\necho "Hello from script!"\nexit 0'),
+        destination: path.join(newDir, 'script.sh'),
+      },
+    ])
 
-    //  replace the contents of the file
-    await sandbox.fs.replaceInFiles([filePath], 'Hello, World!', 'Goodbye, World!')
+    // Execute commands on the sandbox to verify files and make them executable
+    console.log('Verifying uploaded files:')
+    const lsResult = await sandbox.process.executeCommand(`ls -la ${newDir}`)
+    console.log(lsResult.result)
 
-    //  read the file
-    const downloadedFile = await sandbox.fs.downloadFile(filePath)
-    console.log('File content:', downloadedFile.toString())
+    // Make the script executable
+    await sandbox.process.executeCommand(`chmod +x ${path.join(newDir, 'script.sh')}`)
 
-    //  change the file permissions
-    await sandbox.fs.setFilePermissions(filePath, { mode: '777' })
+    // Run the script
+    console.log('Running script:')
+    const scriptResult = await sandbox.process.executeCommand(`${path.join(newDir, 'script.sh')}`)
+    console.log(scriptResult.result)
 
-    //  get file info
-    const fileInfo = await sandbox.fs.getFileDetails(filePath)
-    console.log('File info:', fileInfo) //  should show the new permissions
+    //  search for files in the project
+    const matches = await sandbox.fs.searchFiles(newDir, '*.json')
+    console.log('JSON files found:', matches)
 
-    //  move the file to the new location
-    await sandbox.fs.moveFiles(filePath, 'moved-data.txt')
+    //  replace content in config file
+    await sandbox.fs.replaceInFiles([path.join(newDir, 'config.json')], '"debug": true', '"debug": false')
 
-    //  find the file in the new location
-    const searchResults = await sandbox.fs.searchFiles('~', 'moved-data.txt')
-    console.log('Search results:', searchResults)
+    //  download the modified config file
+    console.log('Downloading updated config file:')
+    const configContent = await sandbox.fs.downloadFile(path.join(newDir, 'config.json'))
+    console.log(configContent.toString())
 
-    //  delete the file
-    await sandbox.fs.deleteFile('moved-data.txt')
+    // Create a report of all operations
+    const reportData = `
+Project Files Report:
+---------------------
+Time: ${new Date().toISOString()}
+Files: ${matches.files.length} JSON files found
+Config: ${configContent.includes('"debug": false') ? 'Production mode' : 'Debug mode'}
+Script: ${scriptResult.exitCode === 0 ? 'Executed successfully' : 'Failed'}
+    `.trim()
+
+    // Save the report
+    await sandbox.fs.uploadFile(Buffer.from(reportData), path.join(newDir, 'report.txt'))
+
+    // Clean up local file
+    fs.unlinkSync(localFilePath)
   } catch (error) {
-    console.error('Error creating sandbox:', error)
+    console.error('Error:', error)
   } finally {
     //  cleanup
     await daytona.delete(sandbox)

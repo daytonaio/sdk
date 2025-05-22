@@ -98,10 +98,7 @@ console.log(response.result)
 
 ```typescript
 // Upload a file
-await sandbox.fs.uploadFile(
-  'path/to/file.txt',
-  new File([Buffer.from('Hello, World!')], 'file.txt', { type: 'text/plain' }),
-)
+await sandbox.fs.uploadFile(Buffer.from('Hello, World!'), 'path/to/file.txt')
 
 // Download a file
 const content = await sandbox.fs.downloadFile('path/to/file.txt')
