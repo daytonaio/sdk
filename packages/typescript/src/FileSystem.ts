@@ -139,6 +139,11 @@ export class FileSystem {
       if (Buffer.isBuffer(data)) {
         return data
       }
+
+      if (data instanceof ArrayBuffer) {
+        return Buffer.from(data)
+      }
+
       return Buffer.from(await data.arrayBuffer())
     }
 
