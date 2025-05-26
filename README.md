@@ -1,3 +1,5 @@
+## Contents of this repo were moved to the [Daytona monorepo](https://github.com/daytonaio/daytona)
+
 # Daytona SDK
 
 Official Python and TypeScript SDKs for interacting with Daytona, providing simple interfaces for managing development environments programmatically. This repository contains both SDK libraries, offering native integration options for Python and TypeScript/JavaScript applications.
