@@ -1,16 +1,15 @@
-import asyncio
 import base64
 import json
 import warnings
 from typing import Callable, Dict, List, Optional
 
-import httpx
 from daytona_api_client import Command, CreateSessionRequest, ExecuteRequest, Session
 from daytona_api_client import SessionExecuteRequest as ApiSessionExecuteRequest
 from daytona_api_client import SessionExecuteResponse, ToolboxApi
 from daytona_sdk._utils.errors import intercept_errors
 from pydantic import model_validator
 
+from ._utils.stream import process_streaming_response
 from .charts import parse_chart
 from .code_toolbox.sandbox_python_code_toolbox import SandboxPythonCodeToolbox
 from .common.code_run_params import CodeRunParams
@@ -29,9 +28,7 @@ class SessionExecuteRequest(ApiSessionExecuteRequest):
 
     @model_validator(mode="before")
     @classmethod
-    def __handle_deprecated_var_async(
-        cls, values
-    ):  # pylint: disable=unused-private-member
+    def __handle_deprecated_var_async(cls, values):  # pylint: disable=unused-private-member
         if "var_async" in values and values.get("var_async"):
             warnings.warn(
                 "'var_async' is deprecated and will be removed in a future version. Use 'run_async' instead.",
@@ -155,13 +152,9 @@ class Process:
             command = f"{safe_env_exports} {command}"
 
         command = f'sh -c "{command}"'
-        execute_request = ExecuteRequest(
-            command=command, cwd=cwd or self._get_root_dir(), timeout=timeout
-        )
+        execute_request = ExecuteRequest(command=command, cwd=cwd or self._get_root_dir(), timeout=timeout)
 
-        response = self.toolbox_api.execute_command(
-            workspace_id=self.instance.id, execute_request=execute_request
-        )
+        response = self.toolbox_api.execute_command(workspace_id=self.instance.id, execute_request=execute_request)
 
         # Post-process the output to extract ExecutionArtifacts
         artifacts = Process._parse_output(response.result.splitlines())
@@ -271,9 +264,7 @@ class Process:
             ```
         """
         request = CreateSessionRequest(sessionId=session_id)
-        self.toolbox_api.create_session(
-            self.instance.id, create_session_request=request
-        )
+        self.toolbox_api.create_session(self.instance.id, create_session_request=request)
 
     @intercept_errors(message_prefix="Failed to get session: ")
     def get_session(self, session_id: str) -> Session:
@@ -317,9 +308,7 @@ class Process:
                 print(f"Command {cmd.command} completed successfully")
             ```
         """
-        return self.toolbox_api.get_session_command(
-            self.instance.id, session_id=session_id, command_id=command_id
-        )
+        return self.toolbox_api.get_session_command(self.instance.id, session_id=session_id, command_id=command_id)
 
     @intercept_errors(message_prefix="Failed to execute session command: ")
     def execute_session_command(
@@ -389,9 +378,7 @@ class Process:
             print(f"Command output: {logs}")
             ```
         """
-        return self.toolbox_api.get_session_command_logs(
-            self.instance.id, session_id=session_id, command_id=command_id
-        )
+        return self.toolbox_api.get_session_command_logs(self.instance.id, session_id=session_id, command_id=command_id)
 
     @intercept_errors(message_prefix="Failed to get session command logs: ")
     async def get_session_command_logs_async(
@@ -413,45 +400,24 @@ class Process:
             )
             ```
         """
-        url = (
-            f"{self.toolbox_api.api_client.configuration.host}/toolbox/{self.instance.id}"
-            + f"/toolbox/process/session/{session_id}/command/{command_id}/logs?follow=true"
+        _, url, *_ = self.toolbox_api._get_session_command_logs_serialize(  # pylint: disable=protected-access
+            workspace_id=self.instance.id,
+            session_id=session_id,
+            command_id=command_id,
+            x_daytona_organization_id=None,
+            follow=True,
+            _request_auth=None,
+            _content_type=None,
+            _headers=None,
+            _host_index=None,
         )
-        headers = self.toolbox_api.api_client.default_headers
 
-        async with httpx.AsyncClient(timeout=None) as client:
-            async with client.stream("GET", url, headers=headers) as response:
-                stream = response.aiter_bytes()
-                next_chunk = None
-                exit_code_seen_count = 0
-
-                while True:
-                    if next_chunk is None:
-                        next_chunk = asyncio.create_task(anext(stream, None))
-                    timeout = asyncio.create_task(asyncio.sleep(2))
-
-                    done, pending = await asyncio.wait(
-                        [next_chunk, timeout], return_when=asyncio.FIRST_COMPLETED
-                    )
-
-                    if next_chunk in done:
-                        timeout.cancel()
-                        chunk = next_chunk.result()
-                        next_chunk = None
-
-                        if chunk is None:
-                            break
-
-                        on_logs(chunk.decode("utf-8"))
-                    elif timeout in done:
-                        cmd_status = self.get_session_command(session_id, command_id)
-
-                        if cmd_status.exit_code is not None:
-                            exit_code_seen_count += 1
-                            if exit_code_seen_count > 1:
-                                if next_chunk in pending:
-                                    next_chunk.cancel()
-                                break
+        await process_streaming_response(
+            url=url,
+            headers=self.toolbox_api.api_client.default_headers,
+            on_chunk=on_logs,
+            should_terminate=lambda: self.get_session_command(session_id, command_id).exit_code is not None,
+        )
 
     @intercept_errors(message_prefix="Failed to list sessions: ")
     def list_sessions(self) -> List[Session]:
